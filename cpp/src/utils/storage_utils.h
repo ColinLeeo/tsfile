@@ -75,8 +75,8 @@ FORCE_INLINE std::string get_file_path_from_file_id(
     char path_buf[len];
     memset(path_buf, 0, len);
     // TODO config
-    snprintf(path_buf, len, "./%" PRId64 "-%d-%d.tsfile", file_id.seq_,
-             file_id.version_, file_id.merge_);
+    // snprintf(path_buf, len, "./%" PRId64 "-%d-%d.tsfile", file_id.seq_,
+    //          file_id.version_, file_id.merge_);
     return std::string(path_buf);
 }
 

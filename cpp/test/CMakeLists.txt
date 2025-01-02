@@ -16,32 +16,47 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 ]]
+cmake_minimum_required(VERSION 3.11)
+project(TsFile_CPP_TEST)
 include(FetchContent)
 
-set(URL_LIST
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
+set(GTEST_URL_LIST
     "https://github.com/google/googletest/archive/refs/tags/release-1.12.1.zip"
     "https://hub.nuaa.cf/google/googletest/archive/refs/tags/release-1.12.1.zip"
     "https://hub.yzuu.cf/google/googletest/archive/refs/tags/release-1.12.1.zip"
 )
 
+set(GTEST_ZIP_PATH "${CMAKE_SOURCE_DIR}/third_party/googletest-release-1.12.1.zip")
 set(DOWNLOADED 0)
 set(GTEST_URL "")
 set(TIMEOUT 30)
 
-foreach(URL ${URL_LIST})
-    message(STATUS "Trying to download from ${URL}")
-    file(DOWNLOAD ${URL} "${CMAKE_BINARY_DIR}/googletest-release-1.12.1.zip" STATUS DOWNLOAD_STATUS TIMEOUT ${TIMEOUT})
+if (EXISTS ${GTEST_ZIP_PATH})
+    message(STATUS "Using local gtest zip file: ${GTEST_ZIP_PATH}")
+    set(DOWNLOADED 1)
+    set(GTEST_URL ${GTEST_ZIP_PATH})
+else()
+    message(STATUS "Local gtest zip file not found, trying to download from network...")
+endif()
 
-    list(GET DOWNLOAD_STATUS 0 DOWNLOAD_RESULT)
-    if(${DOWNLOAD_RESULT} EQUAL 0)
-        set(DOWNLOADED 1)
-        set(GTEST_URL ${URL})
-        break()
-    endif()
-endforeach()
+if (NOT DOWNLOADED)
+    foreach (URL ${GTEST_URL_LIST})
+        message(STATUS "Trying to download from ${URL}")
+        file(DOWNLOAD ${URL} "${CMAKE_SOURCE_DIR}/third_party/googletest-release-1.12.1.zip" STATUS DOWNLOAD_STATUS TIMEOUT ${TIMEOUT})
+
+        list(GET DOWNLOAD_STATUS 0 DOWNLOAD_RESULT)
+        if (${DOWNLOAD_RESULT} EQUAL 0)
+            set(DOWNLOADED 1)
+            set(GTEST_URL ${GTEST_ZIP_PATH})
+            break()
+        endif()
+    endforeach()
+endif()
 
 if(${DOWNLOADED})
-    message(STATUS "Successfully downloaded googletest from ${GTEST_URL}")
+    message(STATUS "Successfully get googletest from ${GTEST_URL}")
     FetchContent_Declare(
       googletest
       URL ${GTEST_URL}
@@ -55,14 +70,19 @@ else()
     return()
 endif()
 
+
 message(STATUS "Adding test configurations...")
 
-set(SDK_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/../src)
-message("SDK_INCLUDE_DIR: ${SDK_INCLUDE_DIR}")
-set(LIBTSFILE_SDK_DIR ${PROJECT_BINARY_DIR}/lib)
-message("LIBTSFILE_SDK_DIR: ${LIBTSFILE_SDK_DIR}")
+set(LIB_TSFILE_SDK_DIR ${PROJECT_BINARY_DIR}/lib)
+message("LIB_TSFILE_SDK_DIR: ${LIB_TSFILE_SDK_DIR}")
 
-include_directories(${SDK_INCLUDE_DIR})
+include_directories(
+    ${LIBRARY_INCLUDE_DIR}
+    ${CMAKE_SOURCE_DIR}/third_party/lz4
+    ${CMAKE_SOURCE_DIR}/third_party/lzokay
+    ${CMAKE_SOURCE_DIR}/third_party/zlib-1.2.13
+    ${CMAKE_SOURCE_DIR}/third_party/antlr4-cpp-runtime-4/runtime/src
+)
 
 enable_testing()
 
@@ -77,6 +97,7 @@ file(GLOB_RECURSE TEST_SRCS
         "writer/*_test.cc"
         "cwrapper/*_test.cc"
         )
+
 if (${COV_ENABLED})
     message("Enable code cov...")
     add_compile_options(-fprofile-arcs -ftest-coverage)
@@ -93,9 +114,9 @@ target_link_libraries(
   TsFile_Test
   GTest::gtest_main
   GTest::gmock
-  tsfile
+  tsfile_static
 )
-set_target_properties(TsFile_Test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${LIBTSFILE_SDK_DIR})
+set_target_properties(TsFile_Test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${LIB_TSFILE_SDK_DIR})
 
 
 include(GoogleTest)

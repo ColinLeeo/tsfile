@@ -23,10 +23,10 @@ cmake_policy(SET CMP0079 NEW)
 set(TsFile_CPP_VERSION 2.1.0.dev)
 set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -Wall")
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=maybe-uninitialized")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=maybe-uninitialized -D__STDC_FORMAT_MACROS")
 endif()
-message("cmake using: USE_CPP11=${USE_CPP11}")
 
+message("cmake using: USE_CPP11=${USE_CPP11}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 if(DEFINED ENV{CXX})
@@ -67,24 +67,18 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
 endif()
 message("CMAKE DEBUG: CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}")
 
+
+# All libs will be stored here, including libtsfile, compress-encoding lib.
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
-set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR}
-                        ${PROJECT_SOURCE_DIR}/src
-                        ${PROJECT_SOURCE_DIR}/third_party/lz4
-                        ${PROJECT_SOURCE_DIR}/third_party/lzokay
-                        ${PROJECT_SOURCE_DIR}/third_party/zlib-1.2.13
-                        ${PROJECT_BINARY_DIR}/third_party/zlib-1.2.13
-)
 
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-include_directories(${PROJECT_INCLUDE_DIR})
+# TsFile code will be stored here.
+set(PROJECT_SRC_DIR ${PROJECT_SOURCE_DIR}/src)
 
-include_directories(${PROJECT_SOURCE_DIR}/third_party/antlr4-cpp-runtime-4/runtime/src)
+# All include files will be installed here.
+set(LIBRARY_INCLUDE_DIR ${PROJECT_BINARY_DIR}/include)
 
 add_subdirectory(third_party)
-
 add_subdirectory(src)
-
 add_subdirectory(test)
 if(TESTS_ENABLED)
     add_dependencies(TsFile_Test tsfile)
