@@ -24,11 +24,21 @@ bool DeviceMetaIterator::has_next() {
     if (!result_cache_.empty()) {
         return true;
     }
+namespace storage {
+bool DeviceMetaIterator::has_next() {
+    if (!result_cache_.empty()) {
+        return true;
+    }
 
     if (load_results() != common::E_OK) {
         return false;
     }
+    if (load_results() != common::E_OK) {
+        return false;
+    }
 
+    return !result_cache_.empty();
+}
     return !result_cache_.empty();
 }
 
@@ -36,7 +46,15 @@ int DeviceMetaIterator::next(std::pair<IDeviceID, MetaIndexNode *>& ret_meta) {
     if (!has_next()) {
         return common::E_NO_MORE_DATA;
     }
+int DeviceMetaIterator::next(std::pair<IDeviceID, MetaIndexNode *>& ret_meta) {
+    if (!has_next()) {
+        return common::E_NO_MORE_DATA;
+    }
 
+    ret_meta = result_cache_.front();
+    result_cache_.pop();
+    return common::E_OK;
+}
     ret_meta = result_cache_.front();
     result_cache_.pop();
     return common::E_OK;
@@ -55,7 +73,22 @@ int DeviceMetaIterator::load_results() {
             return common::E_INVALID_NODE_TYPE;
         }
     }
+int DeviceMetaIterator::load_results() {
+    while (!meta_index_nodes_.empty()) {
+        const auto& meta_data_index_node = meta_index_nodes_.front();
+        meta_index_nodes_.pop();
+        const auto& node_type = meta_data_index_node->node_type_;
+        if (node_type == MetaIndexNodeType::LEAF_DEVICE) {
+            load_leaf_device(meta_data_index_node);
+        } else if (node_type == MetaIndexNodeType::INTERNAL_DEVICE) {
+            load_internal_node(meta_data_index_node);
+        } else {
+            return common::E_INVALID_NODE_TYPE;
+        }
+    }
 
+    return common::E_OK;
+}
     return common::E_OK;
 }
 
