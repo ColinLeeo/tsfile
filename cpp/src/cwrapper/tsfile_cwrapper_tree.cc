@@ -17,7 +17,7 @@
  * under the License.
  */
 
-#include "tsfile_cwrapper.h"
+#include "tsfile_cwrapper_tree.h"
 
 #include <iomanip>
 
@@ -31,8 +31,6 @@
 #include "reader/tsfile_reader.h"
 #include "utils/errno_define.h"
 #include "writer/tsfile_writer.h"
-
-static bool is_init = false;
 
 #define INSERT_DATA_INTO_RECORD(record, column, value)               \
     do {                                                             \
@@ -53,7 +51,7 @@ static bool is_init = false;
 #define INSERT_DATA_TABLET_STEP                                             \
     do {                                                                    \
         for (int i = 0; i < tablet->column_num; i++) {                      \
-            if (strcmp(tablet->column_schema[i]->name, column_name) == 0) { \
+            if (strcmp(tablet->timeseries_schema[i]->name, column_name) == 0) { \
                 column_id = i;                                              \
                 break;                                                      \
             }                                                               \
@@ -70,85 +68,15 @@ static bool is_init = false;
 #define DataType common::TSDataType
 #define Encoding common::TSEncoding
 #define CompressionType common::CompressionType
-#define TsFileReader storage::TsFileReader
-#define TsFileWriter storage::TsFileWriter
 #define E_OK common::E_OK
 #define TsRecord storage::TsRecord
 #define DataPoint storage::DataPoint
 #define E_BUF_NOT_ENOUGH common::E_BUF_NOT_ENOUGH
 
-void init_tsfile_config() {
-    if (!is_init) {
-        common::init_config_value();
-        is_init = true;
-    }
-}
-
-CTsFileReader tsfile_reader_open(const char* pathname, ERRNO* err_code) {
-    init_tsfile_config();
-    TsFileReader* reader = new TsFileReader();
-    int ret = reader->open(pathname);
-    if (ret != E_OK) {
-        std::cout << "open file failed" << std::endl;
-        *err_code = ret;
-        delete reader;
-        return nullptr;
-    }
-    return reader;
-}
-
-CTsFileWriter tsfile_writer_open(const char* pathname, ERRNO* err_code) {
-    init_tsfile_config();
-    TsFileWriter* writer = new TsFileWriter();
-    int flags = O_WRONLY | O_CREAT | O_TRUNC;
-#ifdef _WIN32
-    flags |= O_BINARY;
-#endif
-    int ret = writer->open(pathname, flags, 0644);
-    if (ret != E_OK) {
-        delete writer;
-        *err_code = ret;
-        return nullptr;
-    }
-    return writer;
-}
-
-CTsFileWriter tsfile_writer_open_flag(const char* pathname, mode_t flag,
-                                  ERRNO* err_code) {
-    init_tsfile_config();
-    TsFileWriter* writer = new TsFileWriter();
-    int ret = writer->open(pathname, O_CREAT | O_RDWR, flag);
-    if (ret != E_OK) {
-        delete writer;
-        *err_code = ret;
-        return nullptr;
-    }
-    return writer;
-}
-
-CTsFileWriter tsfile_writer_open_conf(const char* pathname, int flag,
-                                  ERRNO* err_code, TsFileConf* conf) {
-    *err_code = common::E_INVALID_ARG;
-    return nullptr;
-}
-
-ERRNO tsfile_writer_close(CTsFileWriter writer) {
-    TsFileWriter* w = (TsFileWriter*)writer;
-    int ret = w->close();
-    delete w;
-    return ret;
-}
-
-ERRNO tsfile_reader_close(CTsFileReader reader) {
-    TsFileReader* ts_reader = (TsFileReader*)reader;
-    delete ts_reader;
-    return E_OK;
-}
-
-ERRNO tsfile_register_timeseries(CTsFileWriter writer,
+ERRNO tsfile_register_timeseries(TsFileWriter writer,
                                        const char* device_name,
                                        TimeseriesSchema* schema) {
-    TsFileWriter* w = (TsFileWriter*)writer;
+    auto* w = (storage::TsFileWriter*)writer;
 
     int ret = w->register_timeseries(
         device_name, storage::MeasurementSchema(
@@ -157,16 +85,16 @@ ERRNO tsfile_register_timeseries(CTsFileWriter writer,
     return ret;
 }
 
-ERRNO tsfile_register_device(CTsFileWriter writer,
+ERRNO tsfile_register_device(TsFileWriter writer,
                                 device_schema* device_schema) {
-    TsFileWriter* w = (TsFileWriter*)writer;
+    storage::TsFileWriter* w = (storage::TsFileWriter*)writer;
     for (int column_id = 0; column_id < device_schema->timeseries_num; column_id++) {
         TimeseriesSchema* schema = device_schema->timeseries_schema[column_id];
         ERRNO ret = w->register_timeseries(
             device_schema->device_name,
             storage::MeasurementSchema(
                 schema->name, (DataType)schema->data_type,
-                        (Encoding)schema->encoding, (CompressionType)schema->compression)));
+                        (Encoding)schema->encoding, (CompressionType)schema->compression));
         if (ret != E_OK) {
             return ret;
         }
@@ -174,18 +102,12 @@ ERRNO tsfile_register_device(CTsFileWriter writer,
     return E_OK;
 }
 
+
+
 TsFileRowData create_tsfile_row(const char* table_name, int64_t timestamp,
                                 int timeseries_num) {
     TsRecord* record = new TsRecord(timestamp, table_name, timeseries_num);
     return record;
-}
-
-Tablet* create_tablet(const char* table_name, int max_capacity) {
-    Tablet* tablet = new Tablet();
-    tablet->table_name = strdup(table_name);
-    tablet->max_capacity = max_capacity;
-    tablet->times = (timestamp*)malloc(max_capacity * sizeof(int64_t));
-    return tablet;
 }
 
 int get_size_from_datatype(TSDataType datatype) {
@@ -206,108 +128,6 @@ int get_size_from_datatype(TSDataType datatype) {
             return 0;
     }
     return 0;
-}
-
-Tablet* add_column_to_tablet(Tablet* tablet, const char* column_name,
-                             TSDataType type) {
-    tablet->column_num++;
-    tablet->timeseries_schema = (TimeseriesSchema**)realloc(
-        tablet->timeseries_schema, tablet->column_num * sizeof(TimeseriesSchema*));
-    tablet->bitmap =
-        (bool**)realloc(tablet->bitmap, tablet->column_num * sizeof(bool*));
-    tablet->bitmap[tablet->column_num - 1] =
-        (bool*)malloc(tablet->max_capacity * sizeof(bool));
-    std::memset(tablet->bitmap[tablet->column_num - 1], 0,
-                tablet->max_capacity * sizeof(bool));
-    auto* schema = new TimeseriesSchema();
-    schema->name = column_name;
-    schema->data_type = type;
-    tablet->timeseries_schema[tablet->column_num - 1] = schema;
-    tablet->value =
-        (void**)realloc(tablet->value, tablet->column_num * sizeof(void*));
-    tablet->value[tablet->column_num - 1] =
-        (void*)malloc(tablet->max_capacity * sizeof(int64_t));
-    return tablet;
-}
-
-Tablet* add_data_to_tablet_i64(Tablet* tablet, int line_id, int64_t timestamp,
-                               const char* column_name, int64_t value) {
-    int column_id = -1;
-    INSERT_DATA_TABLET_STEP;
-    memcpy((int64_t*)tablet->value[column_id] + line_id, &value,
-           sizeof(int64_t));
-    tablet->bitmap[column_id][line_id] = true;
-    line_id > tablet->cur_num ? tablet->cur_num = line_id : 0;
-    return tablet;
-}
-
-Tablet* add_data_to_tablet_i32(Tablet* tablet, int line_id, int64_t timestamp,
-                               const char* column_name, int32_t value) {
-    int column_id = -1;
-    INSERT_DATA_TABLET_STEP;
-    memcpy((int32_t*)tablet->value[column_id] + line_id, &value,
-           sizeof(int32_t));
-    tablet->bitmap[column_id][line_id] = true;
-    line_id > tablet->cur_num ? tablet->cur_num = line_id : 0;
-    return tablet;
-}
-
-Tablet* add_data_to_tablet_float(Tablet* tablet, int line_id, int64_t timestamp,
-                                 const char* column_name, float value) {
-    int column_id = -1;
-    INSERT_DATA_TABLET_STEP;
-    memcpy((float*)tablet->value[column_id] + line_id, &value, sizeof(float));
-    tablet->bitmap[column_id][line_id] = true;
-    line_id > tablet->cur_num ? tablet->cur_num = line_id : 0;
-    return tablet;
-}
-
-Tablet* add_data_to_tablet_double(Tablet* tablet, int line_id,
-                                  int64_t timestamp, const char* column_name,
-                                  double value) {
-    int column_id = -1;
-    INSERT_DATA_TABLET_STEP;
-    memcpy((double*)tablet->value[column_id] + line_id, &value, sizeof(double));
-    tablet->bitmap[column_id][line_id] = true;
-    line_id > tablet->cur_num ? tablet->cur_num = line_id : 0;
-    return tablet;
-}
-
-Tablet* add_data_to_tablet_bool(Tablet* tablet, int line_id, int64_t timestamp,
-                                const char* column_name, bool value) {
-    int column_id = -1;
-    INSERT_DATA_TABLET_STEP;
-    memcpy((bool*)tablet->value[column_id] + line_id, &value, sizeof(bool));
-    tablet->bitmap[column_id][line_id] = true;
-    line_id > tablet->cur_num ? tablet->cur_num = line_id : 0;
-    return tablet;
-}
-
-Tablet* add_data_to_tablet_char(Tablet* tablet, int line_id, int64_t timestamp,
-                                const char* column_name, char* value) {
-    int column_id = -1;
-    INSERT_DATA_TABLET_STEP;
-    memcpy((char*)tablet->value[column_id] + line_id, &value, sizeof(char*));
-    tablet->bitmap[column_id][line_id] = true;
-    line_id > tablet->cur_num ? tablet->cur_num = line_id : 0;
-    return tablet;
-}
-
-ERRNO destory_tablet(Tablet* tablet) {
-    free(tablet->table_name);
-    tablet->table_name = nullptr;
-    free(tablet->times);
-    tablet->times = nullptr;
-    for (int i = 0; i < tablet->column_num; i++) {
-        free(tablet->column_schema[i]);
-        free(tablet->value[i]);
-        free(tablet->bitmap[i]);
-    }
-    free(tablet->bitmap);
-    free(tablet->column_schema);
-    free(tablet->value);
-    delete tablet;
-    return E_OK;
 }
 
 ERRNO insert_data_into_tsfile_row_int32(TsFileRowData data, char* columname,
@@ -340,8 +160,8 @@ ERRNO insert_data_into_tsfile_row_double(TsFileRowData data,
     INSERT_DATA_INTO_RECORD(record, columname, value);
 }
 
-ERRNO tsfile_write_row_data(CTsFileWriter writer, TsFileRowData data) {
-    TsFileWriter* w = (TsFileWriter*)writer;
+ERRNO tsfile_write_row_data(TsFileWriter writer, TsFileRowData data) {
+    storage::TsFileWriter* w = (storage::TsFileWriter*)writer;
     TsRecord* record = (TsRecord*)data;
     int ret = w->write_record(*record);
     if (ret == E_OK) {
@@ -359,8 +179,8 @@ ERRNO destory_tsfile_row(TsFileRowData data) {
     return E_OK;
 }
 
-ERRNO tsfile_flush_data(CTsFileWriter writer) {
-    TsFileWriter* w = (TsFileWriter*)writer;
+ERRNO tsfile_flush_data(TsFileWriter writer) {
+    storage::TsFileWriter* w = (storage::TsFileWriter*)writer;
     int ret = w->flush();
     return ret;
 }
@@ -507,7 +327,7 @@ Expression* and_filter_to_and_query(Expression* exp_and, Expression* exp) {
     return exp_and;
 }
 
-QueryDataRet ts_reader_query(CTsFileReader reader, const char* table_name,
+QueryDataRet ts_reader_query(TsFileReader reader, const char* table_name,
                              const char** columns_name, int column_num,
                              TimeFilterExpression* expression) {
     TsFileReader* r = (TsFileReader*)reader;
@@ -533,7 +353,7 @@ QueryDataRet ts_reader_query(CTsFileReader reader, const char* table_name,
     return ret;
 }
 
-QueryDataRet ts_reader_begin_end(CTsFileReader reader, const char* table_name,
+QueryDataRet ts_reader_begin_end(TsFileReader reader, const char* table_name,
                                  char** columns_name, int column_num,
                                  timestamp begin, timestamp end) {
     TsFileReader* r = (TsFileReader*)reader;
@@ -577,7 +397,7 @@ QueryDataRet ts_reader_begin_end(CTsFileReader reader, const char* table_name,
     return ret;
 }
 
-QueryDataRet ts_reader_read(CTsFileReader reader, const char* table_name,
+QueryDataRet ts_reader_read(TsFileReader reader, const char* table_name,
                             char** columns_name, int column_num) {
     TsFileReader* r = (TsFileReader*)reader;
     std::string table_name_str(table_name);
@@ -684,14 +504,14 @@ void print_data_result(DataResult* result) {
     std::cout << std::left << std::setw(15) << "timestamp";
     for (int i = 0; i < result->column_num; i++) {
         std::cout << std::left << std::setw(15)
-                  << result->column_schema[i]->name;
+                  << result->timeseries_schema[i]->name;
     }
     std::cout << std::endl;
     for (int i = 0; i < result->cur_num; i++) {
         std::cout << std::left << std::setw(15);
         std::cout << result->times[i];
         for (int j = 0; j < result->column_num; j++) {
-            ColumnSchema* schema = result->column_schema[j];
+            timeseries_schema* schema = result->timeseries_schema[j];
             double dval;
             float fval;
             std::cout << std::left << std::setw(15);

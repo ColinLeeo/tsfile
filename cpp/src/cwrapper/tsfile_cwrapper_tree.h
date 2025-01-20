@@ -77,20 +77,6 @@ typedef struct expression {
     int children_length;
 } Expression;
 
-typedef struct tablet {
-    char* table_name;
-    TimeseriesSchema** timeseries_schema;
-    int column_num;
-    timestamp* times;
-    bool** bitmap;
-    void** value;
-    int cur_num;
-    int max_capacity;
-} Tablet;
-
-typedef struct tsfile_conf {
-    int mem_threshold_kb;
-} TsFileConf;
 
 typedef Tablet DataResult;
 
@@ -105,15 +91,7 @@ typedef struct query_data_ret {
 extern "C" {
 #endif
 
-CTsFileReader tsfile_reader_open(const char* pathname, ERRNO* err_code);
-CTsFileWriter tsfile_writer_open(const char* pathname, ERRNO* err_code);
-CTsFileWriter tsfile_writer_open_flag(const char* pathname, mode_t flag,
-                                      ERRNO* err_code);
-CTsFileWriter tsfile_writer_open_conf(const char* pathname, mode_t flag,
-                                      ERRNO* err_code, TsFileConf* conf);
 
-ERRNO tsfile_writer_close(CTsFileWriter writer);
-ERRNO tsfile_reader_close(CTsFileReader reader);
 
 ERRNO tsfile_register_timeseries(CTsFileWriter writer, const char* device_name,
                                  TimeseriesSchema* schema);

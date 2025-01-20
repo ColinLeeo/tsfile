@@ -100,6 +100,12 @@ class Tablet {
     int add_value(uint32_t row_index, const std::string &measurement_name,
                   T val);
 
+    // tmp code
+    int get_cur_row_size() const;
+    void set_row_size(int row_size);
+    void *get_value(int row_index, uint32_t schema_index,
+                    common::TSDataType &data_type) const;
+
     friend class TabletColIterator;
     friend class TsFileWriter;
     friend struct MeasurementNamesFromTablet;
