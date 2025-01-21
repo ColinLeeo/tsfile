@@ -21,7 +21,7 @@
 
 namespace storage {
 DeviceQueryTask *DeviceQueryTask::create_device_query_task(
-    IDeviceID device_id, std::vector<std::string> column_names,
+    std::shared_ptr<IDeviceID> device_id, std::vector<std::string> column_names,
     ColumnMapping column_mapping, MetaIndexNode index_root,
     TableSchema table_schema, common::PageArena &pa) {
     void *buf = pa.alloc(sizeof(DeviceQueryTask));

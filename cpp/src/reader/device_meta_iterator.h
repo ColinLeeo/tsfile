@@ -22,7 +22,6 @@
 
 #include <queue>
 
-#include "common/tsfile_common.h"
 #include "file/tsfile_io_reader.h"
 #include "reader/expression.h"
 
@@ -40,7 +39,7 @@ class DeviceMetaIterator {
 
     bool has_next();
 
-    int next(std::pair<IDeviceID, MetaIndexNode *> &ret_meta);
+    int next(std::pair<std::shared_ptr<IDeviceID>, MetaIndexNode *> &ret_meta);
 
    private:
     int load_results();
@@ -48,7 +47,7 @@ class DeviceMetaIterator {
     int load_internal_node(MetaIndexNode *meta_index_node);
     TsFileIOReader* io_reader_;
     std::queue<MetaIndexNode *> meta_index_nodes_;
-    std::queue<std::pair<IDeviceID, MetaIndexNode *>> result_cache_;
+    std::queue<std::pair<std::shared_ptr<IDeviceID>, MetaIndexNode *>> result_cache_;
     const Filter *id_filter_;
     common::PageArena pa;
 };

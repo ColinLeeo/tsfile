@@ -1100,6 +1100,27 @@ struct TsFileMeta {
   BloomFilter *bloom_filter_;
   common::PageArena *page_arena_;
 
+    int get_table_metaindex_node(common::String &table_name,
+                                 MetaIndexNode *&ret_node) { // TODO
+        // DeviceNodeMap::iterator it =
+        //     table_metadata_index_node_map_.find(table_name);
+        // if (it == table_metadata_index_node_map_.end()) {
+        //     return common::E_TABLE_NOT_EXIST;
+        // }
+        // ret_node = it->second;
+        return common::E_OK;
+    }
+
+    int get_table_schema(const std::string &table_name,
+                         std::shared_ptr<TableSchema> &ret_schema) {
+        TableSchemasMap::iterator it = table_schemas_.find(table_name);
+        if (it == table_schemas_.end()) {
+            return common::E_TABLE_NOT_EXIST;
+        }
+        ret_schema = it->second;
+        return common::E_OK;
+    }
+
   TsFileMeta()
       : meta_offset_(0),
         bloom_filter_(nullptr),

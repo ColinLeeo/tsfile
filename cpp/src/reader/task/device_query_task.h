@@ -25,7 +25,7 @@
 namespace storage {
 class DeviceQueryTask {
    public:
-    DeviceQueryTask(IDeviceID device_id, std::vector<std::string> column_names,
+    DeviceQueryTask(std::shared_ptr<IDeviceID> device_id, std::vector<std::string> column_names,
                     ColumnMapping column_mapping, MetaIndexNode index_root,
                     TableSchema table_schema)
         : device_id_(device_id),
@@ -36,7 +36,7 @@ class DeviceQueryTask {
     ~DeviceQueryTask();
 
     static DeviceQueryTask *create_device_query_task(
-        IDeviceID device_id, std::vector<std::string> column_names,
+        std::shared_ptr<IDeviceID> device_id, std::vector<std::string> column_names,
         ColumnMapping column_mapping, MetaIndexNode index_root,
         TableSchema table_schema, common::PageArena &pa);
 
@@ -50,10 +50,10 @@ class DeviceQueryTask {
 
     const ColumnMapping &get_column_mapping() const { return column_mapping_; }
 
-    IDeviceID get_device_id() const { return device_id_; }
+    std::shared_ptr<IDeviceID> get_device_id() const { return device_id_; }
 
    private:
-    IDeviceID device_id_;
+    std::shared_ptr<IDeviceID> device_id_;
     std::vector<std::string> column_names_;
     ColumnMapping column_mapping_;
     MetaIndexNode index_root_;

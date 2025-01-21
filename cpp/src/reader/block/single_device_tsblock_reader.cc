@@ -31,10 +31,10 @@ SingleDeviceTsBlockReader::SingleDeviceTsBlockReader(
       tuple_desc_() {
     tuple_desc_.reset();
     tuple_desc_.push_back(common::g_time_column_desc);
-    for (const auto& column_name : device_query_task_->get_column_names()) {
-        ColumnDesc column_desc(common::INT64, TS_2DIFF, SNAPPY, INVALID_TTL, column_name, device_query_task_->get_device_id());
-        tuple_desc_.push_back(column_desc);
-    }
+    // for (const auto& column_name : device_query_task_->get_column_names()) {
+        // common::ColumnDesc column_desc(common::INT64, common::TS_2DIFF, SNAPPY, INVALID_TTL, column_name, device_query_task_->get_device_id());
+        // tuple_desc_.push_back(column_desc);
+    // }
     current_block_ = std::unique_ptr<common::TsBlock>(
         common::TsBlock::create_tsblock(&tuple_desc_, block_size));
 }
@@ -52,7 +52,7 @@ bool SingleDeviceTsBlockReader::has_next() {
     next_time_ = 0;
 
     std::vector<MeasurementColumnContext*> min_time_columns;
-    while (current_block_.get_row_count() < block_size_) {
+    while (current_block_->get_row_count() < block_size_) {
     }
     return true;
 }

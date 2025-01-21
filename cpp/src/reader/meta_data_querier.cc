@@ -19,7 +19,6 @@
 
 #include "reader/meta_data_querier.h"
 
-#include "common/tsfile_common.h"
 #include "device_meta_iterator.h"
 
 namespace storage {

@@ -97,17 +97,9 @@ class TsBlock {
         row_count_ = 0;
     }
 
-    FORCE_INLINE static TsBlock *create_tsblock(TupleDesc *tupledesc, uint32_t max_row_count = 0) {
+    FORCE_INLINE static TsBlock *create_tsblock(TupleDesc *tupledesc,
+                                                uint32_t max_row_count = 0) {
         TsBlock *tsblock = new TsBlock(tupledesc, max_row_count);
-        if (E_OK != tsblock->init()) {
-            delete tsblock;
-            tsblock = nullptr;
-        }
-        return tsblock;
-    }
-
-    FORCE_INLINE static TsBlock *create_tsblock(TupleDesc *tupledesc, uint32_t block_size) {
-        TsBlock *tsblock = new TsBlock(tupledesc, block_size);
         if (E_OK != tsblock->init()) {
             delete tsblock;
             tsblock = nullptr;

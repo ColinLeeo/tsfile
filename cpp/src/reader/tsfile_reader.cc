@@ -76,7 +76,29 @@ int TsFileReader::query(std::vector<std::string>& path_list, int64_t start_time,
     return ret;
 }
 
-void TsFileReader::destroy_query_data_set(storage::ResultSet* qds) {
+int TsFileReader::query(const std::string &table_name,
+                        const std::vector<std::string> &columns_names,
+                        int64_t start_time, int64_t end_time,
+                        ResultSet *&result_set) {
+    int ret = E_OK;
+    TsFileMeta *tsfile_meta = tsfile_executor_->get_tsfile_meta();
+    if (tsfile_meta == nullptr) {
+        return E_TSFILE_WRITER_META_ERR;
+    }
+
+    std::shared_ptr<TableSchema> table_schema =
+        tsfile_meta->table_schemas_.at(table_name);
+    if (table_schema == nullptr) {
+        return E_TABLE_NOT_EXIST;
+    }
+
+    std::vector<TSDataType> data_types = table_schema->get_data_types();
+
+    
+    return ret;
+}
+
+void TsFileReader::destroy_query_data_set(storage::ResultSet *qds) {
     tsfile_executor_->destroy_query_data_set(qds);
 }
 

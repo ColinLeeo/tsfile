@@ -23,7 +23,6 @@
 #include "common/allocator/my_string.h"
 #include "common/device_id.h"
 #include "common/path.h"
-#include "common/tsfile_common.h"
 #include "reader/device_meta_iterator.h"
 #include "reader/ichunk_reader.h"
 

@@ -21,7 +21,6 @@
 #define FILE_TSFILE_IO_REAER_H
 
 #include "common/tsblock/tsblock.h"
-#include "common/tsfile_common.h"
 #include "file/read_file.h"
 #include "reader/chunk_reader.h"
 #include "reader/filter/filter.h"
