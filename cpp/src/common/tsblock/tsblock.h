@@ -25,14 +25,12 @@
 #include "common/container/byte_buffer.h"
 #include "common/global.h"
 #include "common/logger/elog.h"
-#include "common/schema.h"
 #include "tuple_desc.h"
 #include "vector/fixed_length_vector.h"
 #include "vector/variable_length_vector.h"
 #include "vector/vector.h"
 
 namespace common {
-class TableSchema;
 class TsBlock {
    public:
     friend class RowIterator;

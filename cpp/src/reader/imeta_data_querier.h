@@ -24,7 +24,6 @@
 #include "common/device_id.h"
 #include "common/path.h"
 #include "reader/device_meta_iterator.h"
-#include "reader/ichunk_reader.h"
 
 namespace storage {
 

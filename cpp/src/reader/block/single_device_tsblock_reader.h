@@ -22,7 +22,6 @@
 #include "common/tsblock/tsblock.h"
 #include "reader/block/tsblock_reader.h"
 #include "reader/filter/filter.h"
-#include "reader/ichunk_reader.h"
 #include "reader/imeta_data_querier.h"
 #include "reader/task/device_query_task.h"
 

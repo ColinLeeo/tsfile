@@ -21,7 +21,6 @@
 
 #include "common/schema.h"
 #include "expression.h"
-#include "ichunk_reader.h"
 #include "imeta_data_querier.h"
 #include "reader/block/device_ordered_tsblock_reader.h"
 #include "reader/block/tsblock_reader.h"
