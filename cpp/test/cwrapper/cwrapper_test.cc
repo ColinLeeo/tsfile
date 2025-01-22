@@ -63,53 +63,34 @@ TEST_F(CWrapperTest, WriterFlushTabletAndReadData) {
                          TS_DATATYPE_STRING, TS_COMPRESSION_UNCOMPRESSED,
                          TS_ENCODING_PLAIN, TAG};
     }
-    for (int i = 0; i < field_schema_num; i++) {
-        schema.column_schemas[i + id_schema_num] =
-            ColumnSchema{strdup(std::string("s" + std::to_string(i)).c_str()),
-                         TS_DATATYPE_INT64, TS_COMPRESSION_UNCOMPRESSED,
-                         TS_ENCODING_PLAIN, FIELD};
-    }
-    WriteFile file =
-        write_file_new("cwrapper_write_flush_and_read.tsfile", &code);
-    TsFileWriter writer = tsfile_writer_new(file, &schema, &code);
-    ASSERT_EQ(code, RET_OK);
-
-    char** column_names =
-        static_cast<char**>(malloc(column_num * sizeof(char*)));
-    TSDataType* data_types =
-        static_cast<TSDataType*>(malloc(sizeof(TSDataType) * column_num));
-    for (int i = 0; i < id_schema_num; i++) {
-        column_names[i] = strdup(std::string("id" + std::to_string(i)).c_str());
-        data_types[i] = TS_DATATYPE_STRING;
-    }
-
-    for (int i = 0; i < field_schema_num; i++) {
-        column_names[i + id_schema_num] =
-            strdup(std::string("s" + std::to_string(i)).c_str());
-        data_types[i + id_schema_num] = TS_DATATYPE_INT64;
-    }
-
-    Tablet tablet = tablet_new(column_names, data_types, column_num, 10);
-
-    int num_timestamp = 10;
-    char* literal = new char[std::strlen("device_id") + 1];
-    std::strcpy(literal, "device_id");
-
-    for (int l = 0; l < num_timestamp; l++) {
-        tablet_add_timestamp(tablet, l, l);
-        for (int i = 0; i < schema.column_num; i++) {
-            switch (schema.column_schemas[i].data_type) {
-                case TS_DATATYPE_STRING:
-                    tablet_add_value_by_name_string(
-                        tablet, l, schema.column_schemas[i].column_name,
-                        literal);
-                    break;
-                case TS_DATATYPE_INT64:
-                    tablet_add_value_by_name_int64_t(
-                        tablet, l, schema.column_schemas[i].column_name, l);
-                    break;
-                default:
-                    break;
+    int max_rows = 100;
+    for (int i = 0; i < device_num; i++) {
+        char* device_name = strdup(("device" + std::to_string(i)).c_str());
+        char** measurements_name =
+            static_cast<char**>(malloc(measurement_num * sizeof(char*)));
+        TSDataType* data_types = static_cast<TSDataType*>(
+            malloc(sizeof(TSDataType) * measurement_num));
+        for (int j = 0; j < measurement_num; j++) {
+            measurements_name[j] =
+                strdup(("measurement" + std::to_string(j)).c_str());
+            data_types[j] = TS_DATATYPE_INT64;
+        }
+        Tablet tablet =
+            tablet_new_with_device(device_name, measurements_name, data_types,
+                                   nullptr, measurement_num, max_rows);
+        free(device_name);
+        free(data_types);
+        for (int j = 0; j < measurement_num; j++) {
+            free(measurements_name[j]);
+        }
+        free(measurements_name);
+        for (int j = 0; j < measurement_num; j++) {
+            for (int row = 0; row < max_rows; row++) {
+                tablet_add_timestamp(tablet, row, 16225600 + row);
+            }
+            for (int row = 0; row < max_rows; row++) {
+                tablet_add_value_by_index_int64_t(
+                    tablet, row, j, static_cast<int64_t>(row + j));
             }
         }
     }
@@ -170,9 +151,27 @@ TEST_F(CWrapperTest, WriterFlushTabletAndReadData) {
         }
     }
 
-    ASSERT_EQ(5, count_int64_t);
-    ASSERT_EQ(5, count_string);
-    free_tablet(&tablet);
+    ResultSetMetaData metadata = tsfile_result_set_get_metadata(result_set);
+    ASSERT_EQ(metadata.column_num, measurement_num);
+    ASSERT_EQ(std::string(metadata.column_names[4]),
+              std::string("device0.measurement4"));
+    ASSERT_EQ(metadata.data_types[9], TS_DATATYPE_INT64);
+    for (int i = 0; i < measurement_num - 1; i++) {
+        ASSERT_TRUE(tsfile_result_set_next(result_set));
+        ASSERT_FALSE(tsfile_result_set_is_null_by_index(result_set, i));
+        ASSERT_EQ(tsfile_result_set_get_value_by_index_int64_t(result_set, i),
+                  i * 2);
+        ASSERT_EQ(tsfile_result_set_get_value_by_name_int64_t(
+                      result_set,
+                      std::string("measurement" + std::to_string(i)).c_str()),
+                  i * 2);
+    }
+    free_tsfile_result_set(&result_set);
+    free_result_set_meta_data(metadata);
+    for (int i = 0; i < measurement_num; i++) {
+        free(sensor_list[i]);
+    }
+    free(sensor_list);
     tsfile_reader_close(reader);
     free_tsfile_result_set(&result_set);
     free_table_schema(schema);
