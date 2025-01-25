@@ -23,7 +23,7 @@
 #include "expression.h"
 namespace storage
 {
-class ColumnMapping { // Todo: add move constructor and assignment operator
+class ColumnMapping { 
    public:
     int add(const std::string &column_name, int index, TableSchema &schema) {
         int columnIndex = schema.find_column_index(column_name);
@@ -50,7 +50,7 @@ class ColumnMapping { // Todo: add move constructor and assignment operator
         return common::E_OK;
     }
 
-    const std::vector<int> &getColumnPos(const std::string &column_name) const {
+    const std::vector<int> &get_column_pos(const std::string &column_name) const {
         static const std::vector<int> empty;
         auto it = columnPosMap.find(column_name);
         return it != columnPosMap.end() ? it->second : empty;

@@ -28,57 +28,92 @@
 namespace storage {
 
 class DeviceQueryTask;
-class IMetadataReader;
 class MeasurementColumnContext;
 class IdColumnContext;
 
 class SingleDeviceTsBlockReader : public TsBlockReader {
    public:
     explicit SingleDeviceTsBlockReader(DeviceQueryTask* device_query_task,
-                                       int32_t block_size,
-                                       IMetadataReader* metadata_reader,
-                                       IChunkReader* chunk_reader,
+                                       uint32_t block_size,
+                                       IMetadataQuerier* metadata_querier,
                                        Filter* time_filter,
                                        Filter* field_filter);
+    ~SingleDeviceTsBlockReader() { close(); }
     bool has_next() override;
     int next(common::TsBlock& ret_block) override;
     void close() override;
 
    private:
+    void construct_column_context(
+        const std::vector<std::shared_ptr<ChunkMeta>>& chunk_meta_list,
+        Filter* time_filter);
+    int fill_measurements(
+        std::vector<MeasurementColumnContext*>& column_contexts);
+    void fill_ids();
+    void advance_column(MeasurementColumnContext* column_context);
+
     DeviceQueryTask* device_query_task_;
     Filter* field_filter_;
-    int32_t block_size_;
-    std::unique_ptr<common::TsBlock> current_block_;
+    uint32_t block_size_;
+    common::TsBlock* current_block_;
+    std::vector<common::ColAppender*> col_appenders_;
+    common::RowAppender* row_appender_;
     common::TupleDesc tuple_desc_;
     bool last_block_returned_ = true;
     std::map<std::string, MeasurementColumnContext*> field_column_contexts_;
-    std::map<std::string, IdColumnContext*> id_column_contexts_;
+    std::map<std::string, IdColumnContext> id_column_contexts_;
     int64_t next_time_ = 0;
+    TsFileIOReader* tsfile_io_reader_; // TODO: Construct Pass Ioreader
+    common::PageArena pa_;
 };
 
 class MeasurementColumnContext {
    public:
-    explicit MeasurementColumnContext(IChunkReader* chunk_reader)
-        : chunk_reader_(chunk_reader) {}
+    explicit MeasurementColumnContext(TsFileIOReader* tsfile_io_reader)
+        : tsfile_io_reader_(tsfile_io_reader) {}
 
     virtual ~MeasurementColumnContext() = default;
 
-    virtual int remove_from(
-        std::map<std::string, MeasurementColumnContext*>& column_contexts) = 0;
-    virtual int fill_into(common::TsBlock& block, int32_t position) = 0;
+    virtual void fill_into(
+        std::vector<common::ColAppender*>& col_appenders) = 0;
+
+    virtual void remove_from(std::map<std::string, MeasurementColumnContext*>&
+                                 column_context_map) = 0;
+
+    virtual int init(DeviceQueryTask* device_query_task,
+                     const std::shared_ptr<ChunkMeta>& chunk_meta,
+                     Filter* time_filter, common::PageArena& pa) = 0;
+    virtual int get_next_tsblock(bool alloc_mem) = 0;
+
+    virtual int get_current_time(int64_t& time) = 0;
+
+    virtual int get_current_value(char* value) = 0;
+
+    virtual int move_iter() = 0;
 
    protected:
-    IChunkReader* const chunk_reader_;
+    TsFileIOReader* tsfile_io_reader_;
+    TsFileSeriesScanIterator* ssi_;
+    common::TsBlock* tsblock_;
+    common::ColIterator* time_iter_;
+    common::ColIterator* value_iter_;
 };
 
 class SingleMeasurementColumnContext final : public MeasurementColumnContext {
    public:
-    explicit SingleMeasurementColumnContext(IChunkReader* chunk_reader)
-        : MeasurementColumnContext(chunk_reader) {}
+    explicit SingleMeasurementColumnContext(TsFileIOReader* tsfile_io_reader)
+        : MeasurementColumnContext(tsfile_io_reader) {}
 
-    int remove_from(std::map<std::string, MeasurementColumnContext*>&
-                        column_contexts) override;
-    int fill_into(common::TsBlock& block, int32_t position) override;
+    void fill_into(std::vector<common::ColAppender*>& col_appenders) override;
+    void remove_from(std::map<std::string, MeasurementColumnContext*>&
+                         column_context_map) override;
+    int init(DeviceQueryTask* device_query_task,
+             const std::shared_ptr<ChunkMeta>& chunk_meta, Filter* time_filter,
+             common::PageArena& pa) override;
+    int get_next_tsblock(bool alloc_mem) override;
+    int get_current_time(int64_t& time) override;
+    int get_current_value(char* value) override;
+    int move_iter() override;
 
    private:
     std::string column_name_;
@@ -87,12 +122,19 @@ class SingleMeasurementColumnContext final : public MeasurementColumnContext {
 
 class VectorMeasurementColumnContext final : public MeasurementColumnContext {
    public:
-    explicit VectorMeasurementColumnContext(IChunkReader* chunk_reader)
-        : MeasurementColumnContext(chunk_reader) {}
+    explicit VectorMeasurementColumnContext(TsFileIOReader* tsfile_io_reader)
+        : MeasurementColumnContext(tsfile_io_reader) {}
 
-    int remove_from(std::map<std::string, MeasurementColumnContext*>&
-                        column_contexts) override;
-    int fill_into(common::TsBlock& block, int32_t position) override;
+    void fill_into(std::vector<common::ColAppender*>& col_appenders) override;
+    void remove_from(std::map<std::string, MeasurementColumnContext*>&
+                         column_context_map) override;
+    int init(DeviceQueryTask* device_query_task,
+             const std::shared_ptr<ChunkMeta>& chunk_meta, Filter* time_filter,
+             common::PageArena& pa) override;
+    int get_next_tsblock(bool alloc_mem) override;
+    int get_current_time(int64_t& time) override;
+    int get_current_value(char* value) override;
+    int move_iter() override;
 
    private:
     std::vector<std::vector<int32_t>> pos_in_result_;
@@ -103,8 +145,6 @@ class IdColumnContext {
     explicit IdColumnContext(const std::vector<int32_t>& pos_in_result,
                              int32_t pos_in_device_id)
         : pos_in_result_(pos_in_result), pos_in_device_id_(pos_in_device_id) {}
-
-   private:
     const std::vector<int32_t> pos_in_result_;
     const int32_t pos_in_device_id_;
 };

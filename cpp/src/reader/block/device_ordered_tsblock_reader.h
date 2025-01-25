@@ -31,16 +31,16 @@ class DeviceOrderedTsBlockReader : public TsBlockReader {
    public:
     explicit DeviceOrderedTsBlockReader(
         std::unique_ptr<DeviceTaskIterator> device_task_iterator,
-        std::shared_ptr<IMetadataQuerier> meta_querier,
-        std::shared_ptr<IChunkReader> chunk_reader, int32_t block_size,
-        const Filter *time_filter, const Filter *field_filter)
+        IMetadataQuerier* metadata_querier, int32_t block_size,
+        Filter *time_filter, Filter *field_filter)
         : device_task_iterator_(std::move(device_task_iterator)),
-          meta_querier_(meta_querier),
-          chunk_reader_(chunk_reader),
+          metadata_querier_(metadata_querier),
           block_size_(block_size),
           time_filter_(time_filter),
           field_filter_(field_filter) {
-        pa_.init(512, common::MOD_DEVICE_ORDER_TSBLOCK_READER);
+    }
+    ~DeviceOrderedTsBlockReader() override {
+        close();
     }
 
     bool has_next() override;
@@ -49,13 +49,11 @@ class DeviceOrderedTsBlockReader : public TsBlockReader {
 
    private:
     std::unique_ptr<DeviceTaskIterator> device_task_iterator_;
-    std::shared_ptr<IMetadataQuerier> meta_querier_;
-    std::shared_ptr<IChunkReader> chunk_reader_;
+    IMetadataQuerier* metadata_querier_;
     int32_t block_size_;
     SingleDeviceTsBlockReader* current_reader_ = nullptr;
-    const Filter *time_filter_;
-    const Filter *field_filter_;
-    common::PageArena pa_;
+    Filter *time_filter_;
+    Filter *field_filter_;
 };
 }  // namespace storage
 

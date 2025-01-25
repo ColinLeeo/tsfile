@@ -20,10 +20,10 @@
 #ifndef COMMON_SCHEMA_H
 #define COMMON_SCHEMA_H
 
+#include <algorithm>
 #include <map>  // use unordered_map instead
 #include <memory>
 #include <string>
-#include <algorithm>
 #include <unordered_map>
 
 #include "common/db_common.h"
@@ -304,8 +304,32 @@ struct MeasurementSchemaGroup {
         return column_schemas_;
     }
 
+    common::ColumnDesc get_column_desc(const std::string &column_name) {
+        int column_idx = find_column_index(column_name);
+        return common::ColumnDesc(
+            column_schemas_[column_idx]->data_type_,
+            column_schemas_[column_idx]->encoding_,
+            column_schemas_[column_idx]->compression_type_, INVALID_TTL,
+            column_name, common::TsID());
+    }
+
+    int32_t find_id_column_order(const std::string &column_name) {
+        std::string lower_case_column_name = to_lower(column_name);
+
+        int column_order = 0;
+        for (size_t i = 0; i < column_schemas_.size(); ++i) {
+            if (column_schemas_[i]->measurement_name_ == lower_case_column_name 
+                && column_categories_[i] == ColumnCategory::TAG) {
+                return column_order;
+            } else if (column_categories_[i] == ColumnCategory::TAG) {
+                column_order++;
+            }
+        }
+        return -1;
+    }
+
     private:
-        static std::string to_lower(const std::string &str) {
+        static std::string to_lower(const std::string &str) const {
             std::string result;
             std::transform(str.begin(), str.end(), std::back_inserter(result),
                            [](unsigned char c) -> unsigned char { return std::tolower(c); });

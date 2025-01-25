@@ -44,7 +44,7 @@ class DeviceQueryTask {
         return column_names_;
     }
 
-    const TableSchema &get_table_schema() const { return table_schema_; }
+    TableSchema &get_table_schema() { return table_schema_; }
 
     const MetaIndexNode &get_index_root() const { return index_root_; }
 

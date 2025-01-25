@@ -49,7 +49,7 @@ class TupleDesc {
 
     FORCE_INLINE void reset() { column_list_.clear(); }
 
-    FORCE_INLINE void push_back(ColumnDesc &desc) {
+    FORCE_INLINE void push_back(ColumnDesc desc) {
         column_list_.push_back(desc);
     }
 

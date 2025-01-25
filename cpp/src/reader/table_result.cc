@@ -16,27 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-#ifndef READER_BLOCK_TSBLOCK_READER_H
-#define READER_BLOCK_TSBLOCK_READER_H
-
-#include "common/tsblock/tsblock.h"
+#include "reader/table_result.h"
 
 namespace storage {
-class TsBlockReader {
-   public:
-    virtual ~TsBlockReader() = default;
-    virtual bool has_next() = 0;
-    virtual int next(common::TsBlock &ret_block) = 0;
-    virtual void close() = 0;
-};
 
-class EmptyTsBlockReader : public TsBlockReader {
-   public:
-    EmptyTsBlockReader() = default;
-    bool has_next() override { return false; }
-
-    int next(common::TsBlock &ret_block) override { return common::E_OK; }
-};
-}  // namespace storage
-
-#endif  // READER_BLOCK_TSBLOCK_READER_H
+}
