@@ -30,11 +30,12 @@ class DeviceQueryTask;
 
 class DeviceTaskIterator {
    public:
-    explicit DeviceTaskIterator(
-        std::vector<std::string> column_names, MetaIndexNode *index_root,
-        ColumnMapping column_mapping,
-        std::shared_ptr<IMetadataQuerier> metadata_querier,
-        const Filter *id_filter, TableSchema table_schema)
+    explicit DeviceTaskIterator(std::vector<std::string> column_names,
+                                MetaIndexNode *index_root,
+                                ColumnMapping column_mapping,
+                                IMetadataQuerier *metadata_querier,
+                                const Filter *id_filter,
+                                TableSchema table_schema)
         : column_names_(column_names),
           column_mapping_(column_mapping),
           device_meta_iterator_(
@@ -42,7 +43,7 @@ class DeviceTaskIterator {
           table_schema_(table_schema) {
         pa_.init(512, common::MOD_DEVICE_TASK_ITER);
     }
-    ~DeviceTaskIterator();
+    ~DeviceTaskIterator() { pa_.destroy(); }
 
     bool has_next() const;
 

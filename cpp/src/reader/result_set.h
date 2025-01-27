@@ -76,7 +76,7 @@ class ResultSet {
 
    protected:
     std::unordered_map<std::string, uint32_t> index_lookup_;
-    common::PageArena pa;
+    common::PageArena pa_;
 };
 
 template <>

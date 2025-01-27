@@ -157,7 +157,7 @@ TEST_F(TsFileTableReaderTest, TableModelQuery) {
     ResultSet* tmp_result_set = nullptr;
     ret = reader.query(table_schema->get_table_name(),
                        table_schema->get_measurement_names(), 0, 1000000000000,
-                       tmp_result_set);
+                       tmp_result_set); 
     auto* table_result_set = (TableResultSet*)tmp_result_set;
     while(table_result_set->next()) {
         for (uint32_t i = 0; i < table_schema->get_measurement_names().size(); i++) {

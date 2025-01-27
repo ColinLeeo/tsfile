@@ -28,48 +28,40 @@
 
 namespace storage {
 
-class MetadataQuerier : IMetadataQuerier {
+class MetadataQuerier : public IMetadataQuerier {
    public:
     static constexpr int CACHED_ENTRY_NUMBER = 1000;
 
     enum class LocateStatus { BEFORE, IN, AFTER };
 
-    explicit MetadataQuerier(TsFileIOReader* tsfile_io_reader)
-        : io_reader_(tsfile_io_reader) {
-        file_metadata_ = io_reader_->get_tsfile_meta();
-        device_chunk_meta_cache_ = std::unique_ptr<common::Cache<
-            std::string, std::vector<std::shared_ptr<ChunkMeta>>, std::mutex>>(
-            new common::Cache<std::string,
-                              std::vector<std::shared_ptr<ChunkMeta>>,
-                              std::mutex>(CACHED_ENTRY_NUMBER,
-                                          CACHED_ENTRY_NUMBER / 10));
-    }
-
+    explicit MetadataQuerier(TsFileIOReader* tsfile_io_reader);
+    ~MetadataQuerier() override;
     std::vector<std::shared_ptr<ChunkMeta>> get_chunk_metadata_list(
-        const Path& path) const;
+        const Path& path) const override;
 
     std::vector<std::vector<std::shared_ptr<ChunkMeta>>>
-    get_chunk_metadata_lists(std::shared_ptr<IDeviceID> device_id,
-                             const std::unordered_set<std::string>& field_names,
-                             const MetaIndexNode* field_node = nullptr) const;
+    get_chunk_metadata_lists(
+        std::shared_ptr<IDeviceID> device_id,
+        const std::unordered_set<std::string>& field_names,
+        const MetaIndexNode* field_node = nullptr) const override;
 
     std::map<Path, std::vector<std::shared_ptr<ChunkMeta>>>
-    get_chunk_metadata_map(const std::vector<Path>& paths) const;
+    get_chunk_metadata_map(const std::vector<Path>& paths) const override;
 
-    int get_whole_file_metadata(TsFileMeta* tsfile_meta) const;
+    int get_whole_file_metadata(TsFileMeta* tsfile_meta) const override;
 
-    void load_chunk_metadatas(const std::vector<Path>& paths);
+    void load_chunk_metadatas(const std::vector<Path>& paths) override;
 
-    common::TSDataType get_data_type(const Path& path) const;
+    common::TSDataType get_data_type(const Path& path) const override;
 
     std::vector<TimeRange> convert_space_to_time_partition(
         const std::vector<Path>& paths, int64_t spacePartitionStartPos,
-        int64_t spacePartitionEndPos) const;
+        int64_t spacePartitionEndPos) const override;
 
-    std::unique_ptr<DeviceMetaIterator> device_iterator(MetaIndexNode* root,
-                                                        const Filter* id_filter);
+    std::unique_ptr<DeviceMetaIterator> device_iterator(
+        MetaIndexNode* root, const Filter* id_filter) override;
 
-    void clear();
+    void clear() override;
 
    private:
     TsFileIOReader* io_reader_;

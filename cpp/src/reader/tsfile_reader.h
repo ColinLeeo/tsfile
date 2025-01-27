@@ -24,6 +24,7 @@
 #include "common/tsfile_common.h"
 #include "expression.h"
 #include "file/read_file.h"
+#include "reader/table_query_executor.h"
 namespace storage {
 class TsFileExecutor;
 class ReadFile;
@@ -58,6 +59,7 @@ class TsFileReader {
                         std::shared_ptr<MetaIndexNode> index_node, common::PageArena &pa);
     storage::ReadFile *read_file_;
     storage::TsFileExecutor *tsfile_executor_;
+    storage::TableQueryExecutor *table_query_executor_;
 };
 
 }  // namespace storage

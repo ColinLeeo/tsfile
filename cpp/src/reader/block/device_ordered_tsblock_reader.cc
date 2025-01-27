@@ -35,7 +35,7 @@ bool DeviceOrderedTsBlockReader::has_next() {
             current_reader_ = nullptr;
         }
         current_reader_ = new SingleDeviceTsBlockReader(
-            task, block_size_, metadata_querier_, time_filter_,
+            task, block_size_, metadata_querier_, tsfile_io_reader_, time_filter_,
             field_filter_);
         if (current_reader_->has_next()) {
             return true;
@@ -44,7 +44,7 @@ bool DeviceOrderedTsBlockReader::has_next() {
     return false;
 }
 
-int DeviceOrderedTsBlockReader::next(common::TsBlock &ret_block) {
+int DeviceOrderedTsBlockReader::next(common::TsBlock *ret_block) {
     int ret = common::E_OK;
     if (RET_FAIL(has_next())) {
     } else if (RET_FAIL(current_reader_->next(ret_block))) {

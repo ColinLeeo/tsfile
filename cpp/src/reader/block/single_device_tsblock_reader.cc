@@ -23,12 +23,13 @@ namespace storage {
 
 SingleDeviceTsBlockReader::SingleDeviceTsBlockReader(
     DeviceQueryTask* device_query_task, uint32_t block_size,
-    IMetadataQuerier* metadata_querier,
+    IMetadataQuerier* metadata_querier, TsFileIOReader *tsfile_io_reader,
     Filter* time_filter, Filter* field_filter)
     : device_query_task_(device_query_task),
       field_filter_(field_filter),
       block_size_(block_size),
-      tuple_desc_() {
+      tuple_desc_(),
+      tsfile_io_reader_(tsfile_io_reader) {
     pa_.init(512, common::AllocModID::MOD_TSFILE_READER);
     tuple_desc_.reset();
     tuple_desc_.push_back(common::g_time_column_desc);
@@ -145,12 +146,12 @@ void SingleDeviceTsBlockReader::advance_column(
     }
 }
 
-int SingleDeviceTsBlockReader::next(common::TsBlock& ret_block) {
+int SingleDeviceTsBlockReader::next(common::TsBlock* ret_block) {
     if (!has_next()) {
         return common::E_NO_MORE_DATA;
     }
     last_block_returned_ = true;
-    ret_block = *current_block_;
+    ret_block = current_block_;
     return common::E_OK;
 }
 
@@ -175,7 +176,8 @@ void SingleDeviceTsBlockReader::close() {
 }
 
 void SingleDeviceTsBlockReader::construct_column_context(
-    const std::vector<std::shared_ptr<ChunkMeta>>& chunk_meta_list, Filter* time_filter) {
+    const std::vector<std::shared_ptr<ChunkMeta>>& chunk_meta_list,
+    Filter* time_filter) {
     if (chunk_meta_list.empty()) {
         return;
     }

@@ -16,8 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-#include "reader/table_result.h"
+
+#ifndef READER_TABLE_RESULT_SET_H
+#define READER_TABLE_RESULT_SET_H
+
+#include <map>
+#include <vector>
+
+#include "expression.h"
+#include "file/tsfile_io_reader.h"
+#include "result_set.h"
 
 namespace storage {
 
-}
+class TableResultSet : public ResultSet {
+   public:
+
+   private:
+    int get_next_tsblock(uint32_t index, bool alloc_mem);
+
+   private:
+};
+
+}  // namespace storage
+
+#endif  // READER_TABLE_RESULT_SET_H

@@ -223,6 +223,17 @@ class RowIterator {
 
     FORCE_INLINE bool end() { return row_id_ >= tsblock_->row_count_; }
 
+    FORCE_INLINE bool has_next() {
+        return row_id_ < tsblock_->row_count_;
+    }
+
+    FORCE_INLINE uint32_t get_column_count() { return column_count_; }
+
+    FORCE_INLINE TSDataType get_data_type(uint32_t slot_index) {
+        ASSERT(slot_index < column_count_);
+        return tsblock_->vectors_[slot_index]->get_vector_type();
+    }
+
     FORCE_INLINE void next() {
         ASSERT(row_id_ < tsblock_->row_count_);
         ++row_id_;
@@ -237,7 +248,7 @@ class RowIterator {
         Vector *vec = tsblock_->vectors_[slot_index];
         return vec->read(len, null, row_id_);
     }
-
+    
     std::string debug_string();  // for debug
 
    private:

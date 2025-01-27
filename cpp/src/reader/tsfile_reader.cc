@@ -26,7 +26,9 @@ using namespace common;
 using namespace storage;
 
 namespace storage {
-TsFileReader::TsFileReader() : read_file_(nullptr), tsfile_executor_(nullptr) {}
+TsFileReader::TsFileReader()
+    : read_file_(nullptr), tsfile_executor_(nullptr), table_query_executor_(nullptr) {
+}
 
 TsFileReader::~TsFileReader() { close(); }
 
@@ -34,6 +36,7 @@ int TsFileReader::open(const std::string& file_path) {
     int ret = E_OK;
     read_file_ = new storage::ReadFile;
     tsfile_executor_ = new storage::TsFileExecutor();
+    table_query_executor_ = new storage::TableQueryExecutor(read_file_);
     if (RET_FAIL(read_file_->open(file_path))) {
         std::cout << "filed to open file " << ret << std::endl;
     } else if (RET_FAIL(tsfile_executor_->init(read_file_))) {
@@ -47,6 +50,10 @@ int TsFileReader::close() {
     if (tsfile_executor_ != nullptr) {
         delete tsfile_executor_;
         tsfile_executor_ = nullptr;
+    }
+    if (table_query_executor_ != nullptr) {
+        delete table_query_executor_;
+        table_query_executor_ = nullptr;
     }
     if (read_file_ != nullptr) {
         read_file_->close();
@@ -94,6 +101,8 @@ int TsFileReader::query(const std::string &table_name,
 
     std::vector<TSDataType> data_types = table_schema->get_data_types();
 
+    Filter* time_filter = new TimeBetween(start_time, end_time, false);
+    table_query_executor_->query(table_name, columns_names, time_filter, nullptr, nullptr, result_set);
     
     return ret;
 }

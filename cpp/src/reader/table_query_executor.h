@@ -26,7 +26,9 @@
 #include "reader/block/tsblock_reader.h"
 #include "reader/column_mapping.h"
 #include "reader/task/device_task_iterator.h"
+#include "result_set.h"
 #include "utils/errno_define.h"
+#include "table_result_set.h"
 namespace storage {
 
 class DeviceTaskIterator;
@@ -35,72 +37,30 @@ class TableQueryExecutor {
    public:
     enum class TableQueryOrdering { TIME, DEVICE };
 
-    TableQueryExecutor(std::shared_ptr<IMetadataQuerier> meta_data_querier,
-                       std::shared_ptr<IChunkReader> chunk_reader_,
+    TableQueryExecutor(IMetadataQuerier *meta_data_querier,
+                       TsFileIOReader *tsfile_io_reader,
                        TableQueryOrdering table_query_ordering,
                        int block_size = 1024)
-        : meta_data_querier_(std::move(meta_data_querier)),
-          chunk_reader_(std::move(chunk_reader_)),
+        : meta_data_querier_(meta_data_querier),
+          tsfile_io_reader_(tsfile_io_reader),
           table_query_ordering_(table_query_ordering),
           block_size_(block_size) {}
-
-    int query(const std::string &table_name,
-              const std::vector<std::string> &columns,
-              const Filter *time_filter, const Filter *id_filter,
-              const Filter *field_filter,
-              std::unique_ptr<TsBlockReader> &ret_reader) {
-        int ret = common::E_OK;
-        TsFileMeta *file_metadata = nullptr;
-        if (RET_FAIL(
-                meta_data_querier_->get_whole_file_metadata(file_metadata))) {
-            return ret;
-        }
-        common::PageArena pa;  // TODO: Optimize the memory allocation, use pa
-                               // only to alloc String is not good
-        pa.init(512, common::MOD_TSFILE_READER);
-        common::String table_name_str;
-        table_name_str.dup_from(table_name, pa);
-        MetaIndexNode *table_root = nullptr;
-        std::shared_ptr<TableSchema> table_schema;
-        if (RET_FAIL(file_metadata->get_table_metaindex_node(table_name_str,
-                                                             table_root))) {
-        } else if (RET_FAIL(file_metadata->get_table_schema(table_name,
-                                                            table_schema))) {
-        }
-
-        if (IS_FAIL(ret)) {
-            ret_reader = std::unique_ptr<EmptyTsBlockReader>();
-            return ret;
-        }
-
-        ColumnMapping column_mapping;
-        for (size_t i = 0; i < columns.size(); ++i) {
-            column_mapping.add(columns[i], static_cast<int>(i), *table_schema);
-        }
-        // column_mapping.add(*measurement_filter);
-
-        auto device_task_iterator =
-            std::unique_ptr<DeviceTaskIterator>(new DeviceTaskIterator(
-                columns, table_root, column_mapping, meta_data_querier_,
-                id_filter, *table_schema));
-
-        switch (table_query_ordering_) {
-            case TableQueryOrdering::DEVICE:
-                ret_reader = std::unique_ptr<DeviceOrderedTsBlockReader>(
-                    new DeviceOrderedTsBlockReader(
-                        std::move(device_task_iterator), meta_data_querier_,
-                        chunk_reader_, block_size_, time_filter, field_filter));
-            case TableQueryOrdering::TIME:
-            default:
-                ret = common::E_UNSUPPORTED_ORDER;
-        }
-
-        return ret;
+    TableQueryExecutor(ReadFile *read_file) {
+        tsfile_io_reader_ = new TsFileIOReader();
+        tsfile_io_reader_->init(read_file);
+        meta_data_querier_ = new MetadataQuerier(tsfile_io_reader_);
+        table_query_ordering_ = TableQueryOrdering::DEVICE;
+        block_size_ = 1024;
     }
+    int query(const std::string &table_name,
+              const std::vector<std::string> &columns, Filter *time_filter,
+              Filter *id_filter, Filter *field_filter,
+              ResultSet *&ret_qds);
+    void destroy_query_data_set(ResultSet *qds);
 
    private:
-    std::shared_ptr<IMetadataQuerier> meta_data_querier_;
-    std::shared_ptr<IChunkReader> chunk_reader_;
+    IMetadataQuerier *meta_data_querier_;
+    TsFileIOReader *tsfile_io_reader_;
     TableQueryOrdering table_query_ordering_;
     int32_t block_size_;
 };
