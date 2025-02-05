@@ -57,7 +57,7 @@ class TableQueryExecutor {
               Filter *id_filter, Filter *field_filter,
               ResultSet *&ret_qds);
     void destroy_query_data_set(ResultSet *qds);
-
+    
    private:
     IMetadataQuerier *meta_data_querier_;
     TsFileIOReader *tsfile_io_reader_;

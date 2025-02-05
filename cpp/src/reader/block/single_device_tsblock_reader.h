@@ -45,9 +45,8 @@ class SingleDeviceTsBlockReader : public TsBlockReader {
     void close() override;
 
    private:
-    void construct_column_context(
-        const std::vector<std::shared_ptr<ChunkMeta>>& chunk_meta_list,
-        Filter* time_filter);
+    void construct_column_context(const ITimeseriesIndex* time_series_index,
+                                  Filter* time_filter);
     int fill_measurements(
         std::vector<MeasurementColumnContext*>& column_contexts);
     void fill_ids();
@@ -56,7 +55,7 @@ class SingleDeviceTsBlockReader : public TsBlockReader {
     DeviceQueryTask* device_query_task_;
     Filter* field_filter_;
     uint32_t block_size_;
-    common::TsBlock* current_block_;
+    common::TsBlock* current_block_ = nullptr;
     std::vector<common::ColAppender*> col_appenders_;
     common::RowAppender* row_appender_;
     common::TupleDesc tuple_desc_;
@@ -82,7 +81,7 @@ class MeasurementColumnContext {
                                  column_context_map) = 0;
 
     virtual int init(DeviceQueryTask* device_query_task,
-                     const std::shared_ptr<ChunkMeta>& chunk_meta,
+                     const ITimeseriesIndex* time_series_index,
                      Filter* time_filter, common::PageArena& pa) = 0;
     virtual int get_next_tsblock(bool alloc_mem) = 0;
 
@@ -95,7 +94,7 @@ class MeasurementColumnContext {
    protected:
     TsFileIOReader* tsfile_io_reader_;
     TsFileSeriesScanIterator* ssi_;
-    common::TsBlock* tsblock_;
+    common::TsBlock* tsblock_ = nullptr;
     common::ColIterator* time_iter_;
     common::ColIterator* value_iter_;
 };
@@ -109,7 +108,7 @@ class SingleMeasurementColumnContext final : public MeasurementColumnContext {
     void remove_from(std::map<std::string, MeasurementColumnContext*>&
                          column_context_map) override;
     int init(DeviceQueryTask* device_query_task,
-             const std::shared_ptr<ChunkMeta>& chunk_meta, Filter* time_filter,
+             const ITimeseriesIndex* time_series_index, Filter* time_filter,
              common::PageArena& pa) override;
     int get_next_tsblock(bool alloc_mem) override;
     int get_current_time(int64_t& time) override;
@@ -130,7 +129,7 @@ class VectorMeasurementColumnContext final : public MeasurementColumnContext {
     void remove_from(std::map<std::string, MeasurementColumnContext*>&
                          column_context_map) override;
     int init(DeviceQueryTask* device_query_task,
-             const std::shared_ptr<ChunkMeta>& chunk_meta, Filter* time_filter,
+             const ITimeseriesIndex* time_series_index, Filter* time_filter,
              common::PageArena& pa) override;
     int get_next_tsblock(bool alloc_mem) override;
     int get_current_time(int64_t& time) override;

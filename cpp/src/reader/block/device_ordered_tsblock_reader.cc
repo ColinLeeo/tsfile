@@ -30,6 +30,7 @@ bool DeviceOrderedTsBlockReader::has_next() {
         if (IS_FAIL(device_task_iterator_->next(task))) {
             return false;
         }
+        assert(task != nullptr);
         if (current_reader_) {
             delete current_reader_;
             current_reader_ = nullptr;

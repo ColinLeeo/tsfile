@@ -98,7 +98,7 @@ class TsBlock {
     FORCE_INLINE static TsBlock *create_tsblock(TupleDesc *tupledesc,
                                                 uint32_t max_row_count = 0) {
         TsBlock *tsblock = new TsBlock(tupledesc, max_row_count);
-        if (E_OK != tsblock->init()) {
+        if (IS_FAIL(tsblock->init())) {
             delete tsblock;
             tsblock = nullptr;
         }
@@ -155,6 +155,7 @@ class RowAppender {
         Vector *vec = tsblock_->vectors_[slot_index];
         vec->set_null(tsblock_->row_count_ - 1);
     }
+
    private:
     TsBlock *tsblock_;
 };
@@ -187,8 +188,9 @@ class ColAppender {
 
     FORCE_INLINE uint32_t get_col_row_count() { return column_row_count_; }
     FORCE_INLINE uint32_t get_column_index() { return column_index_; }
-    FORCE_INLINE bool fill(const char *value, uint32_t len, uint32_t end_index) {
-        while(column_row_count_ < end_index) {
+    FORCE_INLINE bool fill(const char *value, uint32_t len,
+                           uint32_t end_index) {
+        while (column_row_count_ < end_index) {
             if (!add_row()) {
                 return false;
             }
@@ -196,6 +198,7 @@ class ColAppender {
         }
         return true;
     }
+
    private:
     uint32_t column_index_;
     uint32_t column_row_count_;
@@ -223,9 +226,7 @@ class RowIterator {
 
     FORCE_INLINE bool end() { return row_id_ >= tsblock_->row_count_; }
 
-    FORCE_INLINE bool has_next() {
-        return row_id_ < tsblock_->row_count_;
-    }
+    FORCE_INLINE bool has_next() { return row_id_ < tsblock_->row_count_; }
 
     FORCE_INLINE uint32_t get_column_count() { return column_count_; }
 
@@ -248,7 +249,7 @@ class RowIterator {
         Vector *vec = tsblock_->vectors_[slot_index];
         return vec->read(len, null, row_id_);
     }
-    
+
     std::string debug_string();  // for debug
 
    private:

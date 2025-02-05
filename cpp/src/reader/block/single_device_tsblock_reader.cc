@@ -23,7 +23,7 @@ namespace storage {
 
 SingleDeviceTsBlockReader::SingleDeviceTsBlockReader(
     DeviceQueryTask* device_query_task, uint32_t block_size,
-    IMetadataQuerier* metadata_querier, TsFileIOReader *tsfile_io_reader,
+    IMetadataQuerier* metadata_querier, TsFileIOReader* tsfile_io_reader,
     Filter* time_filter, Filter* field_filter)
     : device_query_task_(device_query_task),
       field_filter_(field_filter),
@@ -32,6 +32,7 @@ SingleDeviceTsBlockReader::SingleDeviceTsBlockReader(
       tsfile_io_reader_(tsfile_io_reader) {
     pa_.init(512, common::AllocModID::MOD_TSFILE_READER);
     tuple_desc_.reset();
+    common::init_common();
     tuple_desc_.push_back(common::g_time_column_desc);
     auto& table_schema = device_query_task->get_table_schema();
     for (const auto& column_name : device_query_task_->get_column_names()) {
@@ -39,18 +40,20 @@ SingleDeviceTsBlockReader::SingleDeviceTsBlockReader(
             table_schema.get_column_desc(column_name));
         tuple_desc_.push_back(column_desc);
     }
+    current_block_ = common::TsBlock::create_tsblock(&tuple_desc_, block_size);
     col_appenders_.resize(tuple_desc_.get_column_count());
-
-    current_block_ =
-        (common::TsBlock::create_tsblock(&tuple_desc_, block_size));
+    for (int i = 0; i < tuple_desc_.get_column_count(); i++) {
+        col_appenders_[i] = new common::ColAppender(i, current_block_);
+    }
     row_appender_ = new common::RowAppender(current_block_);
-    const std::vector<std::vector<std::shared_ptr<ChunkMeta>>>
-        chunk_meta_lists = metadata_querier->get_chunk_metadata_lists(
-            device_query_task->get_device_id(),
-            device_query_task->get_column_mapping().get_measurement_columns(),
-            &device_query_task->get_index_root());
-    for (const auto& chunk_meta_list : chunk_meta_lists) {
-        construct_column_context(chunk_meta_list, time_filter);
+    std::vector<ITimeseriesIndex*> time_series_indexs;
+    tsfile_io_reader_->get_device_timeseries_meta_without_chunk_meta(
+        device_query_task->get_device_id(), time_series_indexs, pa_);
+    for (const auto& time_series_index : time_series_indexs) {
+        construct_column_context(time_series_index, time_filter);
+        std::cout << "construct_column_context: "
+                  << time_series_index->get_measurement_name().to_std_string()
+                  << std::endl;
     }
 
     for (const auto& id_column :
@@ -114,7 +117,7 @@ int SingleDeviceTsBlockReader::fill_measurements(
     if (field_filter_ ==
         nullptr /*TODO: || field_filter_->satisfy(column_contexts)*/) {
         if (!col_appenders_[0]->add_row()) {
-            assert(false);  // Impossible
+            assert(false);
         }
         col_appenders_[0]->append((char*)&next_time_, sizeof(next_time_));
         for (auto& column_contest : column_contexts) {
@@ -176,33 +179,27 @@ void SingleDeviceTsBlockReader::close() {
 }
 
 void SingleDeviceTsBlockReader::construct_column_context(
-    const std::vector<std::shared_ptr<ChunkMeta>>& chunk_meta_list,
-    Filter* time_filter) {
-    if (chunk_meta_list.empty()) {
-        return;
-    }
-    auto chunk_meta = chunk_meta_list.front();
-    // TODO: judge whether the chunk_meta is aligned and jump empty chunk
+    const ITimeseriesIndex* time_series_index, Filter* time_filter) {
+    // TODO: judge whether the time_series_index is aligned and jump empty chunk
     SingleMeasurementColumnContext* column_context =
         new SingleMeasurementColumnContext(tsfile_io_reader_);
-    column_context->init(device_query_task_, chunk_meta, time_filter, pa_);
+    column_context->init(device_query_task_, time_series_index, time_filter,
+                         pa_);
     field_column_contexts_.insert(std::make_pair(
-        chunk_meta->measurement_name_.to_std_string(), column_context));
+        time_series_index->get_measurement_name().to_std_string(),
+        column_context));
 }
 
 int SingleMeasurementColumnContext::init(
     DeviceQueryTask* device_query_task,
-    const std::shared_ptr<ChunkMeta>& chunk_meta, Filter* time_filter,
+    const ITimeseriesIndex* time_series_index, Filter* time_filter,
     common::PageArena& pa) {
     int ret = common::E_OK;
     if (RET_FAIL(tsfile_io_reader_->alloc_ssi(
             device_query_task->get_device_id()->get_device_name(),
-            chunk_meta->measurement_name_.to_std_string(), ssi_, pa,
+            time_series_index->get_measurement_name().to_std_string(), ssi_, pa,
             time_filter))) {
     } else if (RET_FAIL(get_next_tsblock(true))) {
-    } else {
-        time_iter_ = new common::ColIterator(0, tsblock_);
-        value_iter_ = new common::ColIterator(1, tsblock_);
     }
     return ret;
 }
@@ -210,10 +207,14 @@ int SingleMeasurementColumnContext::init(
 int SingleMeasurementColumnContext::get_next_tsblock(bool alloc_mem) {
     int ret = common::E_OK;
     if (tsblock_ != nullptr) {
-        delete time_iter_;
-        time_iter_ = nullptr;
-        delete value_iter_;
-        value_iter_ = nullptr;
+        if (time_iter_) {
+            delete time_iter_;
+            time_iter_ = nullptr;
+        }
+        if (value_iter_) {
+            delete value_iter_;
+            value_iter_ = nullptr;
+        }
         tsblock_->reset();
     }
     if (RET_FAIL(ssi_->get_next(tsblock_, alloc_mem))) {

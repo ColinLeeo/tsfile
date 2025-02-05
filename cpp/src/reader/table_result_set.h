@@ -31,10 +31,18 @@ namespace storage {
 
 class TableResultSet : public ResultSet {
    public:
-
-   private:
-    int get_next_tsblock(uint32_t index, bool alloc_mem);
-
+    explicit TableResultSet(std::unique_ptr<TsBlockReader> tsblock_reader,
+                         std::vector<std::string> column_names,
+                         std::vector<common::TSDataType> data_types) : tsblock_reader_(std::move(tsblock_reader)), column_names_(column_names), data_types_(data_types) {
+        init();
+    }
+    ~TableResultSet();
+    bool next() override;
+    bool is_null(const std::string& column_name) override;
+    bool is_null(uint32_t column_index) override;
+    RowRecord* get_row_record() override;
+    ResultSetMetadata* get_metadata() override;
+    void close() override;
    private:
 };
 

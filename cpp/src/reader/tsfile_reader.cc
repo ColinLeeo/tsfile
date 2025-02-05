@@ -36,12 +36,12 @@ int TsFileReader::open(const std::string& file_path) {
     int ret = E_OK;
     read_file_ = new storage::ReadFile;
     tsfile_executor_ = new storage::TsFileExecutor();
-    table_query_executor_ = new storage::TableQueryExecutor(read_file_);
     if (RET_FAIL(read_file_->open(file_path))) {
         std::cout << "filed to open file " << ret << std::endl;
     } else if (RET_FAIL(tsfile_executor_->init(read_file_))) {
         std::cout << "filed to init " << ret << std::endl;
     }
+    table_query_executor_ = new storage::TableQueryExecutor(read_file_);
     return ret;
 }
 
@@ -103,7 +103,6 @@ int TsFileReader::query(const std::string &table_name,
 
     Filter* time_filter = new TimeBetween(start_time, end_time, false);
     table_query_executor_->query(table_name, columns_names, time_filter, nullptr, nullptr, result_set);
-    
     return ret;
 }
 

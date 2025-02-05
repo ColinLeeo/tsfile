@@ -26,12 +26,8 @@ int TableQueryExecutor::query(const std::string &table_name,
         ResultSet *&ret_qds) {
     int ret = common::E_OK;
     TsFileMeta *file_metadata = nullptr;
-    if (RET_FAIL(
-            meta_data_querier_->get_whole_file_metadata(file_metadata))) {
-        return ret;
-    }
-    common::PageArena pa;  // TODO: Optimize the memory allocation, use pa
-                        // only to alloc String is not good
+    file_metadata = tsfile_io_reader_->get_tsfile_meta();
+    common::PageArena pa;
     pa.init(512, common::MOD_TSFILE_READER);
     common::String table_name_str;
     table_name_str.dup_from(table_name, pa);
@@ -47,7 +43,6 @@ int TableQueryExecutor::query(const std::string &table_name,
         ret_qds = nullptr;
         return ret;
     }
-
     ColumnMapping column_mapping;
     for (size_t i = 0; i < columns.size(); ++i) {
         column_mapping.add(columns[i], static_cast<int>(i), *table_schema);
@@ -71,7 +66,7 @@ int TableQueryExecutor::query(const std::string &table_name,
         default:
             ret = common::E_UNSUPPORTED_ORDER;
     }
-
+    assert(tsblock_reader != nullptr);
     ret_qds = new TableResultSet(std::move(tsblock_reader), columns, table_schema->get_data_types());
     return ret;
 }

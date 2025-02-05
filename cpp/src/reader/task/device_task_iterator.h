@@ -47,7 +47,7 @@ class DeviceTaskIterator {
 
     bool has_next() const;
 
-    int next(DeviceQueryTask *task);
+    int next(DeviceQueryTask *&task);
 
    private:
     std::vector<std::string> column_names_;
