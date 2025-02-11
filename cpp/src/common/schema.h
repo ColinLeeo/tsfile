@@ -193,36 +193,37 @@ class TableSchema {
         int ret = common::E_OK;
         if (RET_FAIL(common::SerializationUtil::write_var_uint(
                 column_schemas_.size(), out))) {
-        } else {
-            for (size_t i = 0; IS_SUCC(ret) && i < column_schemas_.size();
-                 i++) {
-                auto column_schema = column_schemas_[i];
-                auto column_category = column_categories_[i];
-                if (RET_FAIL(column_schema->serialize_to(out))) {
-                } else if (RET_FAIL(common::SerializationUtil::write_i8(
-                               static_cast<int8_t>(column_category), out))) {
+            } else {
+                for (size_t i = 0; IS_SUCC(ret) && i < column_schemas_.size();
+                     i++) {
+                    auto column_schema = column_schemas_[i];
+                    auto column_category = column_categories_[i];
+                    if (RET_FAIL(column_schema->serialize_to(out))) {
+                    } else if (RET_FAIL(common::SerializationUtil::write_i32(
+                        static_cast<int32_t>(column_category), out))) {
+                    }
                 }
             }
+            return ret;
         }
-        return ret;
-    }
 
-    int deserialize(common::ByteStream &in) {
-        int ret = common::E_OK;
-        uint32_t num_columns;
-        if (RET_FAIL(
-                common::SerializationUtil::read_var_uint(num_columns, in))) {
-        } else {
-            for (size_t i = 0; IS_SUCC(ret) && i < num_columns; i++) {
-                auto column_schema = std::make_shared<MeasurementSchema>();
-                int8_t column_category = 0;
-                if (RET_FAIL(column_schema->deserialize_from(in))) {
-                } else if (RET_FAIL(common::SerializationUtil::read_i8(
-                               column_category, in))) {
+        int deserialize(common::ByteStream &in) {
+            int ret = common::E_OK;
+            uint32_t num_columns;
+            if (RET_FAIL(common::SerializationUtil::read_var_uint(
+                num_columns, in))) {
+            } else {
+                for (size_t i = 0; IS_SUCC(ret) && i < num_columns;
+                     i++) {
+                    auto column_schema = std::make_shared<MeasurementSchema>();
+                    int32_t column_category = 0;
+                    if (RET_FAIL(column_schema->deserialize_from(in))) {
+                    } else if (RET_FAIL(common::SerializationUtil::read_i32(
+                        column_category, in))) {
+                    }
+                    column_schemas_.emplace_back(column_schema);
+                    column_categories_.emplace_back(static_cast<ColumnCategory>(column_category));
                 }
-                column_schemas_.emplace_back(column_schema);
-                column_categories_.emplace_back(
-                    static_cast<ColumnCategory>(column_category));
             }
         }
         return ret;
