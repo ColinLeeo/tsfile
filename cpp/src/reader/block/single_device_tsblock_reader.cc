@@ -59,7 +59,8 @@ SingleDeviceTsBlockReader::SingleDeviceTsBlockReader(
          device_query_task->get_column_mapping()->get_id_columns()) {
         const auto& column_pos_in_result =
             device_query_task->get_column_mapping()->get_column_pos(id_column);
-        int column_pos_in_id = table_schema->find_id_column_order(id_column) + 1;
+        int column_pos_in_id =
+            table_schema->find_id_column_order(id_column) + 1;
         id_column_contexts_.insert(std::make_pair(
             id_column,
             IdColumnContext(column_pos_in_result, column_pos_in_id)));
@@ -125,7 +126,6 @@ int SingleDeviceTsBlockReader::fill_measurements(
         for (uint32_t i = 0; i < column_contexts.size(); i++) {
             column_contexts[i]->fill_into(col_appenders_);
             advance_column(column_contexts[i]);
-
         }
         // for (auto& column_contest : column_contexts) {
         //     column_contest->fill_into(col_appenders_);
@@ -145,7 +145,11 @@ void SingleDeviceTsBlockReader::advance_column(
 
 void SingleMeasurementColumnContext::remove_from(
     std::map<std::string, MeasurementColumnContext*>& column_context_map) {
-    column_context_map.erase(column_name_);
+    auto iter = column_context_map.find(column_name_);
+    if (iter != column_context_map.end()) {
+        delete iter->second;
+        column_context_map.erase(iter);
+    }
 }
 
 void SingleDeviceTsBlockReader::fill_ids() {
