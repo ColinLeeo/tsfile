@@ -52,6 +52,16 @@ class TableQueryExecutor {
         table_query_ordering_ = TableQueryOrdering::DEVICE;
         block_size_ = 1024;
     }
+    ~TableQueryExecutor() {
+        if (meta_data_querier_ != nullptr) {
+            delete meta_data_querier_;
+            meta_data_querier_ = nullptr;
+        }
+        if (tsfile_io_reader_ != nullptr) {
+            delete tsfile_io_reader_;
+            tsfile_io_reader_ = nullptr;
+        }
+    }
     int query(const std::string &table_name,
               const std::vector<std::string> &columns, Filter *time_filter,
               Filter *id_filter, Filter *field_filter,

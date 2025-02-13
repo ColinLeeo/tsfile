@@ -34,10 +34,10 @@ SingleDeviceTsBlockReader::SingleDeviceTsBlockReader(
     tuple_desc_.reset();
     common::init_common();
     tuple_desc_.push_back(common::g_time_column_desc);
-    auto& table_schema = device_query_task->get_table_schema();
+    auto table_schema = device_query_task->get_table_schema();
     for (const auto& column_name : device_query_task_->get_column_names()) {
         common::ColumnDesc column_desc(
-            table_schema.get_column_desc(column_name));
+            table_schema->get_column_desc(column_name));
         tuple_desc_.push_back(column_desc);
     }
     current_block_ = common::TsBlock::create_tsblock(&tuple_desc_, block_size);
@@ -46,21 +46,20 @@ SingleDeviceTsBlockReader::SingleDeviceTsBlockReader(
         col_appenders_[i] = new common::ColAppender(i, current_block_);
     }
     row_appender_ = new common::RowAppender(current_block_);
-    std::vector<ITimeseriesIndex*> time_series_indexs;
-    tsfile_io_reader_->get_device_timeseries_meta_without_chunk_meta(
-        device_query_task->get_device_id(), time_series_indexs, pa_);
+    std::vector<ITimeseriesIndex*> time_series_indexs(
+        device_query_task_->get_column_names().size());
+    tsfile_io_reader_->get_timeseries_indexes(
+        device_query_task->get_device_id(),
+        device_query_task->get_column_names(), time_series_indexs, pa_);
     for (const auto& time_series_index : time_series_indexs) {
         construct_column_context(time_series_index, time_filter);
-        std::cout << "construct_column_context: "
-                  << time_series_index->get_measurement_name().to_std_string()
-                  << std::endl;
     }
 
     for (const auto& id_column :
-         device_query_task->get_column_mapping().get_id_columns()) {
+         device_query_task->get_column_mapping()->get_id_columns()) {
         const auto& column_pos_in_result =
-            device_query_task->get_column_mapping().get_column_pos(id_column);
-        int column_pos_in_id = table_schema.find_id_column_order(id_column) + 1;
+            device_query_task->get_column_mapping()->get_column_pos(id_column);
+        int column_pos_in_id = table_schema->find_id_column_order(id_column) + 1;
         id_column_contexts_.insert(std::make_pair(
             id_column,
             IdColumnContext(column_pos_in_result, column_pos_in_id)));
@@ -75,8 +74,8 @@ bool SingleDeviceTsBlockReader::has_next() {
     if (field_column_contexts_.empty()) {
         return false;
     }
-
     current_block_->reset();
+
     next_time_ = -1;
 
     std::vector<MeasurementColumnContext*> min_time_columns;
@@ -100,10 +99,14 @@ bool SingleDeviceTsBlockReader::has_next() {
         } else {
             next_time_ = -1;
         }
+
+        if (field_column_contexts_.empty()) {
+            break;
+        }
     }
     if (current_block_->get_row_count() > 0) {
         fill_ids();
-        // current_block_.fill_trailling_nulls(); TODO: Implement this
+        current_block_->fill_trailling_nulls();
         last_block_returned_ = false;
         return true;
     }
@@ -113,20 +116,36 @@ bool SingleDeviceTsBlockReader::has_next() {
 int SingleDeviceTsBlockReader::fill_measurements(
     std::vector<MeasurementColumnContext*>& column_contexts) {
     int ret = common::E_OK;
-
     if (field_filter_ ==
         nullptr /*TODO: || field_filter_->satisfy(column_contexts)*/) {
         if (!col_appenders_[0]->add_row()) {
             assert(false);
         }
         col_appenders_[0]->append((char*)&next_time_, sizeof(next_time_));
-        for (auto& column_contest : column_contexts) {
-            column_contest->fill_into(col_appenders_);
-            advance_column(column_contest);
+        for (uint32_t i = 0; i < column_contexts.size(); i++) {
+            column_contexts[i]->fill_into(col_appenders_);
+            advance_column(column_contexts[i]);
+
         }
+        // for (auto& column_contest : column_contexts) {
+        //     column_contest->fill_into(col_appenders_);
+        //     advance_column(column_contest);
+        // }
         row_appender_->add_row();
     }
     return ret;
+}
+
+void SingleDeviceTsBlockReader::advance_column(
+    MeasurementColumnContext* column_context) {
+    if (column_context->move_iter() == common::E_NO_MORE_DATA) {
+        column_context->remove_from(field_column_contexts_);
+    }
+}
+
+void SingleMeasurementColumnContext::remove_from(
+    std::map<std::string, MeasurementColumnContext*>& column_context_map) {
+    column_context_map.erase(column_name_);
 }
 
 void SingleDeviceTsBlockReader::fill_ids() {
@@ -139,13 +158,6 @@ void SingleDeviceTsBlockReader::fill_ids() {
             col_appenders_[pos]->fill((char*)&device_id, sizeof(device_id),
                                       current_block_->get_row_count());
         }
-    }
-}
-
-void SingleDeviceTsBlockReader::advance_column(
-    MeasurementColumnContext* column_context) {
-    if (column_context->move_iter() == common::E_NO_MORE_DATA) {
-        column_context->remove_from(field_column_contexts_);
     }
 }
 
@@ -195,6 +207,7 @@ int SingleMeasurementColumnContext::init(
     const ITimeseriesIndex* time_series_index, Filter* time_filter,
     common::PageArena& pa) {
     int ret = common::E_OK;
+    column_name_ = time_series_index->get_measurement_name().to_std_string();
     if (RET_FAIL(tsfile_io_reader_->alloc_ssi(
             device_query_task->get_device_id()->get_device_name(),
             time_series_index->get_measurement_name().to_std_string(), ssi_, pa,
@@ -215,7 +228,8 @@ int SingleMeasurementColumnContext::get_next_tsblock(bool alloc_mem) {
             delete value_iter_;
             value_iter_ = nullptr;
         }
-        tsblock_->reset();
+        delete tsblock_;
+        tsblock_ = nullptr;
     }
     if (RET_FAIL(ssi_->get_next(tsblock_, alloc_mem))) {
         if (time_iter_) {
@@ -228,6 +242,7 @@ int SingleMeasurementColumnContext::get_next_tsblock(bool alloc_mem) {
         }
         if (tsblock_) {
             ssi_->destroy();
+            delete tsblock_;
             tsblock_ = nullptr;
         }
     } else {
@@ -280,10 +295,5 @@ void SingleMeasurementColumnContext::fill_into(
             col_appenders[pos]->append(val, len);
         }
     }
-}
-
-void SingleMeasurementColumnContext::remove_from(
-    std::map<std::string, MeasurementColumnContext*>& column_context_map) {
-    column_context_map.erase(column_name_);
 }
 }  // namespace storage

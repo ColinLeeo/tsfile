@@ -25,13 +25,13 @@ namespace storage {
 
 MetadataQuerier::MetadataQuerier(TsFileIOReader* tsfile_io_reader)
     : io_reader_(tsfile_io_reader) {
-    file_metadata_ = io_reader_->get_tsfile_meta();
-    device_chunk_meta_cache_ = std::unique_ptr<
-        common::Cache<std::string /*ToDO: Device ID*/,
-                      std::vector<std::shared_ptr<ChunkMeta>>, std::mutex>>(
-        new common::Cache<std::string, std::vector<std::shared_ptr<ChunkMeta>>,
-                          std::mutex>(CACHED_ENTRY_NUMBER,
-                                      CACHED_ENTRY_NUMBER / 10));
+    // file_metadata_ = io_reader_->get_tsfile_meta();
+    // device_chunk_meta_cache_ = std::unique_ptr<
+    //     common::Cache<std::string /*ToDO: Device ID*/,
+    //                   std::vector<std::shared_ptr<ChunkMeta>>, std::mutex>>(
+    //     new common::Cache<std::string, std::vector<std::shared_ptr<ChunkMeta>>,
+    //                       std::mutex>(CACHED_ENTRY_NUMBER,
+    //                                   CACHED_ENTRY_NUMBER / 10));
 }
 
 MetadataQuerier::~MetadataQuerier() {}

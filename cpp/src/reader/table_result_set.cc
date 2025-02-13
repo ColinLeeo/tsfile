@@ -40,7 +40,7 @@ bool TableResultSet::next() {
             tsblock_ = nullptr;
         }
         if (tsblock_reader_->next(tsblock_) != common::E_OK) {
-            continue;
+            break;
         }
         if (row_iterator_) {
             delete row_iterator_;

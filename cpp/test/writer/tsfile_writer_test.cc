@@ -180,7 +180,6 @@ TEST_F(TsFileWriterTest, WriteDiffDataType) {
     int ret = reader.open(file_name_);
     ASSERT_EQ(ret, common::E_OK);
     storage::ResultSet *tmp_qds = nullptr;
-
     ret = reader.query(select_list, 1622505600000,
                        1622505600000 + row_num * 100, tmp_qds);
     auto *qds = (QDSWithoutTimeGenerator *)tmp_qds;

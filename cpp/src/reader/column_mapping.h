@@ -33,7 +33,7 @@ class ColumnMapping {
 
         ColumnCategory columnCategory =
             schema.get_column_categories()[columnIndex];
-        columnPosMap[column_name].push_back(index);
+        column_pos_map[column_name].push_back(index);
 
         if (columnCategory == ColumnCategory::TAG) {
             tag_columns_.insert(column_name);
@@ -52,8 +52,8 @@ class ColumnMapping {
 
     const std::vector<int> &get_column_pos(const std::string &column_name) const {
         static const std::vector<int> empty;
-        auto it = columnPosMap.find(column_name);
-        return it != columnPosMap.end() ? it->second : empty;
+        auto it = column_pos_map.find(column_name);
+        return it != column_pos_map.end() ? it->second : empty;
     }
 
     bool is_tag(const std::string &column_name) const {
@@ -73,7 +73,7 @@ class ColumnMapping {
     }
 
    private:
-    std::unordered_map<std::string, std::vector<int>> columnPosMap;
+    std::unordered_map<std::string, std::vector<int>> column_pos_map;
     std::unordered_set<std::string> tag_columns_;
     std::unordered_set<std::string> field_columns_;
 };

@@ -159,10 +159,26 @@ TEST_F(TsFileTableReaderTest, TableModelQuery) {
                        table_schema->get_measurement_names(), 0, 1000000000000,
                        tmp_result_set); 
     auto* table_result_set = (TableResultSet*)tmp_result_set;
+    char* literal = new char[std::strlen("device_id") + 1];
+    std::strcpy(literal, "device_id");
+    String literal_str(literal, std::strlen("device_id"));
+    int64_t i = 0;
     while(table_result_set->next()) {
-        for (uint32_t i = 0; i < table_schema->get_measurement_names().size(); i++) {
-            std::cout << table_schema->get_measurement_names()[i] << std::endl;
+        auto column_schemas = table_schema->get_measurement_schemas();
+        for (const auto& column_schema : column_schemas) {
+            switch (column_schema->data_type_) {
+                case TSDataType::INT64:
+                    ASSERT_EQ(table_result_set->get_value<int64_t>(column_schema->measurement_name_), i);
+                    break;
+                case TSDataType::STRING:
+                    ASSERT_EQ(table_result_set->get_value<common::String*>(column_schema->measurement_name_)->compare(literal_str), 0);
+                    break;
+                default:
+                    break;
+            }
         }
+        i++;
     }
+    reader.destroy_query_data_set(table_result_set);
     ASSERT_EQ(reader.close(), common::E_OK);
 }

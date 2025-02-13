@@ -21,9 +21,9 @@
 
 namespace storage {
 int TableQueryExecutor::query(const std::string &table_name,
-        const std::vector<std::string> &columns, Filter *time_filter,
-        Filter *id_filter, Filter *field_filter,
-        ResultSet *&ret_qds) {
+                              const std::vector<std::string> &columns,
+                              Filter *time_filter, Filter *id_filter,
+                              Filter *field_filter, ResultSet *&ret_qds) {
     int ret = common::E_OK;
     TsFileMeta *file_metadata = nullptr;
     file_metadata = tsfile_io_reader_->get_tsfile_meta();
@@ -34,25 +34,24 @@ int TableQueryExecutor::query(const std::string &table_name,
     MetaIndexNode *table_root = nullptr;
     std::shared_ptr<TableSchema> table_schema;
     if (RET_FAIL(file_metadata->get_table_metaindex_node(table_name_str,
-                                                        table_root))) {
-    } else if (RET_FAIL(file_metadata->get_table_schema(table_name,
-                                                        table_schema))) {
+                                                         table_root))) {
+    } else if (RET_FAIL(
+                   file_metadata->get_table_schema(table_name, table_schema))) {
     }
 
     if (IS_FAIL(ret)) {
         ret_qds = nullptr;
         return ret;
     }
-    ColumnMapping column_mapping;
+    std::shared_ptr<ColumnMapping> column_mapping = std::make_shared<ColumnMapping>();
     for (size_t i = 0; i < columns.size(); ++i) {
-        column_mapping.add(columns[i], static_cast<int>(i), *table_schema);
+        column_mapping->add(columns[i], static_cast<int>(i), *table_schema);
     }
     // column_mapping.add(*measurement_filter);
 
-    auto device_task_iterator =
-        std::unique_ptr<DeviceTaskIterator>(new DeviceTaskIterator(
-            columns, table_root, column_mapping, meta_data_querier_,
-            id_filter, *table_schema));
+    auto device_task_iterator = std::unique_ptr<DeviceTaskIterator>(
+        new DeviceTaskIterator(columns, table_root, column_mapping,
+                               meta_data_querier_, id_filter, table_schema));
 
     std::unique_ptr<TsBlockReader> tsblock_reader;
     switch (table_query_ordering_) {
@@ -60,19 +59,17 @@ int TableQueryExecutor::query(const std::string &table_name,
             tsblock_reader = std::unique_ptr<DeviceOrderedTsBlockReader>(
                 new DeviceOrderedTsBlockReader(
                     std::move(device_task_iterator), meta_data_querier_,
-                    block_size_, tsfile_io_reader_, time_filter,
-                    field_filter));
+                    block_size_, tsfile_io_reader_, time_filter, field_filter));
         case TableQueryOrdering::TIME:
         default:
             ret = common::E_UNSUPPORTED_ORDER;
     }
     assert(tsblock_reader != nullptr);
-    ret_qds = new TableResultSet(std::move(tsblock_reader), columns, table_schema->get_data_types());
+    ret_qds = new TableResultSet(std::move(tsblock_reader), columns,
+                                 table_schema->get_data_types());
     return ret;
 }
 
-void TableQueryExecutor::destroy_query_data_set(ResultSet *qds) {
-    delete qds;
-}
+void TableQueryExecutor::destroy_query_data_set(ResultSet *qds) { delete qds; }
 
 }  // end namespace storage

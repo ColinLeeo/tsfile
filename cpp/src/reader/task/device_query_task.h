@@ -25,9 +25,11 @@
 namespace storage {
 class DeviceQueryTask {
    public:
-    DeviceQueryTask(std::shared_ptr<IDeviceID> device_id, std::vector<std::string> column_names,
-                    ColumnMapping column_mapping, MetaIndexNode index_root,
-                    TableSchema table_schema)
+    DeviceQueryTask(std::shared_ptr<IDeviceID> device_id,
+                    std::vector<std::string> column_names,
+                    std::shared_ptr<ColumnMapping> column_mapping,
+                    MetaIndexNode index_root,
+                    std::shared_ptr<TableSchema> table_schema)
         : device_id_(device_id),
           column_names_(column_names),
           column_mapping_(column_mapping),
@@ -36,28 +38,33 @@ class DeviceQueryTask {
     ~DeviceQueryTask();
 
     static DeviceQueryTask *create_device_query_task(
-        std::shared_ptr<IDeviceID> device_id, std::vector<std::string> column_names,
-        ColumnMapping column_mapping, MetaIndexNode index_root,
-        TableSchema table_schema, common::PageArena &pa);
+        std::shared_ptr<IDeviceID> device_id,
+        std::vector<std::string> column_names,
+        std::shared_ptr<ColumnMapping> column_mapping, MetaIndexNode index_root,
+        std::shared_ptr<TableSchema> table_schema, common::PageArena &pa);
 
     const std::vector<std::string> &get_column_names() const {
         return column_names_;
     }
 
-    TableSchema &get_table_schema() { return table_schema_; }
+    std::shared_ptr<TableSchema> get_table_schema() const {
+        return table_schema_;
+    }
 
     const MetaIndexNode &get_index_root() const { return index_root_; }
 
-    const ColumnMapping &get_column_mapping() const { return column_mapping_; }
+    const std::shared_ptr<ColumnMapping> &get_column_mapping() const {
+        return column_mapping_;
+    }
 
     std::shared_ptr<IDeviceID> get_device_id() const { return device_id_; }
 
    private:
     std::shared_ptr<IDeviceID> device_id_;
     std::vector<std::string> column_names_;
-    ColumnMapping column_mapping_;
+    std::shared_ptr<ColumnMapping> column_mapping_;
     MetaIndexNode index_root_;
-    TableSchema table_schema_;
+    std::shared_ptr<TableSchema> table_schema_;
 };
 
 }  // namespace storage

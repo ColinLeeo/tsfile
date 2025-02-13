@@ -375,6 +375,57 @@ int TsFileIOReader::load_all_measurement_index_entry(
   return ret;
 }
 
+int TsFileIOReader::read_device_meta_index(int32_t start_offset,
+                                           int32_t end_offset,
+                                           common::PageArena &pa,
+                                           MetaIndexNode *&device_meta_index) {
+    int ret = E_OK;
+    ASSERT(start_offset < end_offset);
+    const int32_t read_size = (int32_t)(end_offset - start_offset);
+    int32_t ret_read_len = 0;
+    char *data_buf = (char *)pa.alloc(read_size);
+    void *m_idx_node_buf = pa.alloc(sizeof(MetaIndexNode));
+    if (IS_NULL(data_buf) || IS_NULL(m_idx_node_buf)) {
+        return E_OOM;
+    }
+    device_meta_index = new (m_idx_node_buf) MetaIndexNode(&pa);
+    if (RET_FAIL(read_file_->read(start_offset, data_buf, read_size,
+                                  ret_read_len))) {
+    } else if (RET_FAIL(
+                   device_meta_index->deserialize_from(data_buf, read_size))) {
+    }
+    return ret;
+}
+
+int TsFileIOReader::get_timeseries_indexes(std::shared_ptr<IDeviceID> device_id,
+                             const std::vector<std::string> &measurement_names,
+                             std::vector<ITimeseriesIndex *> &timeseries_indexs,
+                             common::PageArena &pa) {
+  int ret = E_OK;
+  DeviceMetaIndexEntry device_index_entry;
+  int64_t device_ie_end_offset = 0;
+  MeasurementMetaIndexEntry measurement_index_entry;
+  int64_t measurement_ie_end_offset = 0;
+  if (RET_FAIL(load_device_index_entry(
+      std::make_shared<DeviceIDComparable>(device_id), device_index_entry,
+      device_ie_end_offset))) {
+    return ret;
+  }
+  for (size_t i = 0; i < measurement_names.size(); i++) {
+    const auto &measurement_name = measurement_names[i];
+    if (RET_FAIL(load_measurement_index_entry(
+        measurement_name, device_index_entry.offset_,
+        device_ie_end_offset, measurement_index_entry,
+        measurement_ie_end_offset))) {
+    } else if (RET_FAIL(do_load_timeseries_index(
+        measurement_name, measurement_index_entry.offset_,
+        measurement_ie_end_offset, pa,
+        timeseries_indexs[i]))) {
+    }
+  }
+  return ret;
+}
+
 /*
  * @target_name device_name or measurement_name
  * @index_node  leaf device node or leaf measurement node

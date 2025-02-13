@@ -58,6 +58,14 @@ void DeviceOrderedTsBlockReader::close() {
         delete current_reader_;
         current_reader_ = nullptr;
     }
+    if (time_filter_ != nullptr) {
+        delete time_filter_;
+        time_filter_ = nullptr;
+    }
+    if (field_filter_ != nullptr) {
+        delete field_filter_;
+        field_filter_ = nullptr;
+    }
 }
 
 }  // namespace storage

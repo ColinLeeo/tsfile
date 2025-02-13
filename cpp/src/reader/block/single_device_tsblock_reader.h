@@ -93,16 +93,28 @@ class MeasurementColumnContext {
 
    protected:
     TsFileIOReader* tsfile_io_reader_;
-    TsFileSeriesScanIterator* ssi_;
+    TsFileSeriesScanIterator* ssi_ = nullptr;
     common::TsBlock* tsblock_ = nullptr;
-    common::ColIterator* time_iter_;
-    common::ColIterator* value_iter_;
+    common::ColIterator* time_iter_ = nullptr;
+    common::ColIterator* value_iter_ = nullptr;
 };
 
 class SingleMeasurementColumnContext final : public MeasurementColumnContext {
    public:
     explicit SingleMeasurementColumnContext(TsFileIOReader* tsfile_io_reader)
         : MeasurementColumnContext(tsfile_io_reader) {}
+    ~SingleMeasurementColumnContext() override {
+        if (time_iter_) {
+            delete time_iter_;
+            time_iter_ = nullptr;
+        }
+        if (value_iter_) {
+            delete value_iter_;
+            value_iter_ = nullptr;
+        }
+        ssi_->revert_tsblock();
+        tsfile_io_reader_->revert_ssi(ssi_);
+    }
 
     void fill_into(std::vector<common::ColAppender*>& col_appenders) override;
     void remove_from(std::map<std::string, MeasurementColumnContext*>&

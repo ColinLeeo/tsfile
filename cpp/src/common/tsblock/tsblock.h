@@ -87,6 +87,14 @@ class TsBlock {
         return errnum;
     }
 
+    FORCE_INLINE void fill_trailling_nulls() {
+        for (uint32_t i = 0; i < get_column_count(); ++i) {
+            for (uint32_t j = vectors_[i]->get_row_num(); j < row_count_; ++j) { 
+                vectors_[i]->set_null(j);
+            }
+        }
+    }
+
     FORCE_INLINE void reset() {
         int size = vectors_.size();
         for (int i = 0; i < size; ++i) {

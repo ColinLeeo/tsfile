@@ -52,8 +52,8 @@ class DeviceOrderedTsBlockReader : public TsBlockReader {
     int32_t block_size_;
     SingleDeviceTsBlockReader *current_reader_ = nullptr;
     TsFileIOReader *tsfile_io_reader_;
-    Filter *time_filter_;
-    Filter *field_filter_;
+    Filter *time_filter_ = nullptr;
+    Filter *field_filter_ = nullptr;
 };
 }  // namespace storage
 

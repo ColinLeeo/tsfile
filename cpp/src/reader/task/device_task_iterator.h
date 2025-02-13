@@ -32,10 +32,10 @@ class DeviceTaskIterator {
    public:
     explicit DeviceTaskIterator(std::vector<std::string> column_names,
                                 MetaIndexNode *index_root,
-                                ColumnMapping column_mapping,
+                                std::shared_ptr<ColumnMapping> column_mapping,
                                 IMetadataQuerier *metadata_querier,
                                 const Filter *id_filter,
-                                TableSchema table_schema)
+                                std::shared_ptr<TableSchema> table_schema)
         : column_names_(column_names),
           column_mapping_(column_mapping),
           device_meta_iterator_(
@@ -51,9 +51,9 @@ class DeviceTaskIterator {
 
    private:
     std::vector<std::string> column_names_;
-    ColumnMapping column_mapping_;
+    std::shared_ptr<ColumnMapping> column_mapping_;
     std::unique_ptr<DeviceMetaIterator> device_meta_iterator_;
-    TableSchema table_schema_;
+    std::shared_ptr<TableSchema> table_schema_;
     common::PageArena pa_;
 };
 
