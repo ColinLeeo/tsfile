@@ -228,8 +228,7 @@ int SingleMeasurementColumnContext::get_next_tsblock(bool alloc_mem) {
             delete value_iter_;
             value_iter_ = nullptr;
         }
-        delete tsblock_;
-        tsblock_ = nullptr;
+        tsblock_->reset();
     }
     if (RET_FAIL(ssi_->get_next(tsblock_, alloc_mem))) {
         if (time_iter_) {
@@ -242,7 +241,6 @@ int SingleMeasurementColumnContext::get_next_tsblock(bool alloc_mem) {
         }
         if (tsblock_) {
             ssi_->destroy();
-            delete tsblock_;
             tsblock_ = nullptr;
         }
     } else {
@@ -273,7 +271,7 @@ int SingleMeasurementColumnContext::get_current_value(char* value) {
 int SingleMeasurementColumnContext::move_iter() {
     int ret = common::E_OK;
     if (time_iter_->end()) {
-        if (RET_FAIL(get_next_tsblock(true))) {
+        if (RET_FAIL(get_next_tsblock(false))) {
             return ret;
         }
     } else {
