@@ -41,7 +41,7 @@ class SingleDeviceTsBlockReader : public TsBlockReader {
                                        Filter* field_filter);
     ~SingleDeviceTsBlockReader() { close(); }
     bool has_next() override;
-    int next(common::TsBlock* ret_block) override;
+    int next(common::TsBlock*& ret_block) override;
     void close() override;
 
    private:
@@ -63,7 +63,7 @@ class SingleDeviceTsBlockReader : public TsBlockReader {
     std::map<std::string, MeasurementColumnContext*> field_column_contexts_;
     std::map<std::string, IdColumnContext> id_column_contexts_;
     int64_t next_time_ = 0;
-    TsFileIOReader* tsfile_io_reader_;  // TODO: Construct Pass Ioreader
+    TsFileIOReader* tsfile_io_reader_;
     common::PageArena pa_;
 };
 

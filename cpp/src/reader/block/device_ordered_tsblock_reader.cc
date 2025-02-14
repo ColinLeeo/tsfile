@@ -25,6 +25,10 @@ bool DeviceOrderedTsBlockReader::has_next() {
     if (current_reader_ != nullptr && current_reader_->has_next()) {
         return true;
     }
+    if (current_reader_ != nullptr) {
+        delete current_reader_;
+        current_reader_ = nullptr;
+    }
     while (device_task_iterator_->has_next()) {
         DeviceQueryTask *task = nullptr;
         if (IS_FAIL(device_task_iterator_->next(task))) {
@@ -45,9 +49,10 @@ bool DeviceOrderedTsBlockReader::has_next() {
     return false;
 }
 
-int DeviceOrderedTsBlockReader::next(common::TsBlock *ret_block) {
+int DeviceOrderedTsBlockReader::next(common::TsBlock *&ret_block) {
     int ret = common::E_OK;
-    if (RET_FAIL(has_next())) {
+    if (UNLIKELY(!has_next())) {
+        return common::E_NO_MORE_DATA;
     } else if (RET_FAIL(current_reader_->next(ret_block))) {
     }
     return ret;

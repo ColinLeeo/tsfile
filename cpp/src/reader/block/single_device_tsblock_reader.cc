@@ -122,6 +122,7 @@ int SingleDeviceTsBlockReader::fill_measurements(
         if (!col_appenders_[0]->add_row()) {
             assert(false);
         }
+        // std::cout << col_appenders_[0]->tsblock_->debug_string() << std::endl;
         col_appenders_[0]->append((char*)&next_time_, sizeof(next_time_));
         for (uint32_t i = 0; i < column_contexts.size(); i++) {
             column_contexts[i]->fill_into(col_appenders_);
@@ -165,7 +166,7 @@ void SingleDeviceTsBlockReader::fill_ids() {
     }
 }
 
-int SingleDeviceTsBlockReader::next(common::TsBlock* ret_block) {
+int SingleDeviceTsBlockReader::next(common::TsBlock*& ret_block) {
     if (!has_next()) {
         return common::E_NO_MORE_DATA;
     }
@@ -248,6 +249,8 @@ int SingleMeasurementColumnContext::get_next_tsblock(bool alloc_mem) {
             tsblock_ = nullptr;
         }
     } else {
+        std::cout << "debug: \n";
+        std::cout << tsblock_->debug_string() << std::endl;
         time_iter_ = new common::ColIterator(0, tsblock_);
         value_iter_ = new common::ColIterator(1, tsblock_);
     }

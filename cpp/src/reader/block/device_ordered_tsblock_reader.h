@@ -43,7 +43,7 @@ class DeviceOrderedTsBlockReader : public TsBlockReader {
     ~DeviceOrderedTsBlockReader() override { close(); }
 
     bool has_next() override;
-    int next(common::TsBlock *ret_block) override;
+    int next(common::TsBlock *&ret_block) override;
     void close() override;
 
    private:

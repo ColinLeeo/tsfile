@@ -35,10 +35,6 @@ TableResultSet::~TableResultSet() {
 
 bool TableResultSet::next() {
     while((row_iterator_ == nullptr || !row_iterator_->has_next()) && tsblock_reader_->has_next()) {
-        if (tsblock_) {
-            delete tsblock_;
-            tsblock_ = nullptr;
-        }
         if (tsblock_reader_->next(tsblock_) != common::E_OK) {
             break;
         }
@@ -53,8 +49,12 @@ bool TableResultSet::next() {
     }
     row_iterator_->next();
     uint32_t len = 0;
+    bool null = false;
     for (uint32_t i = 0; i < row_iterator_->get_column_count(); ++i) {
-        row_record_->get_field(i)->set_value(data_types_[i], row_iterator_->read(i, &len, nullptr), pa_);
+        std::cout << "TableResultSet::next" << std::endl;
+        std::cout << "data_types_[i]:" << static_cast<int>(row_iterator_->get_data_type(i)) << std::endl;
+        assert(row_iterator_->read(i, &len, &null) != nullptr);
+        row_record_->get_field(i)->set_value(row_iterator_->get_data_type(i), row_iterator_->read(i, &len, &null), pa_);
     }
     return true;
 }
