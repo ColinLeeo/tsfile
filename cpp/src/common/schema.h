@@ -91,15 +91,15 @@ struct MeasurementSchema {
                 for (const auto &prop : props_) {
                     if (RET_FAIL(common::SerializationUtil::write_str(
                             prop.first, out))) {
-                        } else if (RET_FAIL(common::SerializationUtil::write_str(
-                            prop.second, out))) {
-                        }
-                        if (IS_FAIL(ret)) break;
+                    } else if (RET_FAIL(common::SerializationUtil::write_str(
+                                   prop.second, out))) {
                     }
+                    if (IS_FAIL(ret)) break;
                 }
             }
-            return ret;
         }
+        return ret;
+    }
 
     int deserialize_from(common::ByteStream &in) {
         int ret = common::E_OK;
@@ -108,35 +108,36 @@ struct MeasurementSchema {
                 compression_type = common::CompressionType::INVALID_COMPRESSION;
         if (RET_FAIL(
                 common::SerializationUtil::read_str(measurement_name_, in))) {
-            } else if (RET_FAIL(
-                common::SerializationUtil::read_ui8(data_type, in))) {
-            } else if (RET_FAIL(
-                common::SerializationUtil::read_ui8(encoding, in))) {
-            } else if (RET_FAIL(common::SerializationUtil::read_ui8(
-                compression_type, in))) {
-            }
-            data_type_ = static_cast<common::TSDataType>(data_type);
-            encoding_ = static_cast<common::TSEncoding>(encoding);
-            compression_type_ = static_cast<common::CompressionType>(compression_type);
-            uint32_t props_size;
-            if (ret == common::E_OK) {
-                if (RET_FAIL(common::SerializationUtil::read_ui32(props_size,
-                    in))) {
-                    for (uint32_t i = 0; i < props_.size(); ++i) {
-                        std::string key, value;
-                        if (RET_FAIL(common::SerializationUtil::read_str(
-                            key, in))) {
-                        } else if (RET_FAIL(common::SerializationUtil::read_str(
-                            value, in))) {
-                        }
-                        props_.insert(std::make_pair(key, value));
-                        if (IS_FAIL(ret)) break;
+        } else if (RET_FAIL(
+                       common::SerializationUtil::read_ui8(data_type, in))) {
+        } else if (RET_FAIL(
+                       common::SerializationUtil::read_ui8(encoding, in))) {
+        } else if (RET_FAIL(common::SerializationUtil::read_ui8(
+                       compression_type, in))) {
+        }
+        data_type_ = static_cast<common::TSDataType>(data_type);
+        encoding_ = static_cast<common::TSEncoding>(encoding);
+        compression_type_ =
+            static_cast<common::CompressionType>(compression_type);
+        uint32_t props_size;
+        if (ret == common::E_OK) {
+            if (RET_FAIL(
+                    common::SerializationUtil::read_ui32(props_size, in))) {
+                for (uint32_t i = 0; i < props_.size(); ++i) {
+                    std::string key, value;
+                    if (RET_FAIL(
+                            common::SerializationUtil::read_str(key, in))) {
+                    } else if (RET_FAIL(common::SerializationUtil::read_str(
+                                   value, in))) {
                     }
+                    props_.insert(std::make_pair(key, value));
+                    if (IS_FAIL(ret)) break;
                 }
             }
-            return ret;
         }
-    };
+        return ret;
+    }
+};
 
 typedef std::map<std::string, MeasurementSchema *> MeasurementSchemaMap;
 typedef std::map<std::string, MeasurementSchema *>::iterator
@@ -152,36 +153,36 @@ struct MeasurementSchemaGroup {
     TimeChunkWriter *time_chunk_writer_ = nullptr;
 };
 
-    enum class ColumnCategory { TAG = 0, FIELD = 1 };
+enum class ColumnCategory { TAG = 0, FIELD = 1 };
 
-    class TableSchema {
-    public:
-        static void to_lowercase_inplace(std::string &str) {
-            std::transform(str.begin(), str.end(), str.begin(),
-                           [](unsigned char c) -> unsigned char { return std::tolower(c); });
-        }
+class TableSchema {
+   public:
+    static void to_lowercase_inplace(std::string &str) {
+        std::transform(
+            str.begin(), str.end(), str.begin(),
+            [](unsigned char c) -> unsigned char { return std::tolower(c); });
+    }
 
     TableSchema() = default;
 
-        TableSchema(const std::string &table_name,
-                    const std::vector<MeasurementSchema*>
-                    &column_schemas,
-                    const std::vector<ColumnCategory> &column_categories)
-            : table_name_(table_name),
-              column_categories_(column_categories) {
-            to_lowercase_inplace(table_name_);
-            for (const auto column_schema : column_schemas) {
-                if (column_schema != nullptr) {
-                    column_schemas_.emplace_back(std::shared_ptr<MeasurementSchema>(column_schema));
-                }
-            }
-            int idx = 0;
-            for (const auto &measurement_schema: column_schemas_) {
-                to_lowercase_inplace(measurement_schema->measurement_name_);
-                column_pos_index_.insert(
-                    std::make_pair(measurement_schema->measurement_name_, idx++));
+    TableSchema(const std::string &table_name,
+                const std::vector<MeasurementSchema *> &column_schemas,
+                const std::vector<ColumnCategory> &column_categories)
+        : table_name_(table_name), column_categories_(column_categories) {
+        to_lowercase_inplace(table_name_);
+        for (const auto column_schema : column_schemas) {
+            if (column_schema != nullptr) {
+                column_schemas_.emplace_back(
+                    std::shared_ptr<MeasurementSchema>(column_schema));
             }
         }
+        int idx = 0;
+        for (const auto &measurement_schema : column_schemas_) {
+            to_lowercase_inplace(measurement_schema->measurement_name_);
+            column_pos_index_.insert(
+                std::make_pair(measurement_schema->measurement_name_, idx++));
+        }
+    }
 
     TableSchema(TableSchema &&other) noexcept
         : table_name_(std::move(other.table_name_)),
@@ -231,13 +232,13 @@ struct MeasurementSchemaGroup {
 
     const std::string &get_table_name() { return table_name_; }
 
-        std::vector<std::string> get_measurement_names() const {
-            std::vector<std::string> ret(column_schemas_.size());
-            for (size_t i = 0; i < column_schemas_.size(); i++) {
-                ret[i] = column_schemas_[i]->measurement_name_;
-            }
-            return ret;
+    std::vector<std::string> get_measurement_names() const {
+        std::vector<std::string> ret(column_schemas_.size());
+        for (size_t i = 0; i < column_schemas_.size(); i++) {
+            ret[i] = column_schemas_[i]->measurement_name_;
         }
+        return ret;
+    }
 
     int find_column_index(const std::string &column_name) {
         std::string lower_case_column_name = to_lower(column_name);
@@ -316,8 +317,9 @@ struct MeasurementSchemaGroup {
 
         int column_order = 0;
         for (size_t i = 0; i < column_schemas_.size(); ++i) {
-            if (column_schemas_[i]->measurement_name_ == lower_case_column_name 
-                && column_categories_[i] == ColumnCategory::TAG) {
+            if (column_schemas_[i]->measurement_name_ ==
+                    lower_case_column_name &&
+                column_categories_[i] == ColumnCategory::TAG) {
                 return column_order;
             } else if (column_categories_[i] == ColumnCategory::TAG) {
                 column_order++;
@@ -326,13 +328,14 @@ struct MeasurementSchemaGroup {
         return -1;
     }
 
-    private:
-        static std::string to_lower(const std::string &str) const {
-            std::string result;
-            std::transform(str.begin(), str.end(), std::back_inserter(result),
-                           [](unsigned char c) -> unsigned char { return std::tolower(c); });
-            return result;
-        }
+   private:
+    static std::string to_lower(const std::string &str) {
+        std::string result;
+        std::transform(
+            str.begin(), str.end(), std::back_inserter(result),
+            [](unsigned char c) -> unsigned char { return std::tolower(c); });
+        return result;
+    }
 
     std::string table_name_;
     std::vector<std::shared_ptr<MeasurementSchema> > column_schemas_;

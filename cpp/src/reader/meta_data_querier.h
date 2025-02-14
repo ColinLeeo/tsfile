@@ -23,7 +23,6 @@
 #include "common/cache/lru_cache.h"
 #include "common/device_id.h"
 #include "device_meta_iterator.h"
-#include "device_meta_iterator.h"
 #include "file/tsfile_io_reader.h"
 #include "imeta_data_querier.h"
 
@@ -66,10 +65,8 @@ class MetadataQuerier : public IMetadataQuerier {
 
    private:
     TsFileIOReader* io_reader_;
-    TsFileIOReader* io_reader_;
     TsFileMeta* file_metadata_;
     std::unique_ptr<
-        common::Cache<std::string, /*Todo std::pair<IDeviceID, std::string>*/
         common::Cache<std::string, /*Todo std::pair<IDeviceID, std::string>*/
                       std::vector<std::shared_ptr<ChunkMeta>>, std::mutex>>
         device_chunk_meta_cache_;
@@ -77,7 +74,6 @@ class MetadataQuerier : public IMetadataQuerier {
     int load_chunk_meta(const std::pair<IDeviceID, std::string>& key,
                         std::vector<ChunkMeta*>& chunk_meta_list);
 
-    static LocateStatus check_locate_status(
     static LocateStatus check_locate_status(
         const std::shared_ptr<ChunkMeta>& chunk_meta, long start, long end);
 };

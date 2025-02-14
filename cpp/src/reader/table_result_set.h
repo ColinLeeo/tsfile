@@ -16,19 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 #ifndef READER_TABLE_RESULT_SET_H
 #define READER_TABLE_RESULT_SET_H
+#include <memory>
 
-#include <map>
-#include <vector>
-
-#include "expression.h"
-#include "file/tsfile_io_reader.h"
-#include "result_set.h"
+#include "reader/block/tsblock_reader.h"
+#include "reader/result_set.h"
 
 namespace storage {
-
 class TableResultSet : public ResultSet {
    public:
     explicit TableResultSet(std::unique_ptr<TsBlockReader> tsblock_reader,
@@ -53,7 +48,5 @@ class TableResultSet : public ResultSet {
     std::vector<std::string> column_names_;
     std::vector<common::TSDataType> data_types_;
 };
-
 }  // namespace storage
-
-#endif  // READER_TABLE_RESULT_SET_H
+#endif // TABLE_RESULT_SET_H

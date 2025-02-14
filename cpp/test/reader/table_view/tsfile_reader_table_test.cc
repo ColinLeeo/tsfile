@@ -75,34 +75,29 @@ class TsFileTableReaderTest : public ::testing::Test {
         return random_string;
     }
 
-    static std::shared_ptr<storage::TableSchema> gen_table_schema(
-        int table_num) {
-        std::vector<std::shared_ptr<MeasurementSchema>> measurement_schemas;
+    static TableSchema* gen_table_schema(int table_num) {
+        std::vector<MeasurementSchema*> measurement_schemas;
         std::vector<ColumnCategory> column_categories;
         int id_schema_num = 5;
         int measurement_schema_num = 5;
         for (int i = 0; i < id_schema_num; i++) {
-            measurement_schemas.emplace_back(
-                std::make_shared<MeasurementSchema>(
-                    "id" + to_string(i), TSDataType::STRING, TSEncoding::PLAIN,
-                    CompressionType::UNCOMPRESSED));
+            measurement_schemas.emplace_back(new MeasurementSchema(
+                "id" + to_string(i), TSDataType::STRING, TSEncoding::PLAIN,
+                CompressionType::UNCOMPRESSED));
             column_categories.emplace_back(ColumnCategory::TAG);
         }
         for (int i = 0; i < measurement_schema_num; i++) {
-            measurement_schemas.emplace_back(
-                std::make_shared<MeasurementSchema>(
-                    "s" + to_string(i), TSDataType::INT64, TSEncoding::PLAIN,
-                    CompressionType::UNCOMPRESSED));
+            measurement_schemas.emplace_back(new MeasurementSchema(
+                "s" + to_string(i), TSDataType::INT64, TSEncoding::PLAIN,
+                CompressionType::UNCOMPRESSED));
             column_categories.emplace_back(ColumnCategory::FIELD);
         }
-        return std::make_shared<storage::TableSchema>(
-            "testTable" + to_string(table_num), measurement_schemas,
-            column_categories);
+        return new TableSchema("testTable" + to_string(table_num),
+                               measurement_schemas, column_categories);
     }
 
-    static storage::Tablet gen_tablet(
-        const std::shared_ptr<storage::TableSchema>& table_schema, int offset,
-        int device_num) {
+    static storage::Tablet gen_tablet(TableSchema* table_schema, int offset,
+                                      int device_num) {
         storage::Tablet tablet(table_schema->get_table_name(),
                                table_schema->get_measurement_names(),
                                table_schema->get_data_types(),
@@ -157,21 +152,27 @@ TEST_F(TsFileTableReaderTest, TableModelQuery) {
     ResultSet* tmp_result_set = nullptr;
     ret = reader.query(table_schema->get_table_name(),
                        table_schema->get_measurement_names(), 0, 1000000000000,
-                       tmp_result_set); 
+                       tmp_result_set);
     auto* table_result_set = (TableResultSet*)tmp_result_set;
     char* literal = new char[std::strlen("device_id") + 1];
     std::strcpy(literal, "device_id");
     String literal_str(literal, std::strlen("device_id"));
     int64_t i = 0;
-    while(table_result_set->next()) {
+    while (table_result_set->next()) {
         auto column_schemas = table_schema->get_measurement_schemas();
         for (const auto& column_schema : column_schemas) {
             switch (column_schema->data_type_) {
                 case TSDataType::INT64:
-                    ASSERT_EQ(table_result_set->get_value<int64_t>(column_schema->measurement_name_), i);
+                    ASSERT_EQ(table_result_set->get_value<int64_t>(
+                                  column_schema->measurement_name_),
+                              i);
                     break;
                 case TSDataType::STRING:
-                    ASSERT_EQ(table_result_set->get_value<common::String*>(column_schema->measurement_name_)->compare(literal_str), 0);
+                    ASSERT_EQ(table_result_set
+                                  ->get_value<common::String*>(
+                                      column_schema->measurement_name_)
+                                  ->compare(literal_str),
+                              0);
                     break;
                 default:
                     break;
