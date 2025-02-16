@@ -122,16 +122,11 @@ int SingleDeviceTsBlockReader::fill_measurements(
         if (!col_appenders_[0]->add_row()) {
             assert(false);
         }
-        // std::cout << col_appenders_[0]->tsblock_->debug_string() << std::endl;
         col_appenders_[0]->append((char*)&next_time_, sizeof(next_time_));
-        for (uint32_t i = 0; i < column_contexts.size(); i++) {
-            column_contexts[i]->fill_into(col_appenders_);
-            advance_column(column_contexts[i]);
+        for (auto& column_contest : column_contexts) {
+            column_contest->fill_into(col_appenders_);
+            advance_column(column_contest);
         }
-        // for (auto& column_contest : column_contexts) {
-        //     column_contest->fill_into(col_appenders_);
-        //     advance_column(column_contest);
-        // }
         row_appender_->add_row();
     }
     return ret;
@@ -249,8 +244,6 @@ int SingleMeasurementColumnContext::get_next_tsblock(bool alloc_mem) {
             tsblock_ = nullptr;
         }
     } else {
-        std::cout << "debug: \n";
-        std::cout << tsblock_->debug_string() << std::endl;
         time_iter_ = new common::ColIterator(0, tsblock_);
         value_iter_ = new common::ColIterator(1, tsblock_);
     }
@@ -266,11 +259,10 @@ int SingleMeasurementColumnContext::get_current_time(int64_t& time) {
     return common::E_OK;
 }
 
-int SingleMeasurementColumnContext::get_current_value(char* value) {
+int SingleMeasurementColumnContext::get_current_value(char* &value, uint32_t &len) {
     if (value_iter_->end()) {
         return common::E_NO_MORE_DATA;
     }
-    uint32_t len = 0;
     value = value_iter_->read(&len);
     return common::E_OK;
 }
@@ -291,14 +283,12 @@ int SingleMeasurementColumnContext::move_iter() {
 void SingleMeasurementColumnContext::fill_into(
     std::vector<common::ColAppender*>& col_appenders) {
     char* val = nullptr;
-    if (!get_current_value(val)) {
+    uint32_t len = 0;
+    if (!get_current_value(val, len)) {
         return;
     }
     for (int32_t pos : pos_in_result_) {
-        int len = 0;
-        if (get_current_value(val)) {
-            col_appenders[pos]->append(val, len);
-        }
+        col_appenders[pos]->append(val, len);
     }
 }
 }  // namespace storage

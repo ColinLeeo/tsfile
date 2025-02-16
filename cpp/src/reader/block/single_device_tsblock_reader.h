@@ -87,7 +87,7 @@ class MeasurementColumnContext {
 
     virtual int get_current_time(int64_t& time) = 0;
 
-    virtual int get_current_value(char* value) = 0;
+    virtual int get_current_value(char* &value, uint32_t &len) = 0;
 
     virtual int move_iter() = 0;
 
@@ -124,7 +124,7 @@ class SingleMeasurementColumnContext final : public MeasurementColumnContext {
              common::PageArena& pa) override;
     int get_next_tsblock(bool alloc_mem) override;
     int get_current_time(int64_t& time) override;
-    int get_current_value(char* value) override;
+    int get_current_value(char* &value, uint32_t &len) override;
     int move_iter() override;
 
    private:
@@ -145,7 +145,7 @@ class VectorMeasurementColumnContext final : public MeasurementColumnContext {
              common::PageArena& pa) override;
     int get_next_tsblock(bool alloc_mem) override;
     int get_current_time(int64_t& time) override;
-    int get_current_value(char* value) override;
+    int get_current_value(char* &value, uint32_t &len) override;
     int move_iter() override;
 
    private:

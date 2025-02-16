@@ -248,7 +248,7 @@ class TableSchema {
         } else {
             int index = -1;
             for (size_t i = 0; i < column_schemas_.size(); ++i) {
-                if (to_lower(column_schemas_[i]->measurement_name_) ==
+                if (column_schemas_[i]->measurement_name_ ==
                     lower_case_column_name) {
                     index = static_cast<int>(i);
                     break;
