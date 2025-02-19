@@ -37,6 +37,59 @@ class TimeChunkWriter;
 }  // namespace storage
 
 namespace storage {
+
+/**
+* @brief Represents the schema information for a single measurement.
+* @brief Represents the category of a column in a table schema.
+*
+* This enumeration class defines the supported categories for columns within a table schema,
+* distinguishing between tag and field columns.
+*/
+enum class ColumnCategory {
+    TAG = 0,
+    FIELD = 1
+};
+
+/**
+* @brief Represents the schema information for a single column.
+*
+* This structure holds the metadata necessary to describe how a specific column is stored,
+* including its name, data type, category.
+*/
+struct ColumnSchema {
+    std::string column_name_;
+    common::TSDataType data_type_;
+    ColumnCategory column_category_;
+
+    /**
+     * @brief Constructs a ColumnSchema object with the given parameters.
+     *
+     * @param column_name The name of the column. Must be a non-empty string.
+     *                    This name is used to identify the column within the table.
+     * @param data_type The data type of the measurement, such as INT32, DOUBLE, TEXT, etc.
+     *                  This determines how the data will be stored and interpreted.
+     * @param column_category The category of the column indicating its role or type
+     *                        within the schema, e.g., FIELD, TAG.
+     *                        Defaults to ColumnCategory::FIELD if not specified.
+     * @note It is the responsibility of the caller to ensure that `column_name` is not empty.
+     */
+    ColumnSchema(std::string column_name, common::TSDataType data_type,
+                 ColumnCategory column_category = ColumnCategory::FIELD) : column_name_(std::move(column_name)),
+                                                                           data_type_(data_type),
+                                                                           column_category_(column_category) {
+    }
+
+    const std::string& get_column_name() const {
+        return column_name_;
+    }
+    const common::TSDataType& get_data_type() const {
+        return data_type_;
+    }
+    const ColumnCategory& get_column_category() const {
+        return column_category_;
+    }
+};
+
 /* schema information for one measurement */
 struct MeasurementSchema {
     std::string measurement_name_;  // for example: "s1"
@@ -153,8 +206,12 @@ struct MeasurementSchemaGroup {
     TimeChunkWriter *time_chunk_writer_ = nullptr;
 };
 
-enum class ColumnCategory { TAG = 0, FIELD = 1 };
-
+/**
+* @brief Represents the schema information for an entire table.
+*
+* This class holds the metadata necessary to describe how a specific table is structured,
+* including its name and the schemas of all its columns.
+*/
 class TableSchema {
    public:
     static void to_lowercase_inplace(std::string &str) {
@@ -164,6 +221,31 @@ class TableSchema {
     }
 
     TableSchema() = default;
+
+    /**
+     * Constructs a TableSchema object with the given table name, column schemas, and column categories.
+     *
+     * @param table_name The name of the table. Must be a non-empty string.
+     *                   This name is used to identify the table within the system.
+     * @param column_schemas A vector containing ColumnSchema objects.
+     *                       Each ColumnSchema defines the schema for one column in the table.
+     */
+    TableSchema(const std::string& table_name,
+                const std::vector<ColumnSchema>& column_schemas) {
+        to_lowercase_inplace(table_name_);
+        for (const ColumnSchema& column_schema : column_schemas) {
+            column_schemas_.emplace_back(
+                std::make_shared<MeasurementSchema>(column_schema.get_column_name(),
+                                                    column_schema.get_data_type()));
+            column_categories_.emplace_back(column_schema.get_column_category());
+        }
+        int idx = 0;
+        for (const auto& measurement_schema : column_schemas_) {
+            to_lowercase_inplace(measurement_schema->measurement_name_);
+            column_pos_index_.insert(
+                std::make_pair(measurement_schema->measurement_name_, idx++));
+        }
+    }
 
     TableSchema(const std::string &table_name,
                 const std::vector<MeasurementSchema *> &column_schemas,
