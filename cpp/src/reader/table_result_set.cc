@@ -47,6 +47,7 @@ bool TableResultSet::next() {
     if (row_iterator_ == nullptr || !row_iterator_->has_next()) {
         return false;
     }
+    std::cout << "[DEBUG]: tsblock: " << tsblock_->debug_string() << std::endl;
     row_iterator_->next();
     uint32_t len = 0;
     bool null = false;

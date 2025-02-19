@@ -26,16 +26,16 @@ namespace storage
 class ColumnMapping { 
    public:
     int add(const std::string &column_name, int index, TableSchema &schema) {
-        int columnIndex = schema.find_column_index(column_name);
-        if (columnIndex < 0) {
+        int column_index = schema.find_column_index(column_name);
+        if (column_index < 0) {
             return common::E_COLUMN_NOT_EXIST;
         }
 
-        ColumnCategory columnCategory =
-            schema.get_column_categories()[columnIndex];
+        ColumnCategory column_category =
+            schema.get_column_categories()[column_index];
         column_pos_map[column_name].push_back(index);
 
-        if (columnCategory == ColumnCategory::TAG) {
+        if (column_category == ColumnCategory::TAG) {
             tag_columns_.insert(column_name);
         } else {
             field_columns_.insert(column_name);

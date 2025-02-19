@@ -33,13 +33,14 @@ SingleDeviceTsBlockReader::SingleDeviceTsBlockReader(
     pa_.init(512, common::AllocModID::MOD_TSFILE_READER);
     tuple_desc_.reset();
     common::init_common();
-    tuple_desc_.push_back(common::g_time_column_desc);
     auto table_schema = device_query_task->get_table_schema();
     for (const auto& column_name : device_query_task_->get_column_names()) {
         common::ColumnDesc column_desc(
             table_schema->get_column_desc(column_name));
         tuple_desc_.push_back(column_desc);
     }
+    tuple_desc_.push_back(common::g_time_column_desc);
+    time_column_index_ = tuple_desc_.get_column_count() - 1;
     current_block_ = common::TsBlock::create_tsblock(&tuple_desc_, block_size);
     col_appenders_.resize(tuple_desc_.get_column_count());
     for (int i = 0; i < tuple_desc_.get_column_count(); i++) {
@@ -124,10 +125,10 @@ int SingleDeviceTsBlockReader::fill_measurements(
     if (field_filter_ ==
         nullptr /*TODO: || field_filter_->satisfy(column_contexts)*/) {
         row_appender_->add_row();
-        if (!col_appenders_[0]->add_row()) {
+        if (!col_appenders_[time_column_index_]->add_row()) {
             assert(false);
         }
-        col_appenders_[0]->append((const char*)&next_time_, sizeof(next_time_));
+        col_appenders_[time_column_index_]->append((const char*)&next_time_, sizeof(next_time_));
         for (auto& column_contest : column_contexts) {
             column_contest->fill_into(col_appenders_);
             advance_column(column_contest);
@@ -299,12 +300,12 @@ void SingleMeasurementColumnContext::fill_into(
     }
     if (column_name_[0] == 'i') {
         std::cout << "[DEBUG]: column_name: " << column_name_
-                  << ", val: " << *(common::String*)val << ", len: " << len
-                  << std::endl;
+                << ", val: " << *(common::String*)val << ", len: " << len
+                << std::endl;
     } else {
         std::cout << "[DEBUG]: column_name: " << column_name_
-                  << ", val: " << *(int64_t*)val << ", len: " << len
-                  << std::endl;
+                << ", val: " << *(int64_t*)val << ", len: " << len
+                << std::endl;
     }
     for (int32_t pos : pos_in_result_) {
         col_appenders[pos]->add_row();

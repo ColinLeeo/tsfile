@@ -63,6 +63,7 @@ class SingleDeviceTsBlockReader : public TsBlockReader {
     std::map<std::string, MeasurementColumnContext*> field_column_contexts_;
     std::map<std::string, IdColumnContext> id_column_contexts_;
     int64_t next_time_ = 0;
+    int64_t time_column_index_ = 0;
     TsFileIOReader* tsfile_io_reader_;
     common::PageArena pa_;
 };
