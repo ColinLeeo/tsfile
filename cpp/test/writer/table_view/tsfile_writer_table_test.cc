@@ -98,11 +98,8 @@ class TsFileWriterTableTest : public ::testing::Test {
 
     static storage::Tablet gen_tablet(TableSchema* table_schema,
                              int offset, int device_num) {
-        storage::Tablet tablet(table_schema->get_table_name(),
-                               table_schema->get_measurement_names(),
-                               table_schema->get_data_types(),
-                               table_schema->get_column_categories());
-        tablet.init();
+        storage::Tablet tablet(table_schema->get_measurement_names(),
+                               table_schema->get_data_types());
 
         int num_timestamp_per_device = 10;
         char* literal = new char[std::strlen("device_id") + 1];

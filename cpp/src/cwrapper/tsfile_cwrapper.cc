@@ -40,7 +40,6 @@ Tablet tablet_new_with_device(const char *device_id, char **column_name_list,
     }
     auto *tablet = new storage::Tablet(device_id, &measurement_list,
                                        &data_type_list, max_rows);
-    tablet->init();
     return tablet;
 }
 
