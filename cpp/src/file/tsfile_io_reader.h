@@ -20,6 +20,8 @@
 #ifndef FILE_TSFILE_IO_REAER_H
 #define FILE_TSFILE_IO_REAER_H
 
+#include <unordered_set>
+
 #include "common/tsblock/tsblock.h"
 #include "file/read_file.h"
 #include "reader/chunk_reader.h"
@@ -27,7 +29,6 @@
 #include "reader/tsfile_series_scan_iterator.h"
 #include "utils/db_utils.h"
 #include "utils/storage_utils.h"
-
 namespace storage {
 class TsFileSeriesScanIterator;
 
@@ -53,7 +54,7 @@ class TsFileIOReader {
 
     void reset();
 
-    int alloc_ssi(const std::string &device_path,
+    int alloc_ssi(std::shared_ptr<IDeviceID> device_id,
                   const std::string &measurement_name,
                   TsFileSeriesScanIterator *&ssi, common::PageArena &pa,
                   Filter *time_filter = nullptr);
@@ -77,10 +78,11 @@ class TsFileIOReader {
     int read_device_meta_index(int32_t start_offset, int32_t end_offset,
                                common::PageArena &pa,
                                MetaIndexNode *&device_meta_index);
-    int get_timeseries_indexes(std::shared_ptr<IDeviceID> device_id,
-                             const std::vector<std::string> &measurement_names,
-                             std::vector<ITimeseriesIndex *> &timeseries_indexs,
-                             common::PageArena &pa);
+    int get_timeseries_indexes(
+        std::shared_ptr<IDeviceID> device_id,
+        const std::unordered_set<std::string> &measurement_names,
+        std::vector<ITimeseriesIndex *> &timeseries_indexs,
+        common::PageArena &pa);
 
    private:
     FORCE_INLINE int32_t file_size() const { return read_file_->file_size(); }
@@ -114,7 +116,7 @@ class TsFileIOReader {
         common::PageArena &in_timeseries_index_pa,
         std::vector<ITimeseriesIndex *> &ts_indexs);
 
-    int load_timeseries_index_for_ssi(const std::string &device_path,
+    int load_timeseries_index_for_ssi(std::shared_ptr<IDeviceID> device_id,
                                       const std::string &measurement_name,
                                       TsFileSeriesScanIterator *&ssi);
 
@@ -143,6 +145,5 @@ class TsFileIOReader {
     bool read_file_created_;
 };
 
-
-} // end namespace storage
+}  // end namespace storage
 #endif  // FILE_TSFILE_IO_REAER_H

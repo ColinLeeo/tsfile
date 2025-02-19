@@ -451,6 +451,13 @@ int TsFileIOWriter::write_file_index() {
         }
         tsfile_meta.table_metadata_index_node_map_ = table_nodes_map;
         tsfile_meta.table_schemas_ = schema_->table_schema_map_;
+        std::cout << "[DEBUG]: tsfile_meta.table_schemas_: " << std::endl;
+        for (auto table_schema : tsfile_meta.table_schemas_) {
+            assert(table_schema.second != nullptr);
+            for (auto column_category : table_schema.second->get_column_categories()) {
+                std::cout << "[DEBUG]: column_category: " << static_cast<int>(column_category) << std::endl;
+            }
+        }
         tsfile_meta.tsfile_properties_.insert(
             std::make_pair("encryptLevel", encrypt_level_));
         tsfile_meta.tsfile_properties_.insert(

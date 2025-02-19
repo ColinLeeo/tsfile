@@ -165,13 +165,13 @@ int DataRun::reinit_io_reader(SimpleList<OpenFile *>::Iterator &it,
         ////log_err("io_reader init error, ret=%d, file_path=%s",
         // ret, open_file->get_file_path().c_str());
     } else {
-        std::string device_name = col_desc_->get_device_name_str();
+        std::shared_ptr<IDeviceID> device_id = std::make_shared<StringArrayDeviceID>(col_desc_->get_device_name_str());
         std::string measurement_name = col_desc_->get_measurement_name_str();
         if (ssi_ != nullptr) {
             delete ssi_;
             ssi_ = nullptr;
         }
-        if (RET_FAIL(io_reader_.alloc_ssi(device_name, measurement_name, ssi_,
+        if (RET_FAIL(io_reader_.alloc_ssi(device_id, measurement_name, ssi_,
                                           *pa))) {
         }
     }

@@ -47,7 +47,7 @@ int QDSWithoutTimeGenerator::init(TsFileIOReader *io_reader,
     }
     for (size_t i = 0; i < origin_path_count; i++) {
         TsFileSeriesScanIterator *ssi = nullptr;
-        ret = io_reader_->alloc_ssi(paths[i].device_, paths[i].measurement_,
+        ret = io_reader_->alloc_ssi(paths[i].device_id_, paths[i].measurement_,
                                     ssi, pa_, global_time_filter);
         if (ret != 0) {
             return ret;

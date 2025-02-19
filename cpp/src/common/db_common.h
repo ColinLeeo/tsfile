@@ -35,7 +35,7 @@ enum TSDataType : uint8_t {
     DOUBLE = 4,
     TEXT = 5,
     VECTOR = 6,
-    STRING = 11,
+    STRING = 7,
     NULL_TYPE = 254,
     INVALID_DATATYPE = 255
 };

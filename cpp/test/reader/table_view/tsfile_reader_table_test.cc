@@ -144,7 +144,6 @@ TEST_F(TsFileTableReaderTest, TableModelQuery) {
     ASSERT_EQ(tsfile_table_writer_->write_table(tablet), common::E_OK);
     ASSERT_EQ(tsfile_table_writer_->flush(), common::E_OK);
     ASSERT_EQ(tsfile_table_writer_->close(), common::E_OK);
-
     storage::TsFileReader reader;
     int ret = reader.open(file_name_);
     ASSERT_EQ(ret, common::E_OK);

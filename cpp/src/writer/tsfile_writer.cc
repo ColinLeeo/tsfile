@@ -576,7 +576,6 @@ int TsFileWriter::write_table(const Tablet &tablet) {
         return ret;
     }
     auto device_id_end_index_pairs = split_tablet_by_device(tablet);
-
     int start_idx = 0;
     for (auto &device_id_end_index_pair : device_id_end_index_pairs) {
         auto device_id = device_id_end_index_pair.first;

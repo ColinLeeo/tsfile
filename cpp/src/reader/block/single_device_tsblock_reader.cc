@@ -50,7 +50,11 @@ SingleDeviceTsBlockReader::SingleDeviceTsBlockReader(
         device_query_task_->get_column_names().size());
     tsfile_io_reader_->get_timeseries_indexes(
         device_query_task->get_device_id(),
-        device_query_task->get_column_names(), time_series_indexs, pa_);
+        device_query_task->get_column_mapping()->get_measurement_columns(),
+        time_series_indexs, pa_);
+    for (auto measurement_column : device_query_task->get_column_mapping()->get_measurement_columns()) {
+        std::cout << "[DEBUG]: measurement_column: " << measurement_column << std::endl;
+    }
     for (const auto& time_series_index : time_series_indexs) {
         construct_column_context(time_series_index, time_filter);
     }
@@ -119,15 +123,15 @@ int SingleDeviceTsBlockReader::fill_measurements(
     int ret = common::E_OK;
     if (field_filter_ ==
         nullptr /*TODO: || field_filter_->satisfy(column_contexts)*/) {
+        row_appender_->add_row();
         if (!col_appenders_[0]->add_row()) {
             assert(false);
         }
-        col_appenders_[0]->append((char*)&next_time_, sizeof(next_time_));
+        col_appenders_[0]->append((const char*)&next_time_, sizeof(next_time_));
         for (auto& column_contest : column_contexts) {
             column_contest->fill_into(col_appenders_);
             advance_column(column_contest);
         }
-        row_appender_->add_row();
     }
     return ret;
 }
@@ -195,8 +199,11 @@ void SingleDeviceTsBlockReader::construct_column_context(
     // TODO: judge whether the time_series_index is aligned and jump empty chunk
     SingleMeasurementColumnContext* column_context =
         new SingleMeasurementColumnContext(tsfile_io_reader_);
-    column_context->init(device_query_task_, time_series_index, time_filter,
-                         pa_);
+    column_context->init(
+        device_query_task_, time_series_index, time_filter,
+        device_query_task_->get_column_mapping()->get_column_pos(
+            time_series_index->get_measurement_name().to_std_string()),
+        pa_);
     field_column_contexts_.insert(std::make_pair(
         time_series_index->get_measurement_name().to_std_string(),
         column_context));
@@ -205,11 +212,12 @@ void SingleDeviceTsBlockReader::construct_column_context(
 int SingleMeasurementColumnContext::init(
     DeviceQueryTask* device_query_task,
     const ITimeseriesIndex* time_series_index, Filter* time_filter,
-    common::PageArena& pa) {
+    const std::vector<int32_t>& pos_in_result, common::PageArena& pa) {
     int ret = common::E_OK;
+    pos_in_result_ = pos_in_result;
     column_name_ = time_series_index->get_measurement_name().to_std_string();
     if (RET_FAIL(tsfile_io_reader_->alloc_ssi(
-            device_query_task->get_device_id()->get_device_name(),
+            device_query_task->get_device_id(),
             time_series_index->get_measurement_name().to_std_string(), ssi_, pa,
             time_filter))) {
     } else if (RET_FAIL(get_next_tsblock(true))) {
@@ -259,11 +267,13 @@ int SingleMeasurementColumnContext::get_current_time(int64_t& time) {
     return common::E_OK;
 }
 
-int SingleMeasurementColumnContext::get_current_value(char* &value, uint32_t &len) {
+int SingleMeasurementColumnContext::get_current_value(char*& value,
+                                                      uint32_t& len) {
     if (value_iter_->end()) {
         return common::E_NO_MORE_DATA;
     }
     value = value_iter_->read(&len);
+    assert(value != nullptr);
     return common::E_OK;
 }
 
@@ -284,10 +294,20 @@ void SingleMeasurementColumnContext::fill_into(
     std::vector<common::ColAppender*>& col_appenders) {
     char* val = nullptr;
     uint32_t len = 0;
-    if (!get_current_value(val, len)) {
+    if (IS_FAIL(get_current_value(val, len))) {
         return;
     }
+    if (column_name_[0] == 'i') {
+        std::cout << "[DEBUG]: column_name: " << column_name_
+                  << ", val: " << *(common::String*)val << ", len: " << len
+                  << std::endl;
+    } else {
+        std::cout << "[DEBUG]: column_name: " << column_name_
+                  << ", val: " << *(int64_t*)val << ", len: " << len
+                  << std::endl;
+    }
     for (int32_t pos : pos_in_result_) {
+        col_appenders[pos]->add_row();
         col_appenders[pos]->append(val, len);
     }
 }

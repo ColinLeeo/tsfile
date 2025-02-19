@@ -51,8 +51,6 @@ bool TableResultSet::next() {
     uint32_t len = 0;
     bool null = false;
     for (uint32_t i = 0; i < row_iterator_->get_column_count(); ++i) {
-        std::cout << "TableResultSet::next" << std::endl;
-        std::cout << "data_types_[i]:" << static_cast<int>(row_iterator_->get_data_type(i)) << std::endl;
         assert(row_iterator_->read(i, &len, &null) != nullptr);
         row_record_->get_field(i)->set_value(row_iterator_->get_data_type(i), row_iterator_->read(i, &len, &null), pa_);
     }

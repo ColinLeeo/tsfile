@@ -295,9 +295,9 @@ struct ColumnDesc {
         std::stringstream out;
         out << "print ColumnDesc: " << this << std::endl
             << "name: " << column_name_.c_str() << std::endl
-            << "datatype: " << type_ << std::endl
-            << "encoding: " << encoding_ << std::endl
-            << "compression:" << compression_ << std::endl
+            << "datatype: " << get_data_type_name(type_) << std::endl
+            << "encoding: " << get_encoding_name(encoding_) << std::endl
+            << "compression:" << get_compression_name(compression_) << std::endl
             << "ttl:" << ttl_ << std::endl
             << "tsid:" << ts_id_.to_string().c_str() << std::endl;
         return out.str();

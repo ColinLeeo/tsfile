@@ -80,14 +80,11 @@ class MeasurementColumnContext {
     virtual void remove_from(std::map<std::string, MeasurementColumnContext*>&
                                  column_context_map) = 0;
 
-    virtual int init(DeviceQueryTask* device_query_task,
-                     const ITimeseriesIndex* time_series_index,
-                     Filter* time_filter, common::PageArena& pa) = 0;
     virtual int get_next_tsblock(bool alloc_mem) = 0;
 
     virtual int get_current_time(int64_t& time) = 0;
 
-    virtual int get_current_value(char* &value, uint32_t &len) = 0;
+    virtual int get_current_value(char*& value, uint32_t& len) = 0;
 
     virtual int move_iter() = 0;
 
@@ -121,10 +118,11 @@ class SingleMeasurementColumnContext final : public MeasurementColumnContext {
                          column_context_map) override;
     int init(DeviceQueryTask* device_query_task,
              const ITimeseriesIndex* time_series_index, Filter* time_filter,
-             common::PageArena& pa) override;
+             const std::vector<int32_t>& pos_in_result,
+             common::PageArena& pa);
     int get_next_tsblock(bool alloc_mem) override;
     int get_current_time(int64_t& time) override;
-    int get_current_value(char* &value, uint32_t &len) override;
+    int get_current_value(char*& value, uint32_t& len) override;
     int move_iter() override;
 
    private:
@@ -142,10 +140,11 @@ class VectorMeasurementColumnContext final : public MeasurementColumnContext {
                          column_context_map) override;
     int init(DeviceQueryTask* device_query_task,
              const ITimeseriesIndex* time_series_index, Filter* time_filter,
-             common::PageArena& pa) override;
+             std::vector<std::vector<int32_t>>& pos_in_result,
+             common::PageArena& pa);
     int get_next_tsblock(bool alloc_mem) override;
     int get_current_time(int64_t& time) override;
-    int get_current_value(char* &value, uint32_t &len) override;
+    int get_current_value(char*& value, uint32_t& len) override;
     int move_iter() override;
 
    private:

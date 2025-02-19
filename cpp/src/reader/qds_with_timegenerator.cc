@@ -300,7 +300,7 @@ int QDSWithTimeGenerator::init(TsFileIOReader *io_reader, QueryExpression *qe) {
         ValueAt va;
         index_lookup_.insert({paths[i].measurement_, i});
         if (RET_FAIL(io_reader_->alloc_ssi(
-                paths[i].device_, paths[i].measurement_, va.ssi_, pa_))) {
+                paths[i].device_id_, paths[i].measurement_, va.ssi_, pa_))) {
         } else {
             va.io_reader_ = io_reader_;
             data_types.push_back(va.value_col_iter_->get_data_type());
@@ -406,7 +406,7 @@ Node *QDSWithTimeGenerator::construct_node_tree(Expression *expr) {
     } else if (expr->type_ == SERIES_EXPR) {
         Node *leaf = new Node(LEAF_NODE);
         Path &path = expr->series_path_;
-        int ret = io_reader_->alloc_ssi(path.device_, path.measurement_,
+        int ret = io_reader_->alloc_ssi(path.device_id_, path.measurement_,
                                         leaf->sss_.ssi_, pa_, expr->filter_);
         if (E_OK == ret) {
             leaf->sss_.init();

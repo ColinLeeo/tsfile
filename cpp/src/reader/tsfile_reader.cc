@@ -92,7 +92,6 @@ int TsFileReader::query(const std::string &table_name,
     if (tsfile_meta == nullptr) {
         return E_TSFILE_WRITER_META_ERR;
     }
-
     std::shared_ptr<TableSchema> table_schema =
         tsfile_meta->table_schemas_.at(table_name);
     if (table_schema == nullptr) {

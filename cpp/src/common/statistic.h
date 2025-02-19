@@ -868,6 +868,10 @@ class StringStatistic : public Statistic {
                        first_value_, out))) {
         } else if (RET_FAIL(common::SerializationUtil::write_str(
                        last_value_, out))) {
+        } else if (RET_FAIL(common::SerializationUtil::write_str(
+                       min_value_, out))) {
+        } else if (RET_FAIL(common::SerializationUtil::write_str(
+                       max_value_, out))) {
         }
         return ret;
     }
@@ -877,6 +881,10 @@ class StringStatistic : public Statistic {
                        first_value_, pa_, in))) {
         } else if (RET_FAIL(common::SerializationUtil::read_str(
                        last_value_, pa_, in))) {
+        } else if (RET_FAIL(common::SerializationUtil::read_str(
+                       min_value_, pa_, in))) {
+        } else if (RET_FAIL(common::SerializationUtil::read_str(
+                       max_value_, pa_, in))) {
         }
         return ret;
     }
