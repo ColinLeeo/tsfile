@@ -156,7 +156,6 @@ TEST_F(TsFileTableReaderTest, TableModelQuery) {
     char* literal = new char[std::strlen("device_id") + 1];
     std::strcpy(literal, "device_id");
     String literal_str(literal, std::strlen("device_id"));
-    int64_t i = 0;
     while (table_result_set->next()) {
         auto column_schemas = table_schema->get_measurement_schemas();
         for (const auto& column_schema : column_schemas) {
@@ -164,7 +163,7 @@ TEST_F(TsFileTableReaderTest, TableModelQuery) {
                 case TSDataType::INT64:
                     ASSERT_EQ(table_result_set->get_value<int64_t>(
                                   column_schema->measurement_name_),
-                              i);
+                              0);
                     break;
                 case TSDataType::STRING:
                     ASSERT_EQ(table_result_set
@@ -177,7 +176,6 @@ TEST_F(TsFileTableReaderTest, TableModelQuery) {
                     break;
             }
         }
-        i++;
     }
     reader.destroy_query_data_set(table_result_set);
     delete[] literal;

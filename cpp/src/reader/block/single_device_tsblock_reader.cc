@@ -87,6 +87,7 @@ bool SingleDeviceTsBlockReader::has_next() {
     }
     current_block_->reset();
 
+    bool next_time_set = false;
     next_time_ = -1;
 
     std::vector<MeasurementColumnContext*> min_time_columns;
@@ -96,7 +97,8 @@ bool SingleDeviceTsBlockReader::has_next() {
             if (IS_FAIL(column_context.second->get_current_time(time))) {
                 continue;
             }
-            if (next_time_ == -1 || time < next_time_) {
+            if (!next_time_set || time < next_time_) {
+                next_time_set = true;
                 next_time_ = time;
                 min_time_columns.clear();
                 min_time_columns.push_back(column_context.second);
@@ -107,6 +109,7 @@ bool SingleDeviceTsBlockReader::has_next() {
         if (IS_FAIL(fill_measurements(min_time_columns))) {
             return false;
         } else {
+            next_time_set = false;
             next_time_ = -1;
         }
 
@@ -184,10 +187,6 @@ void SingleDeviceTsBlockReader::close() {
     for (auto& column_context : field_column_contexts_) {
         delete column_context.second;
     }
-    if (current_block_) {
-        delete current_block_;
-        current_block_ = nullptr;
-    }
     for (auto& col_appender : col_appenders_) {
         if (col_appender) {
             delete col_appender;
@@ -258,8 +257,6 @@ int SingleMeasurementColumnContext::get_next_tsblock(bool alloc_mem) {
             tsblock_ = nullptr;
         }
     } else {
-        std::cout << "[DEBUG]: column_name: " << column_name_ << std::endl;
-        std::cout << "[DEBUG]: tsblock: " << tsblock_->debug_string() << std::endl;
         time_iter_ = new common::ColIterator(0, tsblock_);
         value_iter_ = new common::ColIterator(1, tsblock_);
     }
@@ -287,13 +284,12 @@ int SingleMeasurementColumnContext::get_current_value(char*& value,
 
 int SingleMeasurementColumnContext::move_iter() {
     int ret = common::E_OK;
+    time_iter_->next();
+    value_iter_->next();
     if (time_iter_->end()) {
         if (RET_FAIL(get_next_tsblock(false))) {
             return ret;
         }
-    } else {
-        time_iter_->next();
-        value_iter_->next();
     }
     return ret;
 }
@@ -304,15 +300,6 @@ void SingleMeasurementColumnContext::fill_into(
     uint32_t len = 0;
     if (IS_FAIL(get_current_value(val, len))) {
         return;
-    }
-    if (column_name_[0] == 'i') {
-        std::cout << "[DEBUG]: column_name: " << column_name_
-                  << ", val: " << *(common::String*)val << ", len: " << len
-                  << std::endl;
-    } else {
-        std::cout << "[DEBUG]: column_name: " << column_name_
-                  << ", val: " << *(int64_t*)val << ", len: " << len
-                  << std::endl;
     }
     for (int32_t pos : pos_in_result_) {
         col_appenders[pos]->add_row();

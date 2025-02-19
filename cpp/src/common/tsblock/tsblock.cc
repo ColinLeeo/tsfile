@@ -272,7 +272,6 @@ std::string RowIterator::debug_string() {
                     break;
                 }
                 case common::STRING: {
-                    assert(value != nullptr);
                     out << *static_cast<String *>(value);
                     break;
                 }

@@ -47,13 +47,12 @@ bool TableResultSet::next() {
     if (row_iterator_ == nullptr || !row_iterator_->has_next()) {
         return false;
     }
-    std::cout << "[DEBUG]: tsblock: " << tsblock_->debug_string() << std::endl;
-    row_iterator_->next();
     uint32_t len = 0;
     bool null = false;
     for (uint32_t i = 0; i < row_iterator_->get_column_count(); ++i) {
         row_record_->get_field(i)->set_value(row_iterator_->get_data_type(i), row_iterator_->read(i, &len, &null), pa_);
     }
+    row_iterator_->next();
     return true;
 }
 
