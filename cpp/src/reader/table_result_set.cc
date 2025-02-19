@@ -20,7 +20,7 @@
 
 namespace storage {
 void TableResultSet::init() {
-    row_record_ = new RowRecord(column_names_.size());
+    row_record_ = new RowRecord(column_names_.size() + 1);
     pa_.reset();
     pa_.init(512, common::MOD_TSFILE_READER);
     index_lookup_.reserve(column_names_.size());
@@ -52,7 +52,6 @@ bool TableResultSet::next() {
     uint32_t len = 0;
     bool null = false;
     for (uint32_t i = 0; i < row_iterator_->get_column_count(); ++i) {
-        assert(row_iterator_->read(i, &len, &null) != nullptr);
         row_record_->get_field(i)->set_value(row_iterator_->get_data_type(i), row_iterator_->read(i, &len, &null), pa_);
     }
     return true;

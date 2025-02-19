@@ -161,7 +161,6 @@ class TsFileWriter {
     storage::TsFileIOWriter *io_writer_;
     // device_id -> MeasurementSchemaGroup
     DeviceSchemasMap schemas_;
-    TableSchemasMap table_schema_map_;
     bool start_file_done_;
     // record count since last flush
     int64_t record_count_since_last_flush_;

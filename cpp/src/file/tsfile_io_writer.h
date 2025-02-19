@@ -120,7 +120,7 @@ public:
     return ts_time_index_vector_;
   }
   FORCE_INLINE std::string get_file_path() { return file_->get_file_path(); }
-
+  FORCE_INLINE std::shared_ptr<Schema> get_schema() { return schema_; }
 private:
   int write_log_index_range();
   int write_file_index();

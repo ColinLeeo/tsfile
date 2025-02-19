@@ -356,6 +356,9 @@ struct Schema {
         }
         table_schema_map_[table_name]->update(chunk_group_meta);
     }
+    void register_table_schema(const std::shared_ptr<TableSchema> &table_schema) {
+        table_schema_map_[table_schema->get_table_name()] = table_schema;
+    }
 };
 }  // end namespace storage
 #endif  // COMMON_SCHEMA_H

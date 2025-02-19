@@ -48,13 +48,15 @@ SingleDeviceTsBlockReader::SingleDeviceTsBlockReader(
     }
     row_appender_ = new common::RowAppender(current_block_);
     std::vector<ITimeseriesIndex*> time_series_indexs(
-        device_query_task_->get_column_names().size());
+        device_query_task_->get_column_mapping()
+            ->get_measurement_columns()
+            .size());
     tsfile_io_reader_->get_timeseries_indexes(
         device_query_task->get_device_id(),
         device_query_task->get_column_mapping()->get_measurement_columns(),
         time_series_indexs, pa_);
-    for (auto measurement_column : device_query_task->get_column_mapping()->get_measurement_columns()) {
-        std::cout << "[DEBUG]: measurement_column: " << measurement_column << std::endl;
+    for (auto measurement_column :
+         device_query_task->get_column_mapping()->get_measurement_columns()) {
     }
     for (const auto& time_series_index : time_series_indexs) {
         construct_column_context(time_series_index, time_filter);
@@ -80,6 +82,9 @@ bool SingleDeviceTsBlockReader::has_next() {
     if (field_column_contexts_.empty()) {
         return false;
     }
+    for (auto col_appender : col_appenders_) {
+        col_appender->reset();
+    }
     current_block_->reset();
 
     next_time_ = -1;
@@ -99,7 +104,6 @@ bool SingleDeviceTsBlockReader::has_next() {
                 min_time_columns.push_back(column_context.second);
             }
         }
-
         if (IS_FAIL(fill_measurements(min_time_columns))) {
             return false;
         } else {
@@ -128,7 +132,8 @@ int SingleDeviceTsBlockReader::fill_measurements(
         if (!col_appenders_[time_column_index_]->add_row()) {
             assert(false);
         }
-        col_appenders_[time_column_index_]->append((const char*)&next_time_, sizeof(next_time_));
+        col_appenders_[time_column_index_]->append((const char*)&next_time_,
+                                                   sizeof(next_time_));
         for (auto& column_contest : column_contexts) {
             column_contest->fill_into(col_appenders_);
             advance_column(column_contest);
@@ -253,6 +258,8 @@ int SingleMeasurementColumnContext::get_next_tsblock(bool alloc_mem) {
             tsblock_ = nullptr;
         }
     } else {
+        std::cout << "[DEBUG]: column_name: " << column_name_ << std::endl;
+        std::cout << "[DEBUG]: tsblock: " << tsblock_->debug_string() << std::endl;
         time_iter_ = new common::ColIterator(0, tsblock_);
         value_iter_ = new common::ColIterator(1, tsblock_);
     }
@@ -300,12 +307,12 @@ void SingleMeasurementColumnContext::fill_into(
     }
     if (column_name_[0] == 'i') {
         std::cout << "[DEBUG]: column_name: " << column_name_
-                << ", val: " << *(common::String*)val << ", len: " << len
-                << std::endl;
+                  << ", val: " << *(common::String*)val << ", len: " << len
+                  << std::endl;
     } else {
         std::cout << "[DEBUG]: column_name: " << column_name_
-                << ", val: " << *(int64_t*)val << ", len: " << len
-                << std::endl;
+                  << ", val: " << *(int64_t*)val << ", len: " << len
+                  << std::endl;
     }
     for (int32_t pos : pos_in_result_) {
         col_appenders[pos]->add_row();

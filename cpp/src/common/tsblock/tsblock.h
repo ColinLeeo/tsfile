@@ -88,11 +88,6 @@ class TsBlock {
     }
 
     FORCE_INLINE void fill_trailling_nulls() {
-        std::cout << "[DEBUG]: fill_trailling_nulls" << std::endl;
-        std::cout << "[DEBUG]: row_count_: " << row_count_ << std::endl;
-        std::cout << "[DEBUG]: column_count_: " << get_column_count() << std::endl;
-        std::cout << "[DEBUG]: vectors_.size(): " << vectors_.size() << std::endl;
-        std::cout << "[DEBUG]: vectors_[0]->get_row_num(): " << vectors_[0]->get_row_num() << std::endl;
         for (uint32_t i = 0; i < get_column_count(); ++i) {
             for (uint32_t j = vectors_[i]->get_row_num(); j < row_count_; ++j) {
                 vectors_[i]->set_null(j);
@@ -178,11 +173,6 @@ class ColAppender {
     ColAppender(uint32_t column_index, TsBlock *tsblock)
         : column_index_(column_index), column_row_count_(0), tsblock_(tsblock) {
         ASSERT(column_index < tsblock_->tuple_desc_->get_column_count());
-        std::cout << "[DEBUG]: column_index: " << column_index
-                  << " ,vectors type: "
-                  << get_data_type_name(
-                         tsblock_->vectors_[column_index]->get_vector_type())
-                  << std::endl;
         vec_ = tsblock_->vectors_[column_index];
     }
 
@@ -217,7 +207,9 @@ class ColAppender {
         }
         return true;
     }
-
+    FORCE_INLINE void reset() {
+        column_row_count_ = 0;
+    }
    private:
     uint32_t column_index_;
     uint32_t column_row_count_;
