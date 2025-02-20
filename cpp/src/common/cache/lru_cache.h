@@ -22,7 +22,6 @@
 
 #include <unordered_map>   
 #include <list>
-#include <mutex>
 #include <algorithm>
 
 #include "utils/errno_define.h"
@@ -68,7 +67,7 @@ class Cache {
     typedef std::list<KeyValuePair<Key, Value>> list_type;
     typedef Map map_type;
     typedef Lock lock_type;
-    using Guard = std::lock_guard<lock_type>;
+    // using Guard = std::lock_guard<lock_type>;
     /**
      * the maxSize is the soft limit of keys and (maxSize + elasticity) is the
      * hard limit
@@ -80,20 +79,16 @@ class Cache {
         : maxSize_(maxSize), elasticity_(elasticity) {}
     virtual ~Cache() = default;
     size_t size() const {
-        Guard g(lock_);
         return cache_.size();
     }
     bool empty() const {
-        Guard g(lock_);
         return cache_.empty();
     }
     void clear() {
-        Guard g(lock_);
         cache_.clear();
         keys_.clear();
     }
     void insert(const Key& k, Value v) {
-        Guard g(lock_);
         const auto iter = cache_.find(k);
         if (iter != cache_.end()) {
             iter->second->value = v;
@@ -106,7 +101,6 @@ class Cache {
         prune();
     }
     void emplace(const Key& k, Value&& v) {
-        Guard g(lock_);
         keys_.emplace_front(k, std::move(v));
         cache_[k] = keys_.begin();
         prune();
@@ -117,7 +111,6 @@ class Cache {
     bool tryGet(const Key& kIn, Value& vOut) { return tryGetCopy(kIn, vOut); }
 
     bool tryGetCopy(const Key& kIn, Value& vOut) {
-        Guard g(lock_);
         Value tmp;
         if (!tryGetRef_nolock(kIn, tmp)) {
             return false;
@@ -127,7 +120,6 @@ class Cache {
     }
 
     bool tryGetRef(const Key& kIn, Value& vOut) {
-        Guard g(lock_);
         return tryGetRef_nolock(kIn, vOut);
     }
     /**
@@ -136,7 +128,6 @@ class Cache {
      *  in multi-threaded apps use getCopy() to be threadsafe
      */
     const Value& getRef(const Key& k) {
-        Guard g(lock_);
         return get_nolock(k);
     }
 
@@ -149,12 +140,10 @@ class Cache {
      * safe to use/recommended in multi-threaded apps
      */
     Value getCopy(const Key& k) {
-        Guard g(lock_);
         return get_nolock(k);
     }
 
     bool remove(const Key& k) {
-        Guard g(lock_);
         auto iter = cache_.find(k);
         if (iter == cache_.end()) {
             return false;
@@ -164,7 +153,6 @@ class Cache {
         return true;
     }
     bool contains(const Key& k) const {
-        Guard g(lock_);
         return cache_.find(k) != cache_.end();
     }
 
@@ -173,7 +161,6 @@ class Cache {
     size_t getMaxAllowedSize() const { return maxSize_ + elasticity_; }
     template <typename F>
     void cwalk(F& f) const {
-        Guard g(lock_);
         std::for_each(keys_.begin(), keys_.end(), f);
     }
 

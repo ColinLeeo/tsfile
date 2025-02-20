@@ -74,7 +74,7 @@ SingleDeviceTsBlockReader::SingleDeviceTsBlockReader(
     }
 }
 
-int SingleDeviceTsBlockReader::has_next(bool &has_next) {
+int SingleDeviceTsBlockReader::has_next(bool& has_next) {
     if (!last_block_returned_) {
         has_next = true;
         return common::E_OK;
@@ -128,7 +128,7 @@ int SingleDeviceTsBlockReader::has_next(bool &has_next) {
         return common::E_OK;
     }
     has_next = false;
-    return common::E_OK; // return value is not used
+    return common::E_OK;  // return value is not used
 }
 
 int SingleDeviceTsBlockReader::fill_measurements(
@@ -208,17 +208,28 @@ void SingleDeviceTsBlockReader::close() {
 
 void SingleDeviceTsBlockReader::construct_column_context(
     const ITimeseriesIndex* time_series_index, Filter* time_filter) {
-    // TODO: judge whether the time_series_index is aligned and jump empty chunk
-    SingleMeasurementColumnContext* column_context =
-        new SingleMeasurementColumnContext(tsfile_io_reader_);
-    column_context->init(
-        device_query_task_, time_series_index, time_filter,
-        device_query_task_->get_column_mapping()->get_column_pos(
-            time_series_index->get_measurement_name().to_std_string()),
-        pa_);
-    field_column_contexts_.insert(std::make_pair(
-        time_series_index->get_measurement_name().to_std_string(),
-        column_context));
+    if (time_series_index == nullptr ||
+        time_series_index->get_chunk_meta_list()->empty()) {
+        return;
+    } else if (time_series_index->is_aligned()) {
+        const AlignedTimeseriesIndex* aligned_time_series_index =
+            dynamic_cast<const AlignedTimeseriesIndex*>(time_series_index);
+        if (aligned_time_series_index == nullptr) {
+            assert(false);
+        }
+        // TODO: support aligned time series index
+    } else {
+        SingleMeasurementColumnContext* column_context =
+            new SingleMeasurementColumnContext(tsfile_io_reader_);
+        column_context->init(
+            device_query_task_, time_series_index, time_filter,
+            device_query_task_->get_column_mapping()->get_column_pos(
+                time_series_index->get_measurement_name().to_std_string()),
+            pa_);
+        field_column_contexts_.insert(std::make_pair(
+            time_series_index->get_measurement_name().to_std_string(),
+            column_context));
+    }
 }
 
 int SingleMeasurementColumnContext::init(
