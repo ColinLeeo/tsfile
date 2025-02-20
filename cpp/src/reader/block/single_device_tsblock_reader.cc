@@ -37,7 +37,9 @@ SingleDeviceTsBlockReader::SingleDeviceTsBlockReader(
     for (const auto& column_name : device_query_task_->get_column_names()) {
         common::ColumnDesc column_desc(
             table_schema->get_column_desc(column_name));
-        tuple_desc_.push_back(column_desc);
+        if (column_desc.is_valid()) {
+            tuple_desc_.push_back(column_desc);
+        }
     }
     tuple_desc_.push_back(common::g_time_column_desc);
     time_column_index_ = tuple_desc_.get_column_count() - 1;

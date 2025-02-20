@@ -336,7 +336,9 @@ class TableSchema {
                     break;
                 }
             }
-            column_pos_index_[lower_case_column_name] = index;
+            if (index != -1) {
+                column_pos_index_[lower_case_column_name] = index;
+            }
             return index;
         }
     }
@@ -387,11 +389,15 @@ class TableSchema {
 
     common::ColumnDesc get_column_desc(const std::string &column_name) {
         int column_idx = find_column_index(column_name);
-        return common::ColumnDesc(
-            column_schemas_[column_idx]->data_type_,
-            column_schemas_[column_idx]->encoding_,
-            column_schemas_[column_idx]->compression_type_, INVALID_TTL,
-            column_name, common::TsID());
+        if (column_idx == -1) {
+            return common::ColumnDesc();
+        } else {
+            return common::ColumnDesc(
+                column_schemas_[column_idx]->data_type_,
+                column_schemas_[column_idx]->encoding_,
+                column_schemas_[column_idx]->compression_type_, INVALID_TTL,
+                column_name, common::TsID());
+        }
     }
 
     int32_t find_id_column_order(const std::string &column_name) {

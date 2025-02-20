@@ -238,9 +238,9 @@ class RowIterator {
 
     FORCE_INLINE uint32_t get_column_count() { return column_count_; }
 
-    FORCE_INLINE TSDataType get_data_type(uint32_t slot_index) {
-        ASSERT(slot_index < column_count_);
-        return tsblock_->vectors_[slot_index]->get_vector_type();
+    FORCE_INLINE TSDataType get_data_type(uint32_t column_index) {
+        ASSERT(column_index < column_count_);
+        return tsblock_->vectors_[column_index]->get_vector_type();
     }
 
     FORCE_INLINE void next() {
@@ -251,10 +251,10 @@ class RowIterator {
         }
     }
 
-    FORCE_INLINE char *read(uint32_t slot_index, uint32_t *__restrict len,
+    FORCE_INLINE char *read(uint32_t column_index, uint32_t *__restrict len,
                             bool *__restrict null) {
-        ASSERT(slot_index < column_count_);
-        Vector *vec = tsblock_->vectors_[slot_index];
+        ASSERT(column_index < column_count_);
+        Vector *vec = tsblock_->vectors_[column_index];
         return vec->read(len, null, row_id_);
     }
 
