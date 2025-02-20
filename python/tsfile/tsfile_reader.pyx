@@ -33,7 +33,10 @@ cdef class ResultSetPy:
     cdef public object metadata
     cdef public object device_name
 
-    def __init__(self, ResultSet result, object device_name ):
+    def __init__(self):
+        pass
+
+    cdef init_c_(self, ResultSet result, object device_name):
         """
         Init c symbols.
         """
@@ -49,6 +52,9 @@ cdef class ResultSetPy:
         Check if the query has next rows.
         """
         return tsfile_result_set_has_next(self.result)
+
+    def next_block(self, max_row_num : str):
+        pass
 
     def get_value_by_index(self, index : int):
         """
@@ -131,8 +137,8 @@ cdef class TsFileReaderPy:
         """
         cdef ResultSet result;
         result = tsfile_reader_query_table_c(self.reader, table_name, column_names, start_time, end_time)
-        pyresult =  ResultSetPy()
-        pyresult.init_c(result, table_name)
+        pyresult = ResultSetPy()
+        pyresult.init_c_(result, table_name)
         return pyresult
 
     def query_timeseries(self, device_name : str, sensor_list : List[str], start_time : int = 0, end_time : int = 0) -> ResultSet:
@@ -141,7 +147,8 @@ cdef class TsFileReaderPy:
         """
         cdef ResultSet result;
         result = tsfile_reader_query_paths_c(self.reader, device_name,  sensor_list, start_time, end_time)
-        pyresult = ResultSetPy(result, device_name)
+        pyresult = ResultSetPy()
+        pyresult.init_c_(result, device_name)
         return pyresult
 
     def close(self):
