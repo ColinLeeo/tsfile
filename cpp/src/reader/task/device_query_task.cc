@@ -32,4 +32,8 @@ DeviceQueryTask *DeviceQueryTask::create_device_query_task(
         device_id, column_names, column_mapping, index_root, table_schema);
     return task;
 }
+
+ DeviceQueryTask::~DeviceQueryTask() {
+}
+
 }  // namespace storage
