@@ -32,7 +32,7 @@ class TableResultSet : public ResultSet {
         init();
     }
     ~TableResultSet();
-    bool next() override;
+    int next(bool &has_next) override;
     bool is_null(const std::string& column_name) override;
     bool is_null(uint32_t column_index) override;
     RowRecord* get_row_record() override;

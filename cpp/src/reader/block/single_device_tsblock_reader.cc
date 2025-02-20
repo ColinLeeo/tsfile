@@ -74,13 +74,15 @@ SingleDeviceTsBlockReader::SingleDeviceTsBlockReader(
     }
 }
 
-bool SingleDeviceTsBlockReader::has_next() {
+int SingleDeviceTsBlockReader::has_next(bool &has_next) {
     if (!last_block_returned_) {
-        return true;
+        has_next = true;
+        return common::E_OK;
     }
 
     if (field_column_contexts_.empty()) {
-        return false;
+        has_next = false;
+        return common::E_OK;
     }
     for (auto col_appender : col_appenders_) {
         col_appender->reset();
@@ -107,7 +109,8 @@ bool SingleDeviceTsBlockReader::has_next() {
             }
         }
         if (IS_FAIL(fill_measurements(min_time_columns))) {
-            return false;
+            has_next = false;
+            return common::E_OK;
         } else {
             next_time_set = false;
             next_time_ = -1;
@@ -121,9 +124,11 @@ bool SingleDeviceTsBlockReader::has_next() {
         fill_ids();
         current_block_->fill_trailling_nulls();
         last_block_returned_ = false;
-        return true;
+        has_next = true;
+        return common::E_OK;
     }
-    return false;
+    has_next = false;
+    return common::E_OK; // return value is not used
 }
 
 int SingleDeviceTsBlockReader::fill_measurements(
@@ -175,7 +180,9 @@ void SingleDeviceTsBlockReader::fill_ids() {
 }
 
 int SingleDeviceTsBlockReader::next(common::TsBlock*& ret_block) {
-    if (!has_next()) {
+    bool next = false;
+    has_next(next);
+    if (next) {
         return common::E_NO_MORE_DATA;
     }
     last_block_returned_ = true;

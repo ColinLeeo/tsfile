@@ -52,7 +52,7 @@ class ResultSet {
    public:
     ResultSet() {}
     virtual ~ResultSet() {}
-    virtual bool next() = 0;
+    virtual int next(bool &has_next) = 0;
     virtual bool is_null(const std::string& column_name) = 0;
     virtual bool is_null(uint32_t column_index) = 0;
 

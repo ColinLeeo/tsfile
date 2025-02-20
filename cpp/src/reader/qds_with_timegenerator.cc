@@ -347,13 +347,15 @@ void QDSWithTimeGenerator::close() {
     pa_.destroy();
 }
 
-bool QDSWithTimeGenerator::next() {
+int QDSWithTimeGenerator::next(bool &has_next) {
     if (tree_ == nullptr) {
-        return false;
+        has_next = false;
+        return E_OK;
     }
     int64_t timestamp = tree_->get_cur_timestamp();
     if (timestamp == INVALID_NEXT_TIMESTAMP) {
-        return false;
+        has_next = false;
+        return E_OK;
     }
     row_record_->set_timestamp(timestamp);
 #if DEBUG_SE
@@ -371,7 +373,8 @@ bool QDSWithTimeGenerator::next() {
 #if DEBUG_SE
     std::cout << "\n\n" << std::endl;
 #endif
-    return true;
+    has_next = true;
+    return E_OK;
 }
 
 bool QDSWithTimeGenerator::is_null(const std::string &column_name) {

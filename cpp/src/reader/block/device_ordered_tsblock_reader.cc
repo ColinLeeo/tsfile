@@ -21,9 +21,10 @@
 
 namespace storage {
 
-bool DeviceOrderedTsBlockReader::has_next() {
-    if (current_reader_ != nullptr && current_reader_->has_next()) {
-        return true;
+int DeviceOrderedTsBlockReader::has_next(bool &has_next) {
+    int ret = common::E_OK;
+    if (current_reader_ != nullptr && IS_SUCC(current_reader_->has_next(has_next)) && has_next) {
+        return common::E_OK;
     }
     if (current_reader_ != nullptr) {
         delete current_reader_;
@@ -32,9 +33,8 @@ bool DeviceOrderedTsBlockReader::has_next() {
     while (device_task_iterator_->has_next()) {
         DeviceQueryTask *task = nullptr;
         if (IS_FAIL(device_task_iterator_->next(task))) {
-            return false;
+            has_next = false;
         }
-        assert(task != nullptr);
         if (current_reader_) {
             delete current_reader_;
             current_reader_ = nullptr;
@@ -42,17 +42,23 @@ bool DeviceOrderedTsBlockReader::has_next() {
         current_reader_ = new SingleDeviceTsBlockReader(
             task, block_size_, metadata_querier_, tsfile_io_reader_, time_filter_,
             field_filter_);
-        if (current_reader_->has_next()) {
-            return true;
+        if (current_reader_ == nullptr) {
+            has_next = false;
+            return common::E_OOM;
+        }
+        if (RET_FAIL(current_reader_->has_next(has_next))) {
+            return ret;
+        } else {
+            return common::E_OK;
         }
     }
-    return false;
+    return ret;
 }
 
 int DeviceOrderedTsBlockReader::next(common::TsBlock *&ret_block) {
     int ret = common::E_OK;
-    if (UNLIKELY(!has_next())) {
-        return common::E_NO_MORE_DATA;
+    bool next = false;
+    if (RET_FAIL(has_next(next)) || !next) {
     } else if (RET_FAIL(current_reader_->next(ret_block))) {
     }
     return ret;

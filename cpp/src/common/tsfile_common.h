@@ -332,6 +332,7 @@ class ITimeseriesIndex {
         return common::INVALID_DATATYPE;
     }
     virtual Statistic *get_statistic() const { return nullptr; }
+    virtual bool is_aligned() const { return false; }
 };
 
 /*
@@ -433,6 +434,10 @@ class TimeseriesIndex : public ITimeseriesIndex {
     FORCE_INLINE void finish() {
         chunk_meta_list_data_size_ =
             chunk_meta_list_serialized_buf_.total_size();
+    }
+
+    FORCE_INLINE bool is_aligned() const {
+        return false;
     }
 
     int serialize_to(common::ByteStream &out) {
@@ -617,6 +622,9 @@ class AlignedTimeseriesIndex : public ITimeseriesIndex {
     virtual Statistic *get_statistic() const {
         return value_ts_idx_->get_statistic();
     }
+    virtual bool is_aligned() const {
+        return true;
+    }
 
 #ifndef NDEBUG
     friend std::ostream &operator<<(std::ostream &os,
@@ -758,7 +766,7 @@ struct IMetaIndexEntry {
     virtual int serialize_to(common::ByteStream &out) { return common::E_OK; }
     virtual int deserialize_from(common::ByteStream &out,
                                  common::PageArena *pa) {
-        return common::E_OK;
+        return common::E_NOT_SUPPORT;
     }
     virtual int64_t get_offset() const { return 0; }
     virtual bool is_device_level() const { return false; }

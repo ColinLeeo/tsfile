@@ -197,15 +197,12 @@ class ColAppender {
 
     FORCE_INLINE uint32_t get_col_row_count() { return column_row_count_; }
     FORCE_INLINE uint32_t get_column_index() { return column_index_; }
-    FORCE_INLINE bool fill(const char *value, uint32_t len,
+    FORCE_INLINE void fill(const char *value, uint32_t len,
                            uint32_t end_index) {
         while (column_row_count_ < end_index) {
-            if (!add_row()) {
-                return false;
-            }
+            ASSERT(add_row());
             append(value, len);
         }
-        return true;
     }
     FORCE_INLINE void reset() {
         column_row_count_ = 0;

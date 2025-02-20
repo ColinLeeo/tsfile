@@ -110,10 +110,11 @@ void QDSWithoutTimeGenerator::close() {
     pa_.destroy();
 }
 
-bool QDSWithoutTimeGenerator::next() {
+int QDSWithoutTimeGenerator::next(bool &has_next) {
     row_record_->reset();
     if (heap_time_.size() == 0) {
-        return false;
+        has_next = false;
+        return E_OK;
     }
     int64_t time = heap_time_.begin()->first;
     row_record_->set_timestamp(time);
@@ -137,7 +138,8 @@ bool QDSWithoutTimeGenerator::next() {
         iter++;  // cppcheck-suppress postfixOperator
         heap_time_.erase(cur);
     }
-    return true;
+    has_next = true;
+    return E_OK;
 }
 
 bool QDSWithoutTimeGenerator::is_null(const std::string &column_name) {

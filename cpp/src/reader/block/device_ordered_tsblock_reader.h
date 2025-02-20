@@ -42,7 +42,7 @@ class DeviceOrderedTsBlockReader : public TsBlockReader {
           field_filter_(field_filter) {}
     ~DeviceOrderedTsBlockReader() override { close(); }
 
-    bool has_next() override;
+    int has_next(bool &has_next) override;
     int next(common::TsBlock *&ret_block) override;
     void close() override;
 

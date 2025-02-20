@@ -285,7 +285,9 @@ ResultSet tsfile_reader_query_device(TsFileReader reader, const char* device_nam
 
 bool tsfile_result_set_has_next(ResultSet result_set) {
     auto *r = static_cast<storage::QDSWithoutTimeGenerator *>(result_set);
-    return r->next();
+    bool has_next = false;
+    r->next(has_next);
+    return has_next;
 }
 
 #define TSFILE_RESULT_SET_GET_VALUE_BY_NAME_DEF(type)                          \

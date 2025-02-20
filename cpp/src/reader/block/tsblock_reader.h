@@ -25,7 +25,7 @@ namespace storage {
 class TsBlockReader {
    public:
     virtual ~TsBlockReader() = default;
-    virtual bool has_next() = 0;
+    virtual int has_next(bool &has_next) = 0;
     virtual int next(common::TsBlock *&ret_block) = 0;
     virtual void close() = 0;
 };
@@ -33,7 +33,10 @@ class TsBlockReader {
 class EmptyTsBlockReader : public TsBlockReader {
    public:
     EmptyTsBlockReader() = default;
-    bool has_next() override { return false; }
+    int has_next(bool &has_next) override {
+        has_next = false;
+        return common::E_OK;
+    }
 
     int next(common::TsBlock *&ret_block) override { return common::E_OK; }
 };

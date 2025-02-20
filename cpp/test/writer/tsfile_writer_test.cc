@@ -185,8 +185,9 @@ TEST_F(TsFileWriterTest, WriteDiffDataType) {
     auto *qds = (QDSWithoutTimeGenerator *)tmp_qds;
 
     int64_t cur_record_num = 0;
+    bool has_next = false;
     do {
-        if (!qds->next()) {
+        if (IS_FAIL(qds->next(has_next)) || !has_next) {
             break;
         }
         cur_record_num++;
@@ -306,8 +307,9 @@ TEST_F(TsFileWriterTest, WriteMultipleTabletsMultiFlush) {
 
     storage::RowRecord *record;
     int max_rows = max_tablet_num * 1;
+    bool has_next = false;
     for (int cur_row = 0; cur_row < max_rows; cur_row++) {
-        if (!qds || !qds->next()) {
+        if (IS_FAIL(qds->next(has_next)) || !has_next) {
             break;
         }
         record = qds->get_row_record();
@@ -469,8 +471,9 @@ TEST_F(TsFileWriterTest, FlushMultipleDevice) {
 
     storage::RowRecord *record;
     int64_t cur_record_num = 0;
+    bool has_next = false;
     do {
-        if (!qds->next()) {
+        if (IS_FAIL(qds->next(has_next)) || !has_next) {
             break;
         }
         record = qds->get_row_record();
@@ -598,8 +601,9 @@ TEST_F(TsFileWriterTest, WriteAlignedTimeseries) {
     auto *qds = (QDSWithoutTimeGenerator *)tmp_qds;
 
     storage::RowRecord *record;
+    bool has_next = false;
     for (int cur_row = 0; cur_row < row_num; cur_row++) {
-        if (!qds->next()) {
+        if (IS_FAIL(qds->next(has_next)) || !has_next) {
             break;
         }
         record = qds->get_row_record();
@@ -662,8 +666,9 @@ TEST_F(TsFileWriterTest, WriteAlignedMultiFlush) {
     auto *qds = (QDSWithoutTimeGenerator *)tmp_qds;
 
     storage::RowRecord *record;
+    bool has_next = false;
     for (int cur_row = 0; cur_row < row_num; cur_row++) {
-        if (!qds->next()) {
+        if (IS_FAIL(qds->next(has_next)) || !has_next) {
             break;
         }
         record = qds->get_row_record();
@@ -726,8 +731,9 @@ TEST_F(TsFileWriterTest, WriteAlignedPartialData) {
 
     storage::RowRecord *record;
     int64_t cur_row = 0;
+    bool has_next = false;
     do {
-        if (!qds->next()) {
+        if (IS_FAIL(qds->next(has_next)) || !has_next) {
             break;
         }
         record = qds->get_row_record();

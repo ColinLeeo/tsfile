@@ -33,9 +33,15 @@ TableResultSet::~TableResultSet() {
     close();
 }
 
-bool TableResultSet::next() {
-    while((row_iterator_ == nullptr || !row_iterator_->has_next()) && tsblock_reader_->has_next()) {
-        if (tsblock_reader_->next(tsblock_) != common::E_OK) {
+int TableResultSet::next(bool &has_next) {
+    int ret = common::E_OK;
+    while(row_iterator_ == nullptr || !row_iterator_->has_next()) {
+        if (RET_FAIL(tsblock_reader_->has_next(has_next))) {
+            return ret;
+        } else if (!has_next) {
+            break;
+        }
+        if (RET_FAIL(tsblock_reader_->next(tsblock_))) {
             break;
         }
         if (row_iterator_) {
@@ -45,15 +51,17 @@ bool TableResultSet::next() {
         row_iterator_ = new common::RowIterator(tsblock_);
     }
     if (row_iterator_ == nullptr || !row_iterator_->has_next()) {
-        return false;
+        has_next = false;
     }
-    uint32_t len = 0;
-    bool null = false;
-    for (uint32_t i = 0; i < row_iterator_->get_column_count(); ++i) {
-        row_record_->get_field(i)->set_value(row_iterator_->get_data_type(i), row_iterator_->read(i, &len, &null), pa_);
+    if (has_next && IS_SUCC(ret)) {
+        uint32_t len = 0;
+        bool null = false;
+        for (uint32_t i = 0; i < row_iterator_->get_column_count(); ++i) {
+            row_record_->get_field(i)->set_value(row_iterator_->get_data_type(i), row_iterator_->read(i, &len, &null), pa_);
+        }
+        row_iterator_->next();
     }
-    row_iterator_->next();
-    return true;
+    return ret;
 }
 
 bool TableResultSet::is_null(const std::string& column_name) {

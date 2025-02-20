@@ -40,7 +40,7 @@ class SingleDeviceTsBlockReader : public TsBlockReader {
                                        Filter* time_filter,
                                        Filter* field_filter);
     ~SingleDeviceTsBlockReader() { close(); }
-    bool has_next() override;
+    int has_next(bool &has_next) override;
     int next(common::TsBlock*& ret_block) override;
     void close() override;
 

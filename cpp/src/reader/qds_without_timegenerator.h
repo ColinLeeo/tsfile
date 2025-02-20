@@ -44,7 +44,7 @@ class QDSWithoutTimeGenerator : public ResultSet {
     ~QDSWithoutTimeGenerator() { close(); }
     int init(TsFileIOReader *io_reader, QueryExpression *qe);
     void close();
-    bool next();
+    int next(bool &has_next);
     bool is_null(const std::string &column_name);
     bool is_null(uint32_t column_index);
     RowRecord *get_row_record();
