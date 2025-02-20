@@ -182,7 +182,7 @@ void SingleDeviceTsBlockReader::fill_ids() {
 int SingleDeviceTsBlockReader::next(common::TsBlock*& ret_block) {
     bool next = false;
     has_next(next);
-    if (next) {
+    if (!next) {
         return common::E_NO_MORE_DATA;
     }
     last_block_returned_ = true;

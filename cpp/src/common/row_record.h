@@ -56,6 +56,10 @@ struct Field {
     template <class T>
     FORCE_INLINE void set_value(common::TSDataType type, T val,
                                 common::PageArena &pa) {
+        if (val == nullptr) {
+            type_ = common::NULL_TYPE;
+            return;
+        }
         type_ = type;
         switch (type) {
             case common::BOOLEAN: {

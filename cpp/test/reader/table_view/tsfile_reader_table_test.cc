@@ -178,10 +178,10 @@ TEST_F(TsFileTableReaderTest, TableModelQuery) {
             }
         }
         for (int i = 0; i < 5; i++) {
-            ASSERT_EQ(table_result_set->get_value<int64_t>(i), 0);
+            ASSERT_EQ(table_result_set->get_value<common::String*>(i)->compare(literal_str), 0);
         }
         for (int i = 5; i < 10; i++) {
-            ASSERT_EQ(table_result_set->get_value<common::String*>(i)->compare(literal_str), 0);
+            ASSERT_EQ(table_result_set->get_value<int64_t>(i), 0);
         }
         ASSERT_EQ(table_result_set->get_value<int64_t>(10), timestamp);
         timestamp++;
