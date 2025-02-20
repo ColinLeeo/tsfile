@@ -102,7 +102,6 @@ class TsFileTableReaderTest : public ::testing::Test {
                                table_schema->get_measurement_names(),
                                table_schema->get_data_types(),
                                table_schema->get_column_categories());
-        tablet.init();
 
         int num_timestamp_per_device = 10;
         char* literal = new char[std::strlen("device_id") + 1];

@@ -28,11 +28,17 @@ storage::TsFileTableWriter::TsFileTableWriter(
     tsfile_writer_->set_generate_table_schema(true);
     std::shared_ptr<TableSchema> table_schema_ptr(table_schema);
     tsfile_writer_->register_table(table_schema_ptr);
+    if (table_schema != nullptr) {
+        table_name_ = table_schema->get_table_name();
+    }
 }
 
 storage::TsFileTableWriter::~TsFileTableWriter() = default;
 
-int storage::TsFileTableWriter::write_table(const storage::Tablet &tablet) {
+int storage::TsFileTableWriter::write_table(storage::Tablet &tablet) const {
+    if (tablet.get_table_name().empty()) {
+        tablet.set_table_name(table_name_);
+    }
     return tsfile_writer_->write_table(tablet);
 }
 
