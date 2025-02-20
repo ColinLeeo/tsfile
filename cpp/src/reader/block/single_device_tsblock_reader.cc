@@ -216,6 +216,9 @@ void SingleDeviceTsBlockReader::close() {
         delete row_appender_;
         row_appender_ = nullptr;
     }
+    if (device_query_task_) {
+        device_query_task_->~DeviceQueryTask();
+    }
 }
 
 void SingleDeviceTsBlockReader::construct_column_context(
