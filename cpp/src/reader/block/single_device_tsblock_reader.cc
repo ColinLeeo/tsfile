@@ -30,20 +30,29 @@ SingleDeviceTsBlockReader::SingleDeviceTsBlockReader(
       block_size_(block_size),
       tuple_desc_(),
       tsfile_io_reader_(tsfile_io_reader) {
+    init(device_query_task, block_size, time_filter, field_filter);
+}
+
+int SingleDeviceTsBlockReader::init(DeviceQueryTask* device_query_task,
+                                    uint32_t block_size, Filter* time_filter,
+                                    Filter* field_filter) {
+    int ret = common::E_OK;
     pa_.init(512, common::AllocModID::MOD_TSFILE_READER);
     tuple_desc_.reset();
     common::init_common();
     auto table_schema = device_query_task->get_table_schema();
     for (const auto& column_name : device_query_task_->get_column_names()) {
-        common::ColumnDesc column_desc(
-            table_schema->get_column_desc(column_name));
-        if (column_desc.is_valid()) {
-            tuple_desc_.push_back(column_desc);
+        common::ColumnSchema column_schema(
+            table_schema->get_column_schema(column_name));
+        if (column_schema.is_valid()) {
+            tuple_desc_.push_back(column_schema);
         }
     }
-    tuple_desc_.push_back(common::g_time_column_desc);
+    tuple_desc_.push_back(common::g_time_column_schema);
     time_column_index_ = tuple_desc_.get_column_count() - 1;
-    current_block_ = common::TsBlock::create_tsblock(&tuple_desc_, block_size);
+    if (RET_FAIL(common::TsBlock::create_tsblock(&tuple_desc_, current_block_, block_size))) {
+        return ret;
+    }
     col_appenders_.resize(tuple_desc_.get_column_count());
     for (int i = 0; i < tuple_desc_.get_column_count(); i++) {
         col_appenders_[i] = new common::ColAppender(i, current_block_);
@@ -74,6 +83,7 @@ SingleDeviceTsBlockReader::SingleDeviceTsBlockReader(
             id_column,
             IdColumnContext(column_pos_in_result, column_pos_in_id)));
     }
+    return ret;
 }
 
 int SingleDeviceTsBlockReader::has_next(bool& has_next) {

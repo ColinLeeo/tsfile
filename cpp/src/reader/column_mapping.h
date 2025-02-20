@@ -31,11 +31,11 @@ class ColumnMapping {
             return common::E_COLUMN_NOT_EXIST;
         }
 
-        ColumnCategory column_category =
+        common::ColumnCategory column_category =
             schema.get_column_categories()[column_index];
         column_pos_map[column_name].push_back(index);
 
-        if (column_category == ColumnCategory::TAG) {
+        if (column_category == common::ColumnCategory::TAG) {
             tag_columns_.insert(column_name);
         } else {
             field_columns_.insert(column_name);

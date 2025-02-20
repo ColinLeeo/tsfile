@@ -98,18 +98,13 @@ public:
   int start_flush_chunk_group(std::shared_ptr<IDeviceID> device_id,
                               bool is_aligned = false);
   int start_flush_chunk(common::ByteStream &chunk_data,
-                        common::ColumnDesc &col_desc, int32_t num_of_pages);
+                        common::ColumnSchema &col_schema, int32_t num_of_pages);
   int start_flush_chunk(common::ByteStream &chunk_data,
                         std::string &measurement_name,
                         common::TSDataType data_type,
                         common::TSEncoding encoding,
                         common::CompressionType compression,
-                        int32_t num_of_pages) {
-    common::TsID dummy_ts_id;
-    return start_flush_chunk(chunk_data, measurement_name, data_type,
-                             encoding, compression, num_of_pages,
-                             dummy_ts_id);
-  }
+                        int32_t num_of_pages);
   int flush_chunk(common::ByteStream &chunk_data);
   int end_flush_chunk(Statistic *chunk_statistic);
   int end_flush_chunk_group(bool is_aligned = false);
@@ -189,13 +184,6 @@ private:
 
   // for open file
   void add_ts_time_index_entry(TimeseriesIndex &ts_index);
-
-  int start_flush_chunk(common::ByteStream &chunk_data,
-                        std::string &measurement_name,
-                        common::TSDataType data_type,
-                        common::TSEncoding encoding,
-                        common::CompressionType compression,
-                        int32_t num_of_pages, common::TsID ts_id);
 
 private:
   common::PageArena meta_allocator_;

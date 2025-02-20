@@ -111,7 +111,7 @@ void *ValueAt::at(int64_t target_timestamp) {
             cur_time_ = INT64_MAX;
             return nullptr;
         }
-        data_type_ = tsblock_->get_tuple_desc()->get_column_desc(1).type_;
+        data_type_ = tsblock_->get_tuple_desc()->get_column_schema(1).data_type_;
         time_col_iter_ = new ColIterator(0, tsblock_);
         value_col_iter_ = new ColIterator(1, tsblock_);
     }

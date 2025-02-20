@@ -42,6 +42,8 @@ class SingleDeviceTsBlockReader : public TsBlockReader {
     ~SingleDeviceTsBlockReader() { close(); }
     int has_next(bool &has_next) override;
     int next(common::TsBlock*& ret_block) override;
+    int init(DeviceQueryTask* device_query_task, uint32_t block_size,
+             Filter* time_filter, Filter* field_filter);
     void close() override;
 
    private:

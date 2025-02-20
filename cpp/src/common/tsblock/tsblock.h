@@ -103,14 +103,18 @@ class TsBlock {
         row_count_ = 0;
     }
 
-    FORCE_INLINE static TsBlock *create_tsblock(TupleDesc *tupledesc,
-                                                uint32_t max_row_count = 0) {
-        TsBlock *tsblock = new TsBlock(tupledesc, max_row_count);
-        if (IS_FAIL(tsblock->init())) {
-            delete tsblock;
-            tsblock = nullptr;
+    FORCE_INLINE static int create_tsblock(TupleDesc *tupledesc,
+                                           TsBlock *&ret_tsblock,
+                                           uint32_t max_row_count = 0) {
+        int ret = common::E_OK;
+        if (ret_tsblock == nullptr) {
+            ret_tsblock = new TsBlock(tupledesc, max_row_count);
         }
-        return tsblock;
+        if (RET_FAIL(ret_tsblock->init())) {
+            delete ret_tsblock;
+            ret_tsblock = nullptr;
+        }
+        return ret;
     }
 
     int init();
@@ -204,9 +208,8 @@ class ColAppender {
             append(value, len);
         }
     }
-    FORCE_INLINE void reset() {
-        column_row_count_ = 0;
-    }
+    FORCE_INLINE void reset() { column_row_count_ = 0; }
+
    private:
     uint32_t column_index_;
     uint32_t column_row_count_;

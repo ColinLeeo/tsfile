@@ -202,7 +202,6 @@ struct ChunkMeta {
     common::TSDataType data_type_;
     int64_t offset_of_chunk_header_;
     Statistic *statistic_;
-    common::TsID ts_id_;
     char mask_;
     common::TSEncoding encoding_;
     common::CompressionType compression_type_;
@@ -212,20 +211,17 @@ struct ChunkMeta {
           data_type_(),
           offset_of_chunk_header_(0),
           statistic_(nullptr),
-          ts_id_(),
           mask_(0) {}
 
     int init(const common::String &measurement_name,
              common::TSDataType data_type, int64_t offset_of_chunk_header,
-             Statistic *stat, const common::TsID &ts_id, char mask,
-             common::TSEncoding encoding,
+             Statistic *stat, char mask, common::TSEncoding encoding,
              common::CompressionType compression_type, common::PageArena &pa) {
         // TODO check parameter valid
         measurement_name_.dup_from(measurement_name, pa);
         data_type_ = data_type;
         offset_of_chunk_header_ = offset_of_chunk_header;
         statistic_ = stat;
-        ts_id_ = ts_id;
         mask_ = mask;
         encoding_ = encoding;
         compression_type_ = compression_type;
@@ -249,7 +245,6 @@ struct ChunkMeta {
             }
             clone_statistic_from(that.statistic_);
         }
-        ts_id_ = that.ts_id_;
         mask_ = that.mask_;
         return ret;
     }
@@ -283,7 +278,6 @@ struct ChunkMeta {
         os << "{measurement_name=" << cm.measurement_name_
            << ", data_type=" << cm.data_type_
            << ", offset_of_chunk_header=" << cm.offset_of_chunk_header_
-           << ", ts_id=" << cm.ts_id_.to_string()
            << ", mask=" << ((int)cm.mask_);
         if (cm.statistic_ == nullptr) {
             os << ", statistic=nil}";
@@ -418,18 +412,6 @@ class TimeseriesIndex : public ITimeseriesIndex {
     }
     virtual Statistic *get_statistic() const { return statistic_; }
     common::TsID get_ts_id() const { return ts_id_; }
-    void set_ts_id(const common::TsID &ts_id) {
-        ts_id_ = ts_id;
-
-        // TODO for debug only
-        if (chunk_meta_list_ != nullptr) {
-            common::SimpleList<ChunkMeta *>::Iterator it =
-                chunk_meta_list_->begin();
-            for (; it != chunk_meta_list_->end(); it++) {
-                it.get()->ts_id_ = ts_id;
-            }
-        }
-    }
 
     FORCE_INLINE void finish() {
         chunk_meta_list_data_size_ =

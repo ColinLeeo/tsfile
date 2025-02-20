@@ -147,13 +147,12 @@ int TSMIterator::get_next(std::shared_ptr<IDeviceID> &ret_device_id, String &ret
     ChunkMeta *first_chunk_meta = chunk_meta_list_of_this_ts.front();
     const char meta_type = (multi_chunks ? 1 : 0) | (first_chunk_meta->mask_);
     const TSDataType data_type = first_chunk_meta->data_type_;
-    const TsID ts_id = first_chunk_meta->ts_id_;
 
     ret_ts_index.set_ts_meta_type(meta_type);
     ret_ts_index.set_measurement_name(ret_measurement_name);
     ret_ts_index.set_data_type(data_type);
     ret_ts_index.init_statistic(data_type);
-    ret_ts_index.set_ts_id(ts_id);
+
 
     SimpleList<ChunkMeta *>::Iterator ts_chunk_meta_iter =
         chunk_meta_list_of_this_ts.begin();

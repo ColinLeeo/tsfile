@@ -245,8 +245,8 @@ std::string RowIterator::debug_string() {
         if (is_null) {
             out << "NULL";
         } else {
-            ColumnDesc &col_desc = tsblock_->tuple_desc_->get_column_desc(i);
-            switch (col_desc.type_) {
+            ColumnSchema &col_schema = tsblock_->tuple_desc_->get_column_schema(i);
+            switch (col_schema.data_type_) {
                 case common::BOOLEAN: {
                     out << *static_cast<bool *>(value);
                     break;

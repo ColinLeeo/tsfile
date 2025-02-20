@@ -112,7 +112,7 @@ class Tablet {
     Tablet(const std::string &insert_target_name,
            const std::vector<std::string> &column_names,
            const std::vector<common::TSDataType> &data_types,
-           const std::vector<ColumnCategory> &column_categories,
+           const std::vector<common::ColumnCategory> &column_categories,
            int max_rows = DEFAULT_MAX_ROWS)
         : max_row_num_(max_rows),
           cur_row_size_(0),
@@ -193,7 +193,7 @@ class Tablet {
     int add_value(uint32_t row_index, uint32_t schema_index, T val);
 
     void set_column_categories(
-        const std::vector<ColumnCategory> &column_categories);
+        const std::vector<common::ColumnCategory> &column_categories);
     std::shared_ptr<IDeviceID> get_device_id(int i) const;
     /**
      * @brief Template function to add a value of type T to the specified row and column by name.
@@ -231,7 +231,7 @@ class Tablet {
     int64_t *timestamps_;
     ValueMatrixEntry *value_matrix_;
     common::BitMap *bitmaps_;
-    std::vector<ColumnCategory> column_categories_;
+    std::vector<common::ColumnCategory> column_categories_;
     std::vector<int> id_column_indexes_;
 };
 

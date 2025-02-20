@@ -191,7 +191,7 @@ ERRNO tsfile_reader_close(TsFileReader reader) {
 
 ERRNO tsfile_writer_register_table(TsFileWriter writer, TableSchema *schema) {
     std::vector<storage::MeasurementSchema *> measurement_schemas;
-    std::vector<storage::ColumnCategory> column_categories;
+    std::vector<common::ColumnCategory> column_categories;
     measurement_schemas.resize(schema->column_num);
     for (int i = 0; i < schema->column_num; i++) {
         ColumnSchema *cur_schema = schema->column_schemas + i;
@@ -199,7 +199,7 @@ ERRNO tsfile_writer_register_table(TsFileWriter writer, TableSchema *schema) {
             cur_schema->column_name,
             static_cast<common::TSDataType>(cur_schema->data_type));
         column_categories.push_back(
-            static_cast<storage::ColumnCategory>(cur_schema->column_category));
+            static_cast<common::ColumnCategory>(cur_schema->column_category));
     }
     auto tsfile_writer = static_cast<storage::TsFileWriter *>(writer);
     return tsfile_writer->register_table(std::make_shared<storage::TableSchema>(
