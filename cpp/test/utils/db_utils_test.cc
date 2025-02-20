@@ -191,7 +191,7 @@ TEST(ColumnSchemaTest, OperatorEqual) {
 
 TEST(ColumnSchemaTest, OperatorNotEqual) {
     ColumnSchema col_schema1("test_col", INT32, SNAPPY, RLE);
-    ColumnSchema col_schema2("test_col", INT32, SNAPPY, RLE);
+    ColumnSchema col_schema2("test_col2", INT32, SNAPPY, RLE);
     EXPECT_TRUE(col_schema1 != col_schema2);
 }
 
