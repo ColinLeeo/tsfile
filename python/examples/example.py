@@ -14,23 +14,23 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from Cython.Includes.cpython.time import result
 
-from tsfile import TsFileWriter, TsFileReader, TSDataType, TSEncoding, Compressor
-from tsfile import DeviceSchema, TimeseriesSchema, RowRecord, Field
-from tsfile import ResultSet
 import os
 
+from tsfile import DeviceSchema, TimeseriesSchema, ColumnSchema, TableSchema, RowRecord, Field
+from tsfile import Tablet
+from tsfile import TsFileWriter, TsFileReader, TSDataType, TSEncoding, Compressor, ColumnCategory
+
 ## tsfile path.
-data_dir = os.path.join(os.path.dirname(__file__), "test.tsfile")
-if os.path.exists(data_dir):
-    os.remove(data_dir)
+reader_data_dir = os.path.join(os.path.dirname(__file__), "test.tsfile")
+if os.path.exists(reader_data_dir):
+    os.remove(reader_data_dir)
 
 ## Tree Model Write Data
 
 DEVICE_NAME = "root.device"
 
-writer = TsFileWriter(data_dir)
+writer = TsFileWriter(reader_data_dir)
 
 timeseries = TimeseriesSchema("temp1", TSDataType.INT32, TSEncoding.PLAIN, Compressor.UNCOMPRESSED)
 timeseries2 = TimeseriesSchema("temp2", TSDataType.INT64)
@@ -46,7 +46,7 @@ writer.register_device(device)
 ### Write data with row record
 row_num = 10
 for i in range(row_num):
-    row_record = RowRecord(DEVICE_NAME, i+1,
+    row_record = RowRecord(DEVICE_NAME, i + 1,
                            [Field("temp1", TSDataType.INT32, i),
                             Field("temp2", TSDataType.INT64, i)])
     writer.write_row_record(row_record)
@@ -56,7 +56,7 @@ writer.close()
 
 ## Tree Model Read Data
 
-reader = TsFileReader(data_dir)
+reader = TsFileReader(reader_data_dir)
 
 ### Query device with specify time scope
 result = reader.query_timeseries(DEVICE_NAME, ["temp1", "temp2"], 0, 100)
@@ -79,21 +79,36 @@ with reader.query_timeseries(DEVICE_NAME, ["level1"], 0, 100) as result:
 
 reader.close()
 
-## Table Model Read and Write
+## Table Model Write and Read
+table_data_dir = os.path.join(os.path.dirname(__file__), "table_test.tsfile")
+if os.path.exists(table_data_dir):
+    os.remove(table_data_dir)
 
+column1 = ColumnSchema("id", TSDataType.STRING, ColumnCategory.TAG)
+column2 = ColumnSchema("id2", TSDataType.STRING, ColumnCategory.TAG)
+column3 = ColumnSchema("value", TSDataType.FLOAT, ColumnCategory.FIELD)
 
-device = DeviceSchema(DEVICE_NAME, [timeseries, timeseries2])
-writer.register_device(device)
+### Free resource automatically
+with TsFileWriter(table_data_dir) as writer:
+    writer.register_table(TableSchema("test_table", [column1, column2, column3]))
+    tablet_row_num = 100
+    tablet = Tablet("test_table",
+                    ["id1", "id2", "value"],
+                    [TSDataType.STRING, TSDataType.STRING, TSDataType.FLOAT],
+                    [ColumnCategory.TAG, ColumnCategory.TAG, ColumnCategory.FIELD],
+                    tablet_row_num)
 
-rc = RowRecord(DEVICE_NAME, 100, [Field("temp1", TSDataType.INT32, 10), Field("temp2", TSDataType.INT64, 10)])
-writer.write_row_record(rc)
-writer.close()
+    for i in range(tablet_row_num):
+        tablet.add_timestamp(i, i * 10)
+        tablet.add_value_by_name("id1", i, "test1")
+        tablet.add_value_by_name("id2", i, "test" + str(i))
+        tablet.add_value_by_index(2, i, i * 100.2)
 
-reader = TsFileReader(data_dir)
-sensor_name = ["temp1", "temp2"]
-result = reader.query_timeseries("root.device", sensor_name, 0, 110)
-while result.next():
-    print(result.get_value_by_index(0))
-    print(result.get_value_by_index(1))
-    print(result.get_value_by_name("temp1"))
-    print(result.get_value_by_name("temp2"))
+    writer.write_tablet(tablet)
+
+### Read table data from tsfile reader.
+with TsFileReader(table_data_dir) as reader:
+    with reader.query_table("test_table", ["id2", "value"], 0, 50) as result:
+        while result.next():
+            print(result.get_value_by_name("id2"))
+            print(result.get_value_by_name("value"))

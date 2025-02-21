@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+import weakref
+
 import pandas as pd
 from pandas import DataFrame
 
@@ -32,13 +34,19 @@ cdef class ResultSetPy:
     Get data from a query result.
     """
     cdef ResultSet result
-    cdef public object metadata
-    cdef public object device_name
+    cdef object metadata
+    cdef object device_name
+    cdef object invalid_result_set
+    cdef object tsfile_reader
 
-    def __init__(self):
+    def __init__(self, tsfile_reader : TsFileReaderPy):
+        self.metadata = None
+        self.device_name = None
+        self.invalid_result_set = False
+        self.tsfile_reader = weakref.ref(tsfile_reader)
         pass
 
-    cdef init_c_(self, ResultSet result, object device_name):
+    cdef init_c(self, ResultSet result, object device_name):
         """
         Init c symbols.
         """
@@ -69,9 +77,10 @@ cdef class ResultSetPy:
         :param max_row_num:
         :return: a dataframe contains data from query result.
         """
+        self.check_result_set_invalid()
         column_names = self.metadata.get_column_list()
         column_num = self.metadata.get_column_num()
-        data_type = [self.metadata.get_data_type(i) for i in range(column_num)]
+        data_type = [self.metadata.get_data_type(i).to_pandas_dtype() for i in range(column_num)]
 
         data_container = {
             column_name: [] for column_name in column_names
@@ -87,12 +96,14 @@ cdef class ResultSetPy:
                 data_container[column_name].append(value)
 
         df = pd.DataFrame(data_container)
-        return df.astype(data_type)
+        data_type_dict = {col: dtype for col, dtype in zip(column_names, data_type)}
+        return df.astype(data_type_dict)
 
     def get_value_by_index(self, index : int):
         """
         Get value by index from query result set.
         """
+        self.check_result_set_invalid()
         if tsfile_result_set_is_null_by_index(self.result, index):
             return None
         data_type = self.metadata.get_data_type(index)
@@ -111,6 +122,7 @@ cdef class ResultSetPy:
         """
         Get value by name from query result set.
         """
+        self.check_result_set_invalid()
         if tsfile_result_set_is_null_by_name_c(self.result, column_name):
             return None
         ind = self.metadata.get_column_name_index(column_name)
@@ -123,6 +135,7 @@ cdef class ResultSetPy:
         This method queries the underlying result set to determine if the value
         at the given column index position represents a null value.
         """
+        self.check_result_set_invalid()
         if index >= len(self.metadata.column_list) or index < 0:
             raise IndexError(
                 f"Column index {index} out of range (column count: {self.metadata.column_num})"
@@ -133,15 +146,29 @@ cdef class ResultSetPy:
         """
         Checks whether the field with the specified column name in the result set is null.
         """
+        self.check_result_set_invalid()
         ind = self.metadata.get_column_name_index(name)
         return self.is_null_by_index(ind)
+
+    def check_result_set_invalid(self):
+        if self.invalid_result_set:
+            raise Exception("Invalid result set. TsFile Reader not exists")
 
     def close(self):
         """
         Close result set, free C resource.
         :return:
         """
-        free_tsfile_result_set(&self.result)
+        if self.result is not NULL:
+            free_tsfile_result_set(&self.result)
+
+
+        if self.tsfile_reader is not None:
+            self.tsfile_reader().notify_result_set_discard(self)
+
+    def set_invalid_result_set(self, invalid : bool):
+        self.invalid_result_set = invalid
+        self.close()
 
     def __dealloc__(self):
         self.close()
@@ -161,12 +188,15 @@ cdef class TsFileReaderPy:
     Provides a Pythonic interface to read and query time series data from TsFiles.
     """
     cdef TsFileReader reader
+    cdef object activate_result_set_list
+
 
     def __init__(self, pathname):
         """
         Initialize a TsFile reader for the specified file path.
         """
         self.init_reader(pathname)
+        self.activate_result_set_list = weakref.WeakSet()
 
     cdef init_reader(self, pathname):
         self.reader = tsfile_reader_new_c(pathname)
@@ -178,8 +208,9 @@ cdef class TsFileReaderPy:
         """
         cdef ResultSet result;
         result = tsfile_reader_query_table_c(self.reader, table_name, column_names, start_time, end_time)
-        pyresult = ResultSetPy()
-        pyresult.init_c_(result, table_name)
+        pyresult = ResultSetPy(self)
+        pyresult.init_c(result, table_name)
+        self.activate_result_set_list.add(pyresult)
         return pyresult
 
     def query_timeseries(self, device_name : str, sensor_list : List[str], start_time : int = 0,
@@ -189,17 +220,33 @@ cdef class TsFileReaderPy:
         """
         cdef ResultSet result;
         result = tsfile_reader_query_paths_c(self.reader, device_name, sensor_list, start_time, end_time)
-        pyresult = ResultSetPy()
-        pyresult.init_c_(result, device_name)
+        pyresult = ResultSetPy(self)
+        pyresult.init_c(result, device_name)
+        self.activate_result_set_list.add(pyresult)
         return pyresult
+
+    def notify_result_set_discard(self, result_set: ResultSetPy):
+        self.activate_result_set_list.discard(result_set)
 
     def close(self):
         """
-        Close TsFile Reader.
+        Close TsFile Reader, if reader has result sets, invalid them.
         """
-        cdef ErrorCode errcode
-        errorcode = tsfile_reader_close(self.reader)
-        check_error(errorcode)
+
+        # result_set_bak to avoid runtime error.
+        result_set_bak = list(self.activate_result_set_list)
+        for result_set in result_set_bak:
+            result_set.set_invalid_result_set(True)
+
+        cdef ErrorCode err_code
+        err_code = tsfile_reader_close(self.reader)
+        check_error(err_code)
 
     def __dealloc__(self):
+        self.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()

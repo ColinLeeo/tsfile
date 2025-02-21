@@ -108,5 +108,12 @@ cdef class TsFileWriterPy:
         errno = tsfile_writer_close(self.writer)
         check_error(errno)
 
-    def __dealloc(self):
+    def __dealloc__(self):
         self.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+

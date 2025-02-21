@@ -48,7 +48,6 @@ class TSDataType(IntEnum):
     def to_pandas_dtype(self):
         """
         Convert datatype to pandas dtype
-        :return: 
         """
         if self == TSDataType.BOOLEAN:
             return "bool"

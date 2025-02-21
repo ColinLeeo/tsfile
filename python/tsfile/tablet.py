@@ -29,7 +29,7 @@ from .constants import TSDataType, ColumnCategory
 class Tablet(object):
 
     def __init__(self, device_id: str, column_name_list: list[str], type_list: list[TSDataType],
-                 max_row_num: int = 1024):
+                 category_list: list[ColumnCategory] = None, max_row_num: int = 1024):
         self.timestamp_list = [None for _ in range(max_row_num)]
         self.data_list: List[List[Union[int, float, bool, str, bytes, None]]] = [
             [None for _ in range(max_row_num)] for _ in range(len(column_name_list))
@@ -38,6 +38,7 @@ class Tablet(object):
         self.column_name_list = column_name_list
         self.type_list = type_list
         self.max_row_num = max_row_num
+        self.category_list = category_list
 
         self._type_ranges = {
             TSDataType.INT32: (-2 ** 31, 2 ** 31 - 1),
