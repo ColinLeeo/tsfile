@@ -137,7 +137,7 @@ cdef TimeseriesSchema* to_c_timeseries_schema(object py_schema):
 cdef DeviceSchema* to_c_device_schema(object py_schema):
     cdef DeviceSchema* c_schema
     c_schema = <DeviceSchema *> malloc(sizeof(DeviceSchema))
-    c_schema.device_name = strdup(py_schema.device_name.encode('utf-8'))
+    c_schema.device_name = strdup(py_schema.device_id.encode('utf-8'))
     c_schema.timeseries_num = len(py_schema.timeseries_list)
     c_schema.timeseries_schema = <TimeseriesSchema *> malloc(c_schema.timeseries_num * sizeof(TimeseriesSchema))
     for i in range(c_schema.timeseries_num):

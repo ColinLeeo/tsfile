@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+from pandas import DataFrame
 
 #cython: language_level=3
 
@@ -47,13 +48,24 @@ cdef class ResultSetPy:
         self.metadata.set_device_name(device_name)
         free_result_set_meta_data(metadata_c)
 
-    def has_next(self):
+    def next(self):
         """
         Check if the query has next rows.
         """
         return tsfile_result_set_has_next(self.result)
 
-    def next_block(self, max_row_num : str):
+    def read_next_data_frame(self, max_row_num : int = 1024):
+        """
+        :param max_row_num:
+        :return: a dataframe contains data from query result.
+        """
+        data_columns = []
+        data_type = []
+        for i in range(self.metadata.get_column_num()):
+            data_columns.append(self.metadata.get_column_name(i))
+            data_type.append(self.metadata.get_data_type(i).to_pandas_dtype())
+        data_frame = DataFrame()
+
         pass
 
     def get_value_by_index(self, index : int):

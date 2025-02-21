@@ -45,6 +45,33 @@ class TSDataType(IntEnum):
         elif self == TSDataType.TEXT or self == TSDataType.STRING:
             return str
 
+    def to_pandas_dtype(self):
+        """
+        Convert datatype to pandas dtype
+        :return: 
+        """
+        if self == TSDataType.BOOLEAN:
+            return "bool"
+        elif self == TSDataType.INT32:
+            return "int32"
+        elif self == TSDataType.INT64:
+            return "int64"
+        elif self == TSDataType.FLOAT:
+            return "float32"
+        elif self == TSDataType.DOUBLE:
+            return "float64"
+        elif self == TSDataType.TEXT or self == TSDataType.STRING:
+            return "object"
+        elif self == TSDataType.TIMESTAMP:
+            return "datetime64[ns]"
+        elif self == TSDataType.DATE:
+            return "datetime64[ns]"
+        elif self == TSDataType.BLOB:
+            return "object"  # BLOB 通常存储为字节对象
+        else:
+            raise ValueError(f"未知类型: {self}")
+
+
 @unique
 class TSEncoding(IntEnum):
     PLAIN = 0

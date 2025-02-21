@@ -45,7 +45,7 @@ def test_row_record_write_and_read():
     reader = TsFileReader("record_write_and_read.tsfile")
     result = reader.query_timeseries("root.device1", ["level1","level2"], 10, 100)
     i = 10
-    while result.has_next():
+    while result.next():
         assert result.get_value_by_index(0) == i
         assert result.get_value_by_name("level2") == i * 1.1
         i = i + 1
@@ -76,7 +76,7 @@ def test_tablet_write_and_read():
     reader = TsFileReader("tablet_write_and_read.tsfile")
     result = reader.query_timeseries("root.device1", ["level0"], 0, 1000000)
     row_num = 0
-    while result.has_next():
+    while result.next():
         assert result.is_null_by_index(0) == False
         assert result.get_value_by_name("level0") == row_num
         row_num = row_num + 1

@@ -18,10 +18,9 @@
 from datetime import datetime
 
 import numpy as np
-import pandas as pd
 
-from .constants import TSDataType
-from .date_utils import parse_int_to_date
+from tsfile.constants import TSDataType
+from tsfile.date_utils import parse_int_to_date
 
 
 class Field(object):
@@ -89,6 +88,18 @@ class Field(object):
 
         return np.int64(self.value)
 
+    def get_timestamp_value(self):
+        if self.value is None:
+            return None
+        if self.data_type is None:
+            raise Exception("None Data Type Exception!")
+        if (
+            self.data_type != TSDataType.TIMESTAMP
+            or self.data_type != TSDataType.INT64
+        ):
+            raise TypeError(f"Expected INT64/Timestamp data type, got {self.data_type}.")
+        return np.int64(self.value)
+
     def get_float_value(self):
         if self.value is None:
             return None
@@ -110,7 +121,7 @@ class Field(object):
             self.data_type != TSDataType.FLOAT
             or self.data_type != TSDataType.DOUBLE
         ):
-            raise TypeError(f"Expected FLOAT/DOUBLE data type, got {self.data_type}.")
+            raise TypeError(f"Expected DOUBLE/FLOAT data type, got {self.data_type}.")
         return np.float64(self.value)
 
     def get_date_value(self):
@@ -118,8 +129,11 @@ class Field(object):
             return None
         if self.data_type is None:
             raise Exception("None Data Type Exception!")
-        if self.data_type != TSDataType.DATE:
-            raise TypeError(f"Expected DATE data type, got {self.data_type}.")
+        if (
+                self.data_type != TSDataType.DATE
+                or self.data_type != TSDataType.INT64
+        ):
+            raise TypeError(f"Expected DATE/INT64 data type, got {self.data_type}.")
         if isinstance(self.value, datetime):
             return self.value
         elif isinstance(self.value, int):
@@ -133,12 +147,6 @@ class Field(object):
             return None
         if self.data_type is None:
             raise Exception("None Data Type Exception!")
-        if (
-                self.data_type != TSDataType.STRING or
-                self.data_type != TSDataType.TEXT or
-                self.data_type != TSDataType.BLOB
-        ):
-            raise TypeError(f"Expected STRING/TEXT/BLOB data type, got {self.data_type}.")
 
         # TEXT, STRING
         if self.data_type == TSDataType.TEXT or self.data_type == TSDataType.STRING:
@@ -156,7 +164,7 @@ class Field(object):
         """
         :param data_type: TSDataType
         """
-        if self.data_type is None or self.value is None or self.value is pd.NA:
+        if self.value is None:
             return None
         if data_type == TSDataType.BOOLEAN:
             return bool(self.value)
@@ -169,7 +177,10 @@ class Field(object):
         elif data_type == TSDataType.DOUBLE:
             return np.float64(self.value)
         elif data_type == TSDataType.DATE:
-            return parse_int_to_date(self.value)
+            if isinstance(self.value, datetime):
+                return self.value
+            elif isinstance(self.value, int):
+                return parse_int_to_date(self.value)
         elif data_type == TSDataType.TEXT or data_type == TSDataType.BLOB or data_type == TSDataType.STRING:
             return self.value
         else:
@@ -182,7 +193,5 @@ class Field(object):
         :param value: field value corresponding to the data type
         :param data_type: TSDataType
         """
-        if value is None or value is pd.NA:
-            return None
         field = Field(field_name, data_type, value)
         return field

@@ -21,6 +21,8 @@ from tsfile import ResultSet
 import os
 
 
+
+
 data_dir = os.path.join(os.path.dirname(__file__), "test.tsfile")
 DEVICE_NAME = "root.device"
 if os.path.exists(data_dir):
@@ -38,7 +40,7 @@ writer.close()
 reader = TsFileReader(data_dir)
 sensor_name = ["temp1", "temp2"]
 result = reader.query_timeseries("root.device", sensor_name, 0, 110)
-while result.has_next():
+while result.next():
     print(result.get_value_by_index(0))
     print(result.get_value_by_index(1))
     print(result.get_value_by_name("temp1"))

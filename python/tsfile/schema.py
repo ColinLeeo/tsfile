@@ -25,11 +25,12 @@ class TimeseriesSchema:
     encoding_type = None
     compression_type = None
 
-    def __init__(self, timeseries_name : str, data_type : TSDataType, encoding_type : TSEncoding = None, compression_type : Compressor = None):
+    def __init__(self, timeseries_name : str, data_type : TSDataType, encoding_type : TSEncoding = TSEncoding.PLAIN,
+                 compression_type : Compressor = Compressor.UNCOMPRESSED):
         self.timeseries_name = timeseries_name
         self.data_type = data_type
-        self.encoding_type = encoding_type if encoding_type is not None else TSEncoding.PLAIN
-        self.compression_type = compression_type if compression_type is not None else Compressor.UNCOMPRESSED
+        self.encoding_type = encoding_type
+        self.compression_type = compression_type
 
 class DeviceSchema:
     device_name = None
@@ -58,16 +59,20 @@ class TableSchema:
 class ResultSetMetaData:
     column_list = None
     data_types = None
-    device_name = None
+    device_id = None
     def __init__(self, column_list : List[str], data_types : List[TSDataType]):
         self.column_list = column_list
         self.data_types = data_types
 
-    def set_device_name(self, device_name : str):
-        self.device_name = device_name
+    def set_device_name(self, device_id : str):
+        self.device_id = device_id
     def get_data_type(self, column_index : int) -> TSDataType:
         return self.data_types[column_index]
     def get_column_name(self, column_index : int) -> str:
         return self.column_list[column_index]
     def get_column_name_index(self, column_name : str) -> int:
-        return self.column_list.index(self.device_name + "." + column_name)
+        return self.column_list.index(self.device_id + "." + column_name)
+    def get_column_num(self):
+        return len(self.column_list)
+    def get_column_list(self):
+        return self.column_list
