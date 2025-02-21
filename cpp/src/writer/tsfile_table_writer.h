@@ -48,6 +48,13 @@ class TsFileTableWriter {
                       uint64_t memory_threshold = 0);
     ~TsFileTableWriter();
     /**
+     * Registers a table schema with the writer.
+     *
+     * @param table_schema The schema of the table to be registered. Must not be null.
+     * @return Returns 0 on success, or a non-zero error code on failure.
+     */
+    int register_table(const std::shared_ptr<TableSchema>& table_schema);
+    /**
      * Writes the given tablet data into the target file according to the schema.
      *
      * @param tablet The tablet containing the data to be written. Must not be null.

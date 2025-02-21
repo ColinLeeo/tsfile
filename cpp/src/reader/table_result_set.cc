@@ -27,6 +27,7 @@ void TableResultSet::init() {
     for (uint32_t i = 0; i < column_names_.size(); ++i) {
         index_lookup_.insert({column_names_[i], i});
     }
+    result_set_metadata_ = std::make_shared<ResultSetMetadata>(column_names_, data_types_);
 }
 
 TableResultSet::~TableResultSet() {
@@ -82,8 +83,8 @@ RowRecord* TableResultSet::get_row_record() {
     return row_record_;
 }
 
-ResultSetMetadata* TableResultSet::get_metadata() {
-    return nullptr;
+std::shared_ptr<ResultSetMetadata> TableResultSet::get_metadata() {
+    return result_set_metadata_;
 }
 
 void TableResultSet::close() {

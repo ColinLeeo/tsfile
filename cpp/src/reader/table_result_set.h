@@ -36,7 +36,7 @@ class TableResultSet : public ResultSet {
     bool is_null(const std::string& column_name) override;
     bool is_null(uint32_t column_index) override;
     RowRecord* get_row_record() override;
-    ResultSetMetadata* get_metadata() override;
+    std::shared_ptr<ResultSetMetadata> get_metadata() override;
     void close() override;
    private:
     void init();
@@ -44,6 +44,7 @@ class TableResultSet : public ResultSet {
     common::RowIterator* row_iterator_ = nullptr;
     common::TsBlock* tsblock_ = nullptr;
     RowRecord* row_record_ = nullptr;
+    std::shared_ptr<ResultSetMetadata> result_set_metadata_;
     std::vector<std::unique_ptr<TsBlockReader>> tsblock_readers_;
     std::vector<std::string> column_names_;
     std::vector<common::TSDataType> data_types_;

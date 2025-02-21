@@ -195,4 +195,28 @@ ResultSet* TsFileReader::read_timeseries(
     const std::vector<std::string>& measurement_name) {
     return nullptr;
 }
+
+std::shared_ptr<TableSchema> TsFileReader::get_table_schema(const std::string &table_name) {
+    TsFileMeta *file_metadata = tsfile_executor_->get_tsfile_meta();
+    common::String table_name_str(table_name);
+    MetaIndexNode *table_root = nullptr;
+    std::shared_ptr<TableSchema> table_schema;
+    if (IS_FAIL(file_metadata->get_table_metaindex_node(table_name_str,
+                                                         table_root))) {
+    } else if (IS_FAIL(
+                   file_metadata->get_table_schema(table_name, table_schema))) {
+    }
+    return table_schema;
+}
+
+std::vector<std::shared_ptr<TableSchema>> TsFileReader::get_all_table_schemas() {
+    TsFileMeta *file_metadata = tsfile_executor_->get_tsfile_meta();
+    std::vector<std::shared_ptr<TableSchema>> table_schemas;
+    for (const auto& table_schema : file_metadata->table_schemas_) {
+        table_schemas.push_back(table_schema.second);
+    }
+    return table_schemas;
+}
+
+
 }  // namespace storage

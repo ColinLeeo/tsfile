@@ -225,7 +225,8 @@ class TableSchema {
 
     int serialize_to(common::ByteStream &out) {
         int ret = common::E_OK;
-        if (RET_FAIL(common::SerializationUtil::write_var_uint(
+        if (RET_FAIL(common::SerializationUtil::write_str(table_name_, out))) {
+        } else if (RET_FAIL(common::SerializationUtil::write_var_uint(
                 column_schemas_.size(), out))) {
         } else {
             for (size_t i = 0; IS_SUCC(ret) && i < column_schemas_.size();
@@ -244,7 +245,8 @@ class TableSchema {
     int deserialize(common::ByteStream &in) {
         int ret = common::E_OK;
         uint32_t num_columns;
-        if (RET_FAIL(
+        if (RET_FAIL(common::SerializationUtil::read_str(table_name_, in))) {
+        } else if (RET_FAIL(
                 common::SerializationUtil::read_var_uint(num_columns, in))) {
         } else {
             for (size_t i = 0; IS_SUCC(ret) && i < num_columns; i++) {

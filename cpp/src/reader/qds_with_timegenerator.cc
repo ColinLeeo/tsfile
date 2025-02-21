@@ -307,7 +307,7 @@ int QDSWithTimeGenerator::init(TsFileIOReader *io_reader, QueryExpression *qe) {
             value_at_vec_.push_back(va);
         }
     }
-    result_set_metadata_ = new ResultSetMetadata(column_names, data_types);
+    result_set_metadata_ = std::make_shared<ResultSetMetadata>(column_names, data_types);
     row_record_ = new RowRecord(value_at_vec_.size());
     tree_ = construct_node_tree(qe->expression_);
     return E_OK;
@@ -327,10 +327,6 @@ void QDSWithTimeGenerator::close() {
     if (row_record_ != nullptr) {
         delete row_record_;
         row_record_ = nullptr;
-    }
-    if (result_set_metadata_ != nullptr) {
-        delete result_set_metadata_;
-        result_set_metadata_ = nullptr;
     }
     if (tree_ != nullptr) {
         destroy_node(tree_);
@@ -392,7 +388,7 @@ bool QDSWithTimeGenerator::is_null(uint32_t column_index) {
 
 RowRecord *QDSWithTimeGenerator::get_row_record() { return row_record_; }
 
-ResultSetMetadata *QDSWithTimeGenerator::get_metadata() {
+std::shared_ptr<ResultSetMetadata> QDSWithTimeGenerator::get_metadata() {
     return result_set_metadata_;
 }
 Node *QDSWithTimeGenerator::construct_node_tree(Expression *expr) {

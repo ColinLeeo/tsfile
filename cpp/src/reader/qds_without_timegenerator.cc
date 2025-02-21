@@ -69,7 +69,7 @@ int QDSWithoutTimeGenerator::init(TsFileIOReader *io_reader,
         get_next_tsblock(i, true);
         data_types.push_back(value_iters_[i]->get_data_type());
     }
-    result_set_metadata_ = new ResultSetMetadata(column_names, data_types);
+    result_set_metadata_ = std::make_shared<ResultSetMetadata>(column_names, data_types);
     return E_OK;  // ignore invalid timeseries
 }
 
@@ -77,10 +77,6 @@ void QDSWithoutTimeGenerator::close() {
     if (row_record_ != nullptr) {
         delete row_record_;
         row_record_ = nullptr;
-    }
-    if (result_set_metadata_ != nullptr) {
-        delete result_set_metadata_;
-        result_set_metadata_ = nullptr;
     }
     for (size_t i = 0; i < time_iters_.size(); i++) {
         delete time_iters_[i];
@@ -157,7 +153,7 @@ bool QDSWithoutTimeGenerator::is_null(uint32_t column_index) {
 
 RowRecord *QDSWithoutTimeGenerator::get_row_record() { return row_record_; }
 
-ResultSetMetadata *QDSWithoutTimeGenerator::get_metadata() {
+std::shared_ptr<ResultSetMetadata> QDSWithoutTimeGenerator::get_metadata() {
     return result_set_metadata_;
 }
 

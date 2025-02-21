@@ -178,7 +178,9 @@ TEST_F(TsFileTableReaderTest, TableModelQuery) {
             }
         }
         for (int i = 0; i < 5; i++) {
-            ASSERT_EQ(table_result_set->get_value<common::String*>(i)->compare(literal_str), 0);
+            ASSERT_EQ(table_result_set->get_value<common::String*>(i)->compare(
+                          literal_str),
+                      0);
         }
         for (int i = 5; i < 10; i++) {
             ASSERT_EQ(table_result_set->get_value<int64_t>(i), 0);
@@ -189,5 +191,93 @@ TEST_F(TsFileTableReaderTest, TableModelQuery) {
     ASSERT_EQ(timestamp, 10);
     reader.destroy_query_data_set(table_result_set);
     delete[] literal;
+    ASSERT_EQ(reader.close(), common::E_OK);
+}
+
+TEST_F(TsFileTableReaderTest, TableModelResultMetadata) {
+    auto table_schema = gen_table_schema(0);
+    auto tsfile_table_writer_ =
+        std::make_shared<TsFileTableWriter>(&write_file_, table_schema);
+    auto tablet = gen_tablet(table_schema, 0, 1);
+    ASSERT_EQ(tsfile_table_writer_->write_table(tablet), common::E_OK);
+    ASSERT_EQ(tsfile_table_writer_->flush(), common::E_OK);
+    ASSERT_EQ(tsfile_table_writer_->close(), common::E_OK);
+    storage::TsFileReader reader;
+    int ret = reader.open(file_name_);
+    ASSERT_EQ(ret, common::E_OK);
+
+    ResultSet* tmp_result_set = nullptr;
+    ret = reader.query(table_schema->get_table_name(),
+                       table_schema->get_measurement_names(), 0, 1000000000000,
+                       tmp_result_set);
+    auto* table_result_set = (TableResultSet*)tmp_result_set;
+    auto result_set_metadata = table_result_set->get_metadata();
+    ASSERT_EQ(result_set_metadata->get_column_count(), 10);
+    for (int i = 0; i < 5; i++) {
+        ASSERT_EQ(result_set_metadata->get_column_name(i), "id" + to_string(i));
+        ASSERT_EQ(result_set_metadata->get_column_type(i), TSDataType::STRING);
+    }
+    for (int i = 5; i < 10; i++) {
+        ASSERT_EQ(result_set_metadata->get_column_name(i),
+                  "s" + to_string(i - 5));
+        ASSERT_EQ(result_set_metadata->get_column_type(i), TSDataType::INT64);
+    }
+    reader.destroy_query_data_set(table_result_set);
+    ASSERT_EQ(reader.close(), common::E_OK);
+}
+
+TEST_F(TsFileTableReaderTest, TableModelGetSchema) {
+    auto tsfile_table_writer_ =
+        std::make_shared<TsFileTableWriter>(&write_file_, nullptr);
+    for (int i = 0; i < 10; i++) {
+        auto table_schema = gen_table_schema(i);
+        auto tablet = gen_tablet(table_schema, 0, 1);
+        auto table_schema_ptr = std::shared_ptr<TableSchema>(table_schema);
+        tsfile_table_writer_->register_table(table_schema_ptr);
+        ASSERT_EQ(tsfile_table_writer_->write_table(tablet), common::E_OK);
+    }
+    ASSERT_EQ(tsfile_table_writer_->flush(), common::E_OK);
+    ASSERT_EQ(tsfile_table_writer_->close(), common::E_OK);
+    storage::TsFileReader reader;
+    int ret = reader.open(file_name_);
+    ASSERT_EQ(ret, common::E_OK);
+
+    auto table_schemas = reader.get_all_table_schemas();
+    std::sort(table_schemas.begin(), table_schemas.end(),
+              [](const std::shared_ptr<TableSchema>& a,
+                 const std::shared_ptr<TableSchema>& b) {
+                  return a->get_table_name() < b->get_table_name();
+              });  // The table_schema returned is not guaranteed to be sorted
+                   // by table_name
+    ASSERT_EQ(table_schemas.size(), 10);
+    for (int i = 0; i < 10; i++) {
+        ASSERT_EQ(table_schemas[i]->get_table_name(),
+                  "testtable" + to_string(i));
+        for (int j = 0; j < 5; j++) {
+            ASSERT_EQ(table_schemas[i]->get_data_types()[j],
+                      TSDataType::STRING);
+            ASSERT_EQ(table_schemas[i]->get_column_categories()[j],
+                      ColumnCategory::TAG);
+        }
+        for (int j = 5; j < 10; j++) {
+            ASSERT_EQ(table_schemas[i]->get_data_types()[j], TSDataType::INT64);
+            ASSERT_EQ(table_schemas[i]->get_column_categories()[j],
+                      ColumnCategory::FIELD);
+        }
+    }
+
+    auto table_schema = reader.get_table_schema("testtable0");
+    ASSERT_EQ(table_schema->get_table_name(), "testtable0");
+    for (int i = 0; i < 5; i++) {
+        ASSERT_EQ(table_schema->get_data_types()[i], TSDataType::STRING);
+        ASSERT_EQ(table_schema->get_column_categories()[i],
+                  ColumnCategory::TAG);
+    }
+    for (int i = 5; i < 10; i++) {
+        ASSERT_EQ(table_schema->get_data_types()[i], TSDataType::INT64);
+        ASSERT_EQ(table_schema->get_column_categories()[i],
+                  ColumnCategory::FIELD);
+    }
+
     ASSERT_EQ(reader.close(), common::E_OK);
 }

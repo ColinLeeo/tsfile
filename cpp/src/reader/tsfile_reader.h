@@ -57,7 +57,8 @@ class TsFileReader {
         std::string table_name);
     int get_timeseries_schema(std::shared_ptr<IDeviceID> device_id,
                               std::vector<MeasurementSchema> &result);
-
+    std::shared_ptr<TableSchema> get_table_schema(const std::string &table_name);
+    std::vector<std::shared_ptr<TableSchema>> get_all_table_schemas();
    private:
     int get_all_devices(std::vector<std::shared_ptr<IDeviceID>> &device_ids,
                         std::shared_ptr<MetaIndexNode> index_node,

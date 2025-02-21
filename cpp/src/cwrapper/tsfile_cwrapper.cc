@@ -329,7 +329,7 @@ bool tsfile_result_set_is_null_by_index(const ResultSet result_set,
 ResultSetMetaData tsfile_result_set_get_metadata(ResultSet result_set) {
     auto *r = static_cast<storage::QDSWithoutTimeGenerator *>(result_set);
     ResultSetMetaData meta_data;
-    storage::ResultSetMetadata *result_set_metadata = r->get_metadata();
+    std::shared_ptr<storage::ResultSetMetadata> result_set_metadata = r->get_metadata();
     meta_data.column_num = result_set_metadata->get_column_count();
     meta_data.column_names =
         static_cast<char **>(malloc(meta_data.column_num * sizeof(char *)));
