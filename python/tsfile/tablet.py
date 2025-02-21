@@ -23,7 +23,7 @@ from typing import List, Union
 import numpy as np
 
 from .date_utils import parse_date_to_int
-from .constants import TSDataType, Category
+from .constants import TSDataType, ColumnCategory
 
 
 class Tablet(object):

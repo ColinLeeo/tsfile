@@ -17,7 +17,8 @@
 #
 from typing import List
 
-from .constants import TSDataType, Category, TSEncoding, Compressor
+from .constants import TSDataType, ColumnCategory, TSEncoding, Compressor
+
 
 class TimeseriesSchema:
     timeseries_name = None
@@ -25,54 +26,102 @@ class TimeseriesSchema:
     encoding_type = None
     compression_type = None
 
-    def __init__(self, timeseries_name : str, data_type : TSDataType, encoding_type : TSEncoding = TSEncoding.PLAIN,
-                 compression_type : Compressor = Compressor.UNCOMPRESSED):
+    def __init__(self, timeseries_name: str, data_type: TSDataType, encoding_type: TSEncoding = TSEncoding.PLAIN,
+                 compression_type: Compressor = Compressor.UNCOMPRESSED):
         self.timeseries_name = timeseries_name
         self.data_type = data_type
         self.encoding_type = encoding_type
         self.compression_type = compression_type
 
+    def get_timeseries_name(self):
+        return self.timeseries_name
+
+    def get_data_type(self):
+        return self.data_type
+
+    def get_encoding_type(self):
+        return self.encoding_type
+
+    def get_compression_type(self):
+        return self.compression_type
+
+
 class DeviceSchema:
     device_name = None
     timeseries_list = None
-    def __init__(self, device_name : str, timeseries_list : List[TimeseriesSchema]):
+
+    def __init__(self, device_name: str, timeseries_list: List[TimeseriesSchema]):
         self.device_name = device_name
         self.timeseries_list = timeseries_list
+
+    def get_device_name(self):
+        return self.device_name
+
+    def get_timeseries_list(self):
+        return self.timeseries_list
+
 
 class ColumnSchema:
     column_name = None
     data_type = None
     category = None
-    def __init__(self, column_name : str, data_type : TSDataType, category : Category):
+
+    def __init__(self, column_name: str, data_type: TSDataType, category: ColumnCategory):
         self.column_name = column_name
         self.data_type = data_type
         self.category = category
+
+    def get_column_name(self):
+        return self.column_name
+
+    def get_data_type(self):
+        return self.data_type
+
+    def get_category(self):
+        return self.category
 
 
 class TableSchema:
     table_name = None
     columns = None
-    def __init__(self, table_name : str, columns : List[ColumnSchema]):
+
+    def __init__(self, table_name: str, columns: List[ColumnSchema]):
         self.table_name = table_name
         self.columns = columns
+
+    def get_table_name(self):
+        return self.table_name
+
+    def get_columns(self):
+        return self.columns
+
 
 class ResultSetMetaData:
     column_list = None
     data_types = None
     device_id = None
-    def __init__(self, column_list : List[str], data_types : List[TSDataType]):
+
+    def __init__(self, column_list: List[str], data_types: List[TSDataType]):
         self.column_list = column_list
         self.data_types = data_types
 
-    def set_device_name(self, device_id : str):
+    def set_device_name(self, device_id: str):
         self.device_id = device_id
-    def get_data_type(self, column_index : int) -> TSDataType:
+
+    def get_data_type(self, column_index: int) -> TSDataType:
         return self.data_types[column_index]
-    def get_column_name(self, column_index : int) -> str:
+
+    def get_column_name(self, column_index: int) -> str:
         return self.column_list[column_index]
-    def get_column_name_index(self, column_name : str) -> int:
+
+    def get_column_name_index(self, column_name: str) -> int:
         return self.column_list.index(self.device_id + "." + column_name)
+
     def get_column_num(self):
         return len(self.column_list)
+
     def get_column_list(self):
         return self.column_list
+
+    def get_data_type_list(self):
+        return self.data_types

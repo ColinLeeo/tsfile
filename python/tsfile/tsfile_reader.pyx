@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+import pandas as pd
 from pandas import DataFrame
 
 #cython: language_level=3
@@ -54,19 +55,39 @@ cdef class ResultSetPy:
         """
         return tsfile_result_set_has_next(self.result)
 
+    def get_result_column_info(self):
+        return {
+            column_name:column_type
+            for column_name, column_type in zip(
+                self.metadata.column_list,
+                self.metadata.data_types
+            )
+        }
+
     def read_next_data_frame(self, max_row_num : int = 1024):
         """
         :param max_row_num:
         :return: a dataframe contains data from query result.
         """
-        data_columns = []
-        data_type = []
-        for i in range(self.metadata.get_column_num()):
-            data_columns.append(self.metadata.get_column_name(i))
-            data_type.append(self.metadata.get_data_type(i).to_pandas_dtype())
-        data_frame = DataFrame()
+        column_names = self.metadata.get_column_list()
+        column_num = self.metadata.get_column_num()
+        data_type = [self.metadata.get_data_type(i) for i in range(column_num)]
 
-        pass
+        data_container = {
+            column_name: [] for column_name in column_names
+        }
+
+        cur_line = 0
+        while self.next() and cur_line < max_row_num:
+            row_data = (
+                self.get_value_by_index(i)
+                for i in range(column_num)
+            )
+            for column_name, value in zip(column_names, row_data):
+                data_container[column_name].append(value)
+
+        df = pd.DataFrame(data_container)
+        return df.astype(data_type)
 
     def get_value_by_index(self, index : int):
         """
@@ -125,6 +146,14 @@ cdef class ResultSetPy:
     def __dealloc__(self):
         self.close()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+
+
 cdef class TsFileReaderPy:
     """
     Cython wrapper class for interacting with TsFileReader C implementation.
@@ -143,7 +172,7 @@ cdef class TsFileReaderPy:
         self.reader = tsfile_reader_new_c(pathname)
 
     def query_table(self, table_name : str, column_names : List[str],
-              start_time : int = 0, end_time : int = 0) -> ResultSet:
+                    start_time : int = 0, end_time : int = 0) -> ResultSet:
         """
         Execute a time range query on specified table and columns.
         """
@@ -153,12 +182,13 @@ cdef class TsFileReaderPy:
         pyresult.init_c_(result, table_name)
         return pyresult
 
-    def query_timeseries(self, device_name : str, sensor_list : List[str], start_time : int = 0, end_time : int = 0) -> ResultSet:
+    def query_timeseries(self, device_name : str, sensor_list : List[str], start_time : int = 0,
+                         end_time : int = 0) -> ResultSet:
         """
         Execute a time range query on specified path list.
         """
         cdef ResultSet result;
-        result = tsfile_reader_query_paths_c(self.reader, device_name,  sensor_list, start_time, end_time)
+        result = tsfile_reader_query_paths_c(self.reader, device_name, sensor_list, start_time, end_time)
         pyresult = ResultSetPy()
         pyresult.init_c_(result, device_name)
         return pyresult
@@ -173,8 +203,3 @@ cdef class TsFileReaderPy:
 
     def __dealloc__(self):
         self.close()
-
-
-
-
-

@@ -29,7 +29,7 @@ from cpython.unicode cimport PyUnicode_AsUTF8String, PyUnicode_AsUTF8
 from tsfile.exceptions import ERROR_MAPPING
 from tsfile.schema import ResultSetMetaData as ResultSetMetaDataPy
 from tsfile.schema import TSDataType as TSDataTypePy, TSEncoding as TSEncodingPy
-from tsfile.schema import Compressor as CompressorPy, Category as CategoryPy
+from tsfile.schema import Compressor as CompressorPy, ColumnCategory as CategoryPy
 
 # check exception and set py exception object
 cdef inline void check_error(int errcode, const char* context=NULL) except *:

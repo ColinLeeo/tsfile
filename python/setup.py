@@ -35,13 +35,15 @@ def copy_tsfile_lib(source_dir, target_dir, suffix):
     if os.path.exists(source):
         shutil.copyfile(source, target)
 
-    link_name = os.path.join(target_dir, "libtsfile.dylib")
-    if os.path.exists(link_name):
-        os.remove(link_name)
-
     if system == "Linux":
+        link_name = os.path.join(target_dir, "libtsfile.so")
+        if os.path.exists(link_name):
+            os.remove(link_name)
         os.symlink(lib_file_name, link_name)
     elif system == "Darwin":
+        link_name = os.path.join(target_dir, "libtsfile.dylib")
+        if os.path.exists(link_name):
+            os.remove(link_name)
         os.symlink(lib_file_name, link_name)
 
 

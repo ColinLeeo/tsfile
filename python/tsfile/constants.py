@@ -103,6 +103,6 @@ class Compressor(IntEnum):
     LZMA2 = 9
 
 @unique
-class Category(IntEnum):
+class ColumnCategory(IntEnum):
     TAG = 0
     FIELD = 1
