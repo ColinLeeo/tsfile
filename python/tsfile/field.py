@@ -69,9 +69,14 @@ class Field(object):
 
         if (
             self.data_type != TSDataType.INT32
-            or self.data_type != TSDataType.INT64
+            and self.data_type != TSDataType.INT64
         ):
             raise TypeError(f"Expected INT32/64 data type, got {self.data_type}.")
+        min_int32, max_int32 = np.iinfo(np.int32).min, np.iinfo(np.int32).max
+        if not (min_int32 <= self.value <= max_int32):
+            raise OverflowError(
+                f"Value {self.value} exceeds int32 range [{min_int32}, {max_int32}]"
+            )
         return np.int32(self.value)
 
     def get_long_value(self):
@@ -82,7 +87,7 @@ class Field(object):
 
         if (
             self.data_type != TSDataType.INT32
-            or self.data_type != TSDataType.INT64
+            and self.data_type != TSDataType.INT64
         ):
             raise TypeError(f"Expected INT32/64 data type, got {self.data_type}.")
 
@@ -95,7 +100,7 @@ class Field(object):
             raise Exception("None Data Type Exception!")
         if (
             self.data_type != TSDataType.TIMESTAMP
-            or self.data_type != TSDataType.INT64
+            and self.data_type != TSDataType.INT64
         ):
             raise TypeError(f"Expected INT64/Timestamp data type, got {self.data_type}.")
         return np.int64(self.value)
@@ -107,7 +112,7 @@ class Field(object):
             raise Exception("None Data Type Exception!")
         if (
             self.data_type != TSDataType.FLOAT
-            or self.data_type != TSDataType.DOUBLE
+            and self.data_type != TSDataType.DOUBLE
         ):
             raise TypeError(f"Expected FLOAT/DOUBLE data type, got {self.data_type}.")
         return np.float32(self.value)
@@ -119,7 +124,7 @@ class Field(object):
             raise Exception("None Data Type Exception!")
         if (
             self.data_type != TSDataType.FLOAT
-            or self.data_type != TSDataType.DOUBLE
+            and self.data_type != TSDataType.DOUBLE
         ):
             raise TypeError(f"Expected DOUBLE/FLOAT data type, got {self.data_type}.")
         return np.float64(self.value)
@@ -131,7 +136,7 @@ class Field(object):
             raise Exception("None Data Type Exception!")
         if (
                 self.data_type != TSDataType.DATE
-                or self.data_type != TSDataType.INT64
+                and self.data_type != TSDataType.INT64
         ):
             raise TypeError(f"Expected DATE/INT64 data type, got {self.data_type}.")
         if isinstance(self.value, datetime):
