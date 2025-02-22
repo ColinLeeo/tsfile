@@ -139,7 +139,7 @@ struct ChunkHeader {
     int serialize_to(common::ByteStream &out) {
         int ret = common::E_OK;
         if (RET_FAIL(common::SerializationUtil::write_char(chunk_type_, out))) {
-        } else if (RET_FAIL(common::SerializationUtil::write_str(
+        } else if (RET_FAIL(common::SerializationUtil::write_var_str(
                        measurement_name_, out))) {
         } else if (RET_FAIL(common::SerializationUtil::write_var_uint(
                        data_size_, out))) {
@@ -156,7 +156,7 @@ struct ChunkHeader {
         int ret = common::E_OK;
         in.mark_read_pos();
         if (RET_FAIL(common::SerializationUtil::read_char(chunk_type_, in))) {
-        } else if (RET_FAIL(common::SerializationUtil::read_str(
+        } else if (RET_FAIL(common::SerializationUtil::read_var_str(
                        measurement_name_, in))) {
         } else if (RET_FAIL(common::SerializationUtil::read_var_uint(data_size_,
                                                                      in))) {
