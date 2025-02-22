@@ -143,11 +143,11 @@ cdef extern from "./tsfile_cwrapper.h":
 
     # row_record
     TsRecord ts_record_new(const char * device_id, int64_t timestamp, int timeseries_num);
-    ErrorCode insert_data_into_ts_record_by_name_int32_t(TsRecord data, const char *measurement_name, int32_t value);
-    ErrorCode insert_data_into_ts_record_by_name_int64_t(TsRecord data, const char *measurement_name, int64_t value);
-    ErrorCode insert_data_into_ts_record_by_name_float(TsRecord data, const char *measurement_name, float value);
-    ErrorCode insert_data_into_ts_record_by_name_double(TsRecord data, const char *measurement_name, double value);
-    ErrorCode insert_data_into_ts_record_by_name_bool(TsRecord data, const char *measurement_name, bint value);
+    ErrorCode insert_data_into_ts_record_by_name_int32_t(TsRecord data, const char *measurement_name, const int32_t value);
+    ErrorCode insert_data_into_ts_record_by_name_int64_t(TsRecord data, const char *measurement_name, const int64_t value);
+    ErrorCode insert_data_into_ts_record_by_name_float(TsRecord data, const char *measurement_name, const float value);
+    ErrorCode insert_data_into_ts_record_by_name_double(TsRecord data, const char *measurement_name, const double value);
+    ErrorCode insert_data_into_ts_record_by_name_bool(TsRecord data, const char *measurement_name,const  bint value);
 
     void free_tsfile_ts_record(TsRecord* record);
 
@@ -163,7 +163,7 @@ cdef extern from "./tsfile_cwrapper.h":
                                          timestamp start_time, timestamp end_time);
 
     # resultSet : get data from resultSet
-    bint tsfile_result_set_has_next(ResultSet result_set);
+    bint tsfile_result_set_next(ResultSet result_set);
     bint tsfile_result_set_is_null_by_index(ResultSet result_set, uint32_t column_index);
     bint tsfile_result_set_is_null_by_name(ResultSet result_set, const char* column_name);
     void free_tsfile_result_set(ResultSet* result_set);

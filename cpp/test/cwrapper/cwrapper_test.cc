@@ -122,7 +122,7 @@ TEST_F(CWrapperTest, WriterFlushTabletAndReadData) {
               std::string("device0.measurement4"));
     ASSERT_EQ(metadata.data_types[9], TS_DATATYPE_INT64);
     for (int i = 0; i < measurement_num - 1; i++) {
-        ASSERT_TRUE(tsfile_result_set_has_next(result_set));
+        ASSERT_TRUE(tsfile_result_set_next(result_set));
         ASSERT_FALSE(tsfile_result_set_is_null_by_index(result_set, i));
         ASSERT_EQ(tsfile_result_set_get_value_by_index_int64_t(result_set, i),
                   i * 2);

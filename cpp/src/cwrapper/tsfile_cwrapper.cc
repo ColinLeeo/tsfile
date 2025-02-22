@@ -29,7 +29,7 @@
 static bool is_init = false;
 
 Tablet tablet_new_with_device(const char *device_id, char **column_name_list,
-                              TSDataType *data_types, ColumnCategory* category,
+                              TSDataType *data_types, ColumnCategory *category,
                               int column_num, int max_rows) {
     std::vector<std::string> measurement_list;
     std::vector<common::TSDataType> data_type_list;
@@ -39,18 +39,20 @@ Tablet tablet_new_with_device(const char *device_id, char **column_name_list,
         data_type_list.push_back(
             static_cast<common::TSDataType>(*(data_types + i)));
     }
-    storage::Tablet* tablet = nullptr;
+    storage::Tablet *tablet = nullptr;
     if (category == nullptr) {
         tablet = new storage::Tablet(device_id, &measurement_list,
-                                       &data_type_list, max_rows);
+                                     &data_type_list, max_rows);
     } else {
         std::vector<storage::ColumnCategory> column_category_list;
         column_category_list.reserve(column_num);
         for (int i = 0; i < column_num; i++) {
-            column_category_list.emplace_back(static_cast<storage::ColumnCategory>(*(category + i)));
+            column_category_list.emplace_back(
+                static_cast<storage::ColumnCategory>(*(category + i)));
         }
-        tablet = new storage::Tablet(device_id, measurement_list,
-            data_type_list, column_category_list, max_rows);
+        tablet =
+            new storage::Tablet(device_id, measurement_list, data_type_list,
+                                column_category_list, max_rows);
     }
     tablet->init();
     return tablet;
@@ -123,15 +125,15 @@ TsRecord ts_record_new(const char *device_id, timestamp timestamp,
     return record;
 }
 
-#define INSERT_DATA_INTO_TS_RECORD_BY_NAME_DEF(type)                 \
-    ERRNO insert_data_into_ts_record_by_name_##type(                  \
-        TsRecord data, const char *measurement_name, type value) {   \
-        auto *record = (storage::TsRecord *)data;                    \
-        storage::DataPoint point(measurement_name, value);           \
-        if (record->points_.size() + 1 > record->points_.capacity()) \
-            return common::E_BUF_NOT_ENOUGH;                         \
-        record->points_.push_back(point);                            \
-        return common::E_OK;                                         \
+#define INSERT_DATA_INTO_TS_RECORD_BY_NAME_DEF(type)                     \
+    ERRNO insert_data_into_ts_record_by_name_##type(                     \
+        TsRecord data, const char *measurement_name, const type value) { \
+        auto *record = (storage::TsRecord *)data;                        \
+        storage::DataPoint point(measurement_name, value);               \
+        if (record->points_.size() + 1 > record->points_.capacity())     \
+            return common::E_BUF_NOT_ENOUGH;                             \
+        record->points_.push_back(point);                                \
+        return common::E_OK;                                             \
     }
 
 INSERT_DATA_INTO_TS_RECORD_BY_NAME_DEF(int32_t);
@@ -281,27 +283,29 @@ ERRNO tsfile_writer_flush_data(TsFileWriter writer) {
 // Query
 
 ResultSet tsfile_reader_query_table(TsFileReader reader, const char *table_name,
-char **columns, uint32_t column_num,
+                                    char **columns, uint32_t column_num,
                                     timestamp start_time, timestamp end_time) {
     // TODO: Implement query table with tsfile reader.
     return nullptr;
 }
 
-ResultSet tsfile_reader_query_device(TsFileReader reader, const char* device_name,
-    char** sensor_name, uint32_t sensor_num,
-                                   timestamp start_time, timestamp end_time) {
+ResultSet tsfile_reader_query_device(TsFileReader reader,
+                                     const char *device_name,
+                                     char **sensor_name, uint32_t sensor_num,
+                                     timestamp start_time, timestamp end_time) {
     auto *r = static_cast<storage::TsFileReader *>(reader);
     std::vector<std::string> selected_paths;
     selected_paths.reserve(sensor_num);
     for (int i = 0; i < sensor_num; i++) {
-        selected_paths.push_back(std::string(device_name) + "." + std::string(sensor_name[i]));
+        selected_paths.push_back(std::string(device_name) + "." +
+                                 std::string(sensor_name[i]));
     }
     storage::ResultSet *qds = nullptr;
     r->query(selected_paths, start_time, end_time, qds);
     return qds;
 }
 
-bool tsfile_result_set_has_next(ResultSet result_set) {
+bool tsfile_result_set_next(ResultSet result_set) {
     auto *r = static_cast<storage::QDSWithoutTimeGenerator *>(result_set);
     return r->next();
 }
@@ -382,7 +386,7 @@ TableSchema tsfile_reader_get_table_schema(TsFileReader reader,
 }
 
 DeviceSchema tsfile_reader_get_device_schema(TsFileReader reader,
-                                                 const char *device_id) {
+                                             const char *device_id) {
     auto *r = static_cast<storage::TsFileReader *>(reader);
     std::vector<storage::MeasurementSchema> measurement_schemas;
     r->get_timeseries_schema(
@@ -413,21 +417,21 @@ TableSchema *tsfile_reader_get_all_table_schemas(TsFileReader reader,
 }
 
 // delete pointer
-void free_tsfile_ts_record(TsRecord* record) {
+void free_tsfile_ts_record(TsRecord *record) {
     if (*record != nullptr) {
         delete static_cast<storage::TsRecord *>(*record);
     }
     *record = nullptr;
 }
 
-void free_tablet(Tablet* tablet) {
+void free_tablet(Tablet *tablet) {
     if (*tablet != nullptr) {
         delete static_cast<storage::Tablet *>(*tablet);
     }
     *tablet = nullptr;
 }
 
-void free_tsfile_result_set(ResultSet* result_set) {
+void free_tsfile_result_set(ResultSet *result_set) {
     if (*result_set != nullptr) {
         delete static_cast<storage::ResultSet *>(*result_set);
     }

@@ -158,7 +158,7 @@ TsRecord ts_record_new(const char* device_id, timestamp timestamp,
 
 #define INSERT_DATA_INTO_TS_RECORD_BY_NAME(type)     \
     ERRNO insert_data_into_ts_record_by_name_##type( \
-        TsRecord data, const char* measurement_name, type value);
+        TsRecord data, const char* measurement_name, const type value);
 
 INSERT_DATA_INTO_TS_RECORD_BY_NAME(int32_t);
 INSERT_DATA_INTO_TS_RECORD_BY_NAME(int64_t);
@@ -197,7 +197,7 @@ ResultSet tsfile_reader_query_device(TsFileReader reader,
                                      const char* device_name,
                                      char** sensor_name, uint32_t sensor_num,
                                      timestamp start_time, timestamp end_time);
-bool tsfile_result_set_has_next(ResultSet result_set);
+bool tsfile_result_set_next(ResultSet result_set);
 
 #define TSFILE_RESULT_SET_GET_VALUE_BY_NAME(type)                         \
     type tsfile_result_set_get_value_by_name_##type(ResultSet result_set, \
