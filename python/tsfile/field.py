@@ -79,11 +79,11 @@ class Field(object):
             and self.data_type != TSDataType.FLOAT
             and self.data_type != TSDataType.DOUBLE
         ):
-            raise TypeError(f"Expected data type, got {self.data_type}.")
+            raise TypeError(f"Expected INT32/64 or DOUBLE/FLOAT data type, got {self.data_type}.")
         min_int32, max_int32 = np.iinfo(np.int32).min, np.iinfo(np.int32).max
         if not (min_int32 <= self.value <= max_int32):
             raise OverflowError(
-                f"Value {self.value} exceeds int32 range [{min_int32}, {max_int32}]"
+                f"Value {self.value} exceeds int range [{min_int32}, {max_int32}]"
             )
         return np.int32(self.value)
 
@@ -99,7 +99,7 @@ class Field(object):
             and self.data_type != TSDataType.FLOAT
             and self.data_type != TSDataType.DOUBLE
         ):
-            raise TypeError(f"Expected INT32/64 data type, got {self.data_type}.")
+            raise TypeError(f"Expected INT32/64 or DOUBLE/FLOAT data type, got {self.data_type}.")
 
         return np.int64(self.value)
 
@@ -112,7 +112,7 @@ class Field(object):
             self.data_type != TSDataType.TIMESTAMP
             and self.data_type != TSDataType.INT64
         ):
-            raise TypeError(f"Expected INT64/Timestamp data type, got {self.data_type}.")
+            raise TypeError(f"Expected INT64/TIMESTAMP data type, got {self.data_type}.")
         return np.int64(self.value)
 
     def get_float_value(self):
@@ -126,7 +126,13 @@ class Field(object):
             and self.data_type != TSDataType.FLOAT
             and self.data_type != TSDataType.DOUBLE
         ):
-            raise TypeError(f"Expected FLOAT/DOUBLE data type, got {self.data_type}.")
+            raise TypeError(f"Expected INT32/64 or DOUBLE/FLOAT data type, got {self.data_type}.")
+        min_float32, max_float32 = np.finfo(np.float32).min, np.finfo(np.float32).max
+        if not (min_float32 <= self.value <= max_float32):
+            raise OverflowError(
+                f"Value {self.value} exceeds float range [{min_float32}, {max_float32}]"
+            )
+
         return np.float32(self.value)
 
     def get_double_value(self):
@@ -140,7 +146,7 @@ class Field(object):
             and self.data_type != TSDataType.FLOAT
             and self.data_type != TSDataType.DOUBLE
         ):
-            raise TypeError(f"Expected DOUBLE/FLOAT data type, got {self.data_type}.")
+            raise TypeError(f"Expected INT32/64 or DOUBLE/FLOAT data type, got {self.data_type}.")
         return np.float64(self.value)
 
     def get_date_value(self):

@@ -66,9 +66,9 @@ class TSDataType(IntEnum):
         elif self == TSDataType.DATE:
             return "datetime64[ns]"
         elif self == TSDataType.BLOB:
-            return "object"  # BLOB 通常存储为字节对象
+            return "object"
         else:
-            raise ValueError(f"未知类型: {self}")
+            raise ValueError(f"Unknown data type: {self}")
 
 
 @unique

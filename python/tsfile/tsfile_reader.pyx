@@ -170,7 +170,7 @@ cdef class ResultSetPy:
         Close result set, free C resource.
         :return:
         """
-        if self.result is not NULL:
+        if self.result != NULL:
             free_tsfile_result_set(&self.result)
 
 
@@ -220,7 +220,7 @@ cdef class TsFileReaderPy:
         self.reader = tsfile_reader_new_c(pathname)
 
     def query_table(self, table_name : str, column_names : List[str],
-                    start_time : int = 0, end_time : int = 0) -> ResultSet:
+                    start_time : int = 0, end_time : int = 0) -> ResultSetPy:
         """
         Execute a time range query on specified table and columns.
         """
@@ -232,15 +232,11 @@ cdef class TsFileReaderPy:
         return pyresult
 
     def query_timeseries(self, device_name : str, sensor_list : List[str], start_time : int = 0,
-                         end_time : int = 0) -> ResultSet:
+                         end_time : int = 0) -> ResultSetPy:
         """
         Execute a time range query on specified path list.
         """
         cdef ResultSet result;
-        print(device_name)
-        print(sensor_list)
-        print(start_time)
-        print(end_time)
         result = tsfile_reader_query_paths_c(self.reader, device_name, sensor_list, start_time, end_time)
         pyresult = ResultSetPy(self)
         pyresult.init_c(result, device_name)
