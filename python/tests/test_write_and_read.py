@@ -26,32 +26,37 @@ from tsfile import TSDataType
 from tsfile import Tablet, RowRecord, Field
 
 def test_row_record_write_and_read():
-    writer = TsFileWriter("record_write_and_read.tsfile")
-    timeseries = TimeseriesSchema("level1", TSDataType.INT64)
-    writer.register_timeseries("root.device1", timeseries)
-    writer.register_timeseries("root.device1", TimeseriesSchema("level2", TSDataType.DOUBLE))
-    writer.register_timeseries("root.device1", TimeseriesSchema("level3", TSDataType.INT32))
+    try:
+        writer = TsFileWriter("record_write_and_read.tsfile")
+        timeseries = TimeseriesSchema("level1", TSDataType.INT64)
+        writer.register_timeseries("root.device1", timeseries)
+        writer.register_timeseries("root.device1", TimeseriesSchema("level2", TSDataType.DOUBLE))
+        writer.register_timeseries("root.device1", TimeseriesSchema("level3", TSDataType.INT32))
 
-    max_row_num = 1000
-    for i in range(max_row_num):
-        row = RowRecord("root.device1", i,
-                        [Field("level1", TSDataType.INT64, i),
-                                Field("level2", TSDataType.DOUBLE, i*1.1),
-                                Field("level3", TSDataType.INT32, i*2)])
-        writer.write_row_record(row)
+        max_row_num = 1000
+        for i in range(max_row_num):
+            row = RowRecord("root.device1", i,
+                            [Field("level1", i, TSDataType.INT64),
+                                    Field("level2",i*1.1, TSDataType.DOUBLE),
+                                    Field("level3", i*2, TSDataType.INT32)])
+            writer.write_row_record(row)
 
-    writer.close()
+        writer.close()
 
-    reader = TsFileReader("record_write_and_read.tsfile")
-    result = reader.query_timeseries("root.device1", ["level1","level2"], 10, 100)
-    i = 10
-    while result.next():
-        assert result.get_value_by_index(0) == i
-        assert result.get_value_by_name("level2") == i * 1.1
-        i = i + 1
-    reader.close()
-    if os.path.exists("record_write_and_read.tsfile"):
-        os.remove("record_write_and_read.tsfile")
+        reader = TsFileReader("record_write_and_read.tsfile")
+        result = reader.query_timeseries("root.device1", ["level1","level2"], 10, 100)
+        i = 10
+        while result.next():
+            assert result.get_value_by_index(0) == i
+            assert result.get_value_by_name("level2") == i * 1.1
+            i = i + 1
+        print(reader.get_active_query_result())
+        result.close()
+        print(reader.get_active_query_result())
+        reader.close()
+    finally:
+        if os.path.exists("record_write_and_read.tsfile"):
+            os.remove("record_write_and_read.tsfile")
 
 def test_tablet_write_and_read():
     writer = TsFileWriter("tablet_write_and_read.tsfile")

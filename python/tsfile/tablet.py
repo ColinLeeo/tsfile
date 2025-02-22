@@ -88,11 +88,9 @@ class Tablet(object):
         self.timestamp_list[row_index] = timestamp
 
     def _check_numeric_range(self, value: Union[int, float], data_type: TSDataType):
+        if math.isnan(value) or math.isinf(value):
+            return
         min_val, max_val = self._type_ranges[data_type]
-        if math.isinf(value):
-            raise ValueError(
-                f"{data_type}.name not support inf"
-            )
         if not (min_val <= value <= max_val):
             raise OverflowError(f"data:{value} out of range ({min_val}, {max_val})")
 

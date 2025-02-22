@@ -103,10 +103,13 @@ cdef class TsFileWriterPy:
         Flush data and Close tsfile writer.
         """
         cdef ErrorCode errno
+        if self.writer == NULL:
+            return
         errno = tsfile_writer_flush_data(self.writer)
         check_error(errno)
         errno = tsfile_writer_close(self.writer)
         check_error(errno)
+        self.writer = NULL
 
     def __dealloc__(self):
         self.close()

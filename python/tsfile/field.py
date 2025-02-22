@@ -22,9 +22,12 @@ import numpy as np
 from tsfile.constants import TSDataType
 from tsfile.date_utils import parse_int_to_date
 
+class NoneDataTypeException(Exception):
+    pass
+
 
 class Field(object):
-    def __init__(self, field_name, data_type=None, value=None):
+    def __init__(self, field_name, value=None, data_type=None):
         """
         :param field_name: field's name
         :param data_type: TSDataType
@@ -45,6 +48,9 @@ class Field(object):
     def set_value(self, value):
         self.value = value
 
+    def set_data_type(self, data_type):
+        self.data_type = data_type
+
     def get_value(self):
         return self.value
 
@@ -52,7 +58,7 @@ class Field(object):
         if self.value is None:
             return None
         if self.data_type is None:
-            raise Exception("None Data Type Exception!")
+            raise NoneDataTypeException("None Data Type Exception!")
         if self.data_type != TSDataType.BOOLEAN:
             raise TypeError(f"Expected BOOLEAN data type, got {self.data_type}.")
 
@@ -65,13 +71,15 @@ class Field(object):
         if self.value is None:
             return None
         if self.data_type is None:
-            raise Exception("None Data Type Exception!")
+            raise NoneDataTypeException("None Data Type Exception!")
 
         if (
             self.data_type != TSDataType.INT32
             and self.data_type != TSDataType.INT64
+            and self.data_type != TSDataType.FLOAT
+            and self.data_type != TSDataType.DOUBLE
         ):
-            raise TypeError(f"Expected INT32/64 data type, got {self.data_type}.")
+            raise TypeError(f"Expected data type, got {self.data_type}.")
         min_int32, max_int32 = np.iinfo(np.int32).min, np.iinfo(np.int32).max
         if not (min_int32 <= self.value <= max_int32):
             raise OverflowError(
@@ -83,11 +91,13 @@ class Field(object):
         if self.value is None:
             return None
         if self.data_type is None:
-            raise Exception("None Data Type Exception!")
+            raise NoneDataTypeException("None Data Type Exception!")
 
         if (
             self.data_type != TSDataType.INT32
             and self.data_type != TSDataType.INT64
+            and self.data_type != TSDataType.FLOAT
+            and self.data_type != TSDataType.DOUBLE
         ):
             raise TypeError(f"Expected INT32/64 data type, got {self.data_type}.")
 
@@ -97,7 +107,7 @@ class Field(object):
         if self.value is None:
             return None
         if self.data_type is None:
-            raise Exception("None Data Type Exception!")
+            raise NoneDataTypeException("None Data Type Exception!")
         if (
             self.data_type != TSDataType.TIMESTAMP
             and self.data_type != TSDataType.INT64
@@ -109,9 +119,11 @@ class Field(object):
         if self.value is None:
             return None
         if self.data_type is None:
-            raise Exception("None Data Type Exception!")
+            raise NoneDataTypeException("None Data Type Exception!")
         if (
-            self.data_type != TSDataType.FLOAT
+            self.data_type != TSDataType.INT32
+            and self.data_type != TSDataType.INT64
+            and self.data_type != TSDataType.FLOAT
             and self.data_type != TSDataType.DOUBLE
         ):
             raise TypeError(f"Expected FLOAT/DOUBLE data type, got {self.data_type}.")
@@ -121,9 +133,11 @@ class Field(object):
         if self.value is None:
             return None
         if self.data_type is None:
-            raise Exception("None Data Type Exception!")
+            raise NoneDataTypeException("None Data Type Exception!")
         if (
-            self.data_type != TSDataType.FLOAT
+            self.data_type != TSDataType.INT32
+            and self.data_type != TSDataType.INT64
+            and self.data_type != TSDataType.FLOAT
             and self.data_type != TSDataType.DOUBLE
         ):
             raise TypeError(f"Expected DOUBLE/FLOAT data type, got {self.data_type}.")
@@ -133,7 +147,7 @@ class Field(object):
         if self.value is None:
             return None
         if self.data_type is None:
-            raise Exception("None Data Type Exception!")
+            raise NoneDataTypeException("None Data Type Exception!")
         if (
                 self.data_type != TSDataType.DATE
                 and self.data_type != TSDataType.INT64
@@ -151,11 +165,11 @@ class Field(object):
         if self.value is None:
             return None
         if self.data_type is None:
-            raise Exception("None Data Type Exception!")
+            raise NoneDataTypeException("None Data Type Exception!")
 
         # TEXT, STRING
         if self.data_type == TSDataType.TEXT or self.data_type == TSDataType.STRING:
-            return self.value.decode("utf-8")
+            return str(self.value)
         # BLOB
         elif self.data_type == TSDataType.BLOB:
             return str(hex(int.from_bytes(self.value, byteorder="big")))
@@ -191,12 +205,3 @@ class Field(object):
         else:
             raise RuntimeError("Unsupported data type:" + str(data_type))
 
-    @staticmethod
-    def get_field(field_name, value, data_type):
-        """
-        :param field_name: field's name
-        :param value: field value corresponding to the data type
-        :param data_type: TSDataType
-        """
-        field = Field(field_name, data_type, value)
-        return field

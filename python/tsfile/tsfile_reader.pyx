@@ -15,15 +15,19 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+
+#cython: language_level=3
+
 import weakref
 
 import pandas as pd
 from pandas import DataFrame
 
-#cython: language_level=3
+
 
 from .tsfile_cpp cimport *
 from .tsfile_py_cpp cimport *
+cimport cython
 
 from typing import List
 
@@ -33,11 +37,14 @@ cdef class ResultSetPy:
     """
     Get data from a query result.
     """
+    __pyx_allow_weakref__ = True
     cdef ResultSet result
     cdef object metadata
     cdef object device_name
     cdef object invalid_result_set
     cdef object tsfile_reader
+    cdef object __weakref__
+
 
     def __init__(self, tsfile_reader : TsFileReaderPy):
         self.metadata = None
@@ -164,7 +171,11 @@ cdef class ResultSetPy:
 
 
         if self.tsfile_reader is not None:
-            self.tsfile_reader().notify_result_set_discard(self)
+            reader = self.tsfile_reader()
+            if reader is not None:
+                reader.notify_result_set_discard(self)
+
+        self.result = NULL
 
     def set_invalid_result_set(self, invalid : bool):
         self.invalid_result_set = invalid
@@ -189,6 +200,8 @@ cdef class TsFileReaderPy:
     """
     cdef TsFileReader reader
     cdef object activate_result_set_list
+    __pyx_allow_weakref__ = True
+    cdef object __weakref__
 
 
     def __init__(self, pathname):
@@ -232,7 +245,8 @@ cdef class TsFileReaderPy:
         """
         Close TsFile Reader, if reader has result sets, invalid them.
         """
-
+        if self.reader == NULL:
+            return
         # result_set_bak to avoid runtime error.
         result_set_bak = list(self.activate_result_set_list)
         for result_set in result_set_bak:
@@ -241,6 +255,10 @@ cdef class TsFileReaderPy:
         cdef ErrorCode err_code
         err_code = tsfile_reader_close(self.reader)
         check_error(err_code)
+        self.reader = NULL
+
+    def get_active_query_result(self):
+        return self.activate_result_set_list
 
     def __dealloc__(self):
         self.close()
