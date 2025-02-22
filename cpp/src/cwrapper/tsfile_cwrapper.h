@@ -139,15 +139,21 @@ TABLET_ADD_VALUE_BY_NAME(float);
 TABLET_ADD_VALUE_BY_NAME(double);
 TABLET_ADD_VALUE_BY_NAME(bool);
 
-#define TABLE_ADD_VALUE_BY_INDEX(type)                                        \
+ERRNO tablet_add_value_by_name_string(Tablet tablet, uint32_t row_index,
+                                      const char* column_name, char* value);
+
+#define TABLET_ADD_VALUE_BY_INDEX(type)                                       \
     ERRNO tablet_add_value_by_index_##type(Tablet tablet, uint32_t row_index, \
                                            uint32_t column_index, type value);
 
-TABLE_ADD_VALUE_BY_INDEX(int32_t);
-TABLE_ADD_VALUE_BY_INDEX(int64_t);
-TABLE_ADD_VALUE_BY_INDEX(float);
-TABLE_ADD_VALUE_BY_INDEX(double);
-TABLE_ADD_VALUE_BY_INDEX(bool);
+TABLET_ADD_VALUE_BY_INDEX(int32_t);
+TABLET_ADD_VALUE_BY_INDEX(int64_t);
+TABLET_ADD_VALUE_BY_INDEX(float);
+TABLET_ADD_VALUE_BY_INDEX(double);
+TABLET_ADD_VALUE_BY_INDEX(bool);
+
+ERRNO tablet_add_value_by_index_string(Tablet tablet, uint32_t row_index,
+                                       uint32_t column_index, char* value);
 
 void* tablet_get_value(Tablet tablet, uint32_t row_index, uint32_t schema_index,
                        TSDataType* type);

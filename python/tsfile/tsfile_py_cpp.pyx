@@ -185,6 +185,8 @@ cdef Tablet to_c_tablet(object tablet):
     cdef char** columns_names
     cdef TSDataType* column_types
     cdef ColumnCategory* column_category
+    cdef bytes row_bytes
+    cdef char *row_str
 
 
     column_num = len(tablet.get_column_name_list())
@@ -192,6 +194,7 @@ cdef Tablet to_c_tablet(object tablet):
     columns_types = <TSDataType *> malloc(sizeof(TSDataType) * column_num)
     column_category = NULL
     if tablet.get_category_list() is not None:
+        column_category =<ColumnCategory *> malloc(sizeof(ColumnCategory) * column_num)
         for i in range(column_num):
             column_category[i] = to_c_category_type(tablet.get_category_list()[i])
     for i in range(column_num):
@@ -246,6 +249,14 @@ cdef Tablet to_c_tablet(object tablet):
             for row in range(max_row_num):
                 if value[row] is not None:
                     tablet_add_value_by_index_double(ctablet, row, col, value[row])
+
+        elif data_type == TS_DATATYPE_STRING:
+            for row in range(max_row_num):
+                if value[row] is not None:
+                    row_bytes = PyUnicode_AsUTF8String(value[row])
+                    row_str = row_bytes
+                    tablet_add_value_by_index_string(ctablet, row, col, row_str)
+
 
     return ctablet
 

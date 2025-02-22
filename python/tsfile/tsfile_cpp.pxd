@@ -138,6 +138,8 @@ cdef extern from "./tsfile_cwrapper.h":
     ErrorCode tablet_add_value_by_index_double(Tablet tablet, uint32_t row_index, uint32_t column_index, double value);
     ErrorCode tablet_add_value_by_index_float(Tablet tablet, uint32_t row_index, uint32_t column_index, float value);
     ErrorCode tablet_add_value_by_index_bool(Tablet tablet, uint32_t row_index, uint32_t column_index, bint value);
+    ErrorCode tablet_add_value_by_index_string(Tablet tablet, uint32_t row_index,
+                                       uint32_t column_index, char* value);
 
     void free_tablet(Tablet* tablet);
 
