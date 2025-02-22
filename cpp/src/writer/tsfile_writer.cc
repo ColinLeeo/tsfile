@@ -535,6 +535,7 @@ int TsFileWriter::write_tablet_aligned(const Tablet &tablet) {
             mnames_getter, time_chunk_writer, value_chunk_writers))) {
         return ret;
     }
+    time_write_column(time_chunk_writer, tablet);
     ASSERT(value_chunk_writers.size() == tablet.get_column_count());
     for (uint32_t c = 0; c < value_chunk_writers.size(); c++) {
         ValueChunkWriter *value_chunk_writer = value_chunk_writers[c];
@@ -678,8 +679,23 @@ int TsFileWriter::write_column(ChunkWriter *chunk_writer, const Tablet &tablet,
     return ret;
 }
 
+int TsFileWriter::time_write_column(TimeChunkWriter *time_chunk_writer, const Tablet &tablet, uint32_t start_idx,
+                               uint32_t end_idx) {
+    int64_t *timestamps = tablet.timestamps_;
+    int ret = E_OK;
+    if (IS_NULL(time_chunk_writer) || IS_NULL(timestamps)) {
+        return E_INVALID_ARG;
+    }
+    for (uint32_t r = start_idx; r < end_idx; r++) {
+        if (RET_FAIL(time_chunk_writer->write(timestamps[r]))) {
+            break;
+        }
+    }
+    return ret;
+}
+
 int TsFileWriter::value_write_column(ValueChunkWriter *value_chunk_writer,
-                                     const Tablet &tablet, int col_idx) {
+                                     const Tablet &tablet, int col_idx, uint32_t start_idx, uint32_t end_idx) {
     int ret = E_OK;
 
     TSDataType data_type = tablet.schema_vec_->at(col_idx).data_type_;

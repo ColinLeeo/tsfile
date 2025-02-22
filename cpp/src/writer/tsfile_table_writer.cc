@@ -42,6 +42,8 @@ int storage::TsFileTableWriter::register_table(const std::shared_ptr<TableSchema
 int storage::TsFileTableWriter::write_table(storage::Tablet &tablet) const {
     if (tablet.get_table_name().empty()) {
         tablet.set_table_name(table_name_);
+    } else if (tablet.get_table_name() != table_name_) {
+        return common::E_INVALID_ARG;
     }
     return tsfile_writer_->write_table(tablet);
 }

@@ -321,6 +321,82 @@ TEST_F(TsFileWriterTest, WriteMultipleTabletsMultiFlush) {
     reader.destroy_query_data_set(qds);
 }
 
+TEST_F(TsFileWriterTest, WriteMultipleTabletsAlignedMultiFlush) {
+    const int device_num = 20;
+    const int measurement_num = 20;
+    int max_tablet_num = 100;
+    std::vector<std::vector<MeasurementSchema>> schema_vecs(
+        device_num, std::vector<MeasurementSchema>(measurement_num));
+    for (int i = 0; i < device_num; i++) {
+        std::string device_name = "test_device" + std::to_string(i);
+        for (int j = 0; j < measurement_num; j++) {
+            std::string measure_name = "measurement" + std::to_string(j);
+            schema_vecs[i][j] =
+                MeasurementSchema(measure_name, common::TSDataType::INT32,
+                                  common::TSEncoding::PLAIN,
+                                  common::CompressionType::UNCOMPRESSED);
+            tsfile_writer_->register_aligned_timeseries(
+                device_name, storage::MeasurementSchema(
+                                 measure_name, common::TSDataType::INT32,
+                                 common::TSEncoding::PLAIN,
+                                 common::CompressionType::UNCOMPRESSED));
+        }
+    }
+
+    for (int tablet_num = 0; tablet_num < max_tablet_num; tablet_num++) {
+        for (int i = 0; i < device_num; i++) {
+            std::string device_name = "test_device" + std::to_string(i);
+            storage::Tablet tablet(device_name,
+                          std::make_shared<std::vector<MeasurementSchema>>(
+                              schema_vecs[i]),
+                          1);
+            for (int j = 0; j < measurement_num; j++) {
+                tablet.add_timestamp(0, 16225600000 + tablet_num * 100);
+                tablet.add_value(0, j, static_cast<int32_t>(tablet_num));
+            }
+            ASSERT_EQ(tsfile_writer_->write_tablet_aligned(tablet), E_OK);
+        }
+        ASSERT_EQ(tsfile_writer_->flush(), E_OK);
+    }
+    ASSERT_EQ(tsfile_writer_->close(), E_OK);
+
+    std::vector<storage::Path> select_list;
+    for (int i = 0; i < device_num; i++) {
+        for (int j = 0; j < measurement_num; ++j) {
+            std::string device_name = "test_device" + std::to_string(i);
+            std::string measure_name = "measurement" + std::to_string(j);
+            storage::Path path(device_name, measure_name);
+            select_list.push_back(path);
+        }
+    }
+    storage::QueryExpression *query_expr =
+        storage::QueryExpression::create(select_list, nullptr);
+
+    storage::TsFileReader reader;
+    int ret = reader.open(file_name_);
+    ASSERT_EQ(ret, common::E_OK);
+    storage::ResultSet *tmp_qds = nullptr;
+
+    ret = reader.query(query_expr, tmp_qds);
+    auto *qds = (QDSWithoutTimeGenerator *)tmp_qds;
+
+    storage::RowRecord *record;
+    int max_rows = max_tablet_num * 1;
+    bool has_next = false;
+    for (int cur_row = 0; cur_row < max_rows; cur_row++) {
+        if (IS_FAIL(qds->next(has_next)) || !has_next) {
+            break;
+        }
+        record = qds->get_row_record();
+        int size = record->get_fields()->size();
+        for (int i = 0; i < size; ++i) {
+            EXPECT_EQ(std::to_string(cur_row),
+                      field_to_string(record->get_field(i)));
+        }
+    }
+    reader.destroy_query_data_set(qds);
+}
+
 TEST_F(TsFileWriterTest, WriteMultipleTabletsInt64) {
     const int device_num = 50;
     const int measurement_num = 50;
