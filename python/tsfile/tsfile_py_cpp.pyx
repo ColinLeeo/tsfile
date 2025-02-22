@@ -64,6 +64,7 @@ cdef dict TS_DATA_TYPE_MAP = {
     TSDataTypePy.FLOAT: TSDataType.TS_DATATYPE_FLOAT,
     TSDataTypePy.DOUBLE: TSDataType.TS_DATATYPE_DOUBLE,
     TSDataTypePy.TEXT: TSDataType.TS_DATATYPE_TEXT,
+    TSDataTypePy.STRING: TSDataType.TS_DATATYPE_STRING
 }
 
 cdef dict TS_ENCODING_MAP = {
@@ -162,7 +163,7 @@ cdef TableSchema* to_c_table_schema(object py_schema):
     c_schema.column_num = len(py_schema.columns)
     c_schema.column_schemas = <ColumnSchema *> malloc(c_schema.column_num * sizeof(ColumnSchema))
     for i in range(c_schema.column_num):
-        c_schema.column_schemas[i].column_name = strdup(py_schema.columns[i].column_name)
+        c_schema.column_schemas[i].column_name = strdup(py_schema.columns[i].column_name.encode('utf-8'))
         c_schema.column_schemas[i].column_category = to_c_category(py_schema.columns[i].category)
         c_schema.column_schemas[i].data_type = to_c_data_type(py_schema.columns[i].data_type)
     return c_schema

@@ -68,6 +68,7 @@ cdef class ResultSetPy:
         """
         Check if the query has next rows.
         """
+        self.check_result_set_invalid()
         return tsfile_result_set_has_next(self.result)
 
     def get_result_column_info(self):
@@ -232,6 +233,10 @@ cdef class TsFileReaderPy:
         Execute a time range query on specified path list.
         """
         cdef ResultSet result;
+        print(device_name)
+        print(sensor_list)
+        print(start_time)
+        print(end_time)
         result = tsfile_reader_query_paths_c(self.reader, device_name, sensor_list, start_time, end_time)
         pyresult = ResultSetPy(self)
         pyresult.init_c(result, device_name)

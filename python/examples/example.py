@@ -22,7 +22,7 @@ from tsfile import Tablet
 from tsfile import TsFileWriter, TsFileReader, TSDataType, TSEncoding, Compressor, ColumnCategory
 
 ## tsfile path.
-reader_data_dir = os.path.join(os.path.dirname(__file__), "test.tsfile")
+reader_data_dir = os.path.join(os.path.dirname(__file__), "tree_model.tsfile")
 if os.path.exists(reader_data_dir):
     os.remove(reader_data_dir)
 
@@ -47,8 +47,8 @@ writer.register_device(device)
 row_num = 10
 for i in range(row_num):
     row_record = RowRecord(DEVICE_NAME, i + 1,
-                           [Field("temp1", TSDataType.INT32, i),
-                            Field("temp2", TSDataType.INT64, i)])
+                           [Field("temp1",i, TSDataType.INT32),
+                            Field("temp2", i, TSDataType.INT64)])
     writer.write_row_record(row_record)
 
 ### Flush data and close writer.
@@ -73,9 +73,9 @@ result.close()
 
 ### Get query result which can free automatically
 
-with reader.query_timeseries(DEVICE_NAME, ["level1"], 0, 100) as result:
+with reader.query_timeseries(DEVICE_NAME, ["temp1"], 0, 100) as result:
     while result.next():
-        print(result.get_value_by_name("level1"))
+        print(result.get_value_by_name("temp1"))
 
 reader.close()
 
@@ -107,8 +107,8 @@ with TsFileWriter(table_data_dir) as writer:
     writer.write_tablet(tablet)
 
 ### Read table data from tsfile reader.
-with TsFileReader(table_data_dir) as reader:
-    with reader.query_table("test_table", ["id2", "value"], 0, 50) as result:
-        while result.next():
-            print(result.get_value_by_name("id2"))
-            print(result.get_value_by_name("value"))
+# with TsFileReader(table_data_dir) as reader:
+#     with reader.query_table("test_table", ["id2", "value"], 0, 50) as result:
+#         while result.next():
+#             print(result.get_value_by_name("id2"))
+#             print(result.get_value_by_name("value"))

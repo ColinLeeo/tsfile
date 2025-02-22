@@ -42,6 +42,7 @@ cdef extern from "./tsfile_cwrapper.h":
         TS_DATATYPE_DOUBLE = 4
         TS_DATATYPE_TEXT = 5
         TS_DATATYPE_VECTOR = 6
+        TS_DATATYPE_STRING = 11
         TS_DATATYPE_NULL_TYPE = 254
         TS_DATATYPE_INVALID = 255
 

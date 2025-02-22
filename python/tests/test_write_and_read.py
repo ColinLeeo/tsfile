@@ -59,37 +59,41 @@ def test_row_record_write_and_read():
             os.remove("record_write_and_read.tsfile")
 
 def test_tablet_write_and_read():
-    writer = TsFileWriter("tablet_write_and_read.tsfile")
-    measurement_num = 30
-    for i in range(measurement_num):
-        writer.register_timeseries("root.device1", TimeseriesSchema('level' + str(i), TSDataType.INT64))
+    try:
+        writer = TsFileWriter("tablet_write_and_read.tsfile")
+        measurement_num = 30
+        for i in range(measurement_num):
+            writer.register_timeseries("root.device1", TimeseriesSchema('level' + str(i), TSDataType.INT64))
 
-    max_row_num = 10000
-    tablet_row_num = 1000
-    tablet_num = 0
-    for i in range(max_row_num // tablet_row_num):
-        tablet = Tablet("root.device1",[f'level{j}' for j in range(measurement_num)],[TSDataType.INT64 for _ in range(measurement_num)], tablet_row_num)
-        for row in range(tablet_row_num):
-            tablet.add_timestamp(row, row + tablet_num * tablet_row_num)
-            for col in range(measurement_num):
-                tablet.add_value_by_index(col, row, row + tablet_num * tablet_row_num)
-        writer.write_tablet(tablet)
-        tablet_num += 1
+        max_row_num = 10000
+        tablet_row_num = 1000
+        tablet_num = 0
+        for i in range(max_row_num // tablet_row_num):
+            tablet = Tablet("root.device1",[f'level{j}' for j in range(measurement_num)],[TSDataType.INT64 for _ in range(measurement_num)], tablet_row_num)
+            for row in range(tablet_row_num):
+                tablet.add_timestamp(row, row + tablet_num * tablet_row_num)
+                for col in range(measurement_num):
+                    tablet.add_value_by_index(col, row, row + tablet_num * tablet_row_num)
+            writer.write_tablet(tablet)
+            tablet_num += 1
 
-    writer.close()
+        writer.close()
 
-    reader = TsFileReader("tablet_write_and_read.tsfile")
-    result = reader.query_timeseries("root.device1", ["level0"], 0, 1000000)
-    row_num = 0
-    while result.next():
-        assert result.is_null_by_index(0) == False
-        assert result.get_value_by_name("level0") == row_num
-        row_num = row_num + 1
+        reader = TsFileReader("tablet_write_and_read.tsfile")
+        result = reader.query_timeseries("root.device1", ["level0"], 0, 1000000)
+        row_num = 0
+        while result.next():
+            assert result.is_null_by_index(0) == False
+            assert result.get_value_by_name("level0") == row_num
+            row_num = row_num + 1
 
-    assert row_num == max_row_num
-    reader.close()
+        assert row_num == max_row_num
+        reader.close()
+        with pytest.raises(Exception):
+            result.next()
 
-    if os.path.exists("tablet_write_and_read.tsfile"):
-        os.remove("tablet_write_and_read.tsfile")
+    finally:
+        if os.path.exists("tablet_write_and_read.tsfile"):
+            os.remove("tablet_write_and_read.tsfile")
 
 
