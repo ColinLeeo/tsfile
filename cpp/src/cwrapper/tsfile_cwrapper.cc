@@ -29,17 +29,29 @@
 static bool is_init = false;
 
 Tablet tablet_new_with_device(const char *device_id, char **column_name_list,
-                              TSDataType *data_types, int column_num,
-                              int max_rows) {
+                              TSDataType *data_types, ColumnCategory* category,
+                              int column_num, int max_rows) {
     std::vector<std::string> measurement_list;
     std::vector<common::TSDataType> data_type_list;
+
     for (int i = 0; i < column_num; i++) {
         measurement_list.emplace_back(column_name_list[i]);
         data_type_list.push_back(
             static_cast<common::TSDataType>(*(data_types + i)));
     }
-    auto *tablet = new storage::Tablet(device_id, &measurement_list,
+    storage::Tablet* tablet = nullptr;
+    if (category == nullptr) {
+        tablet = new storage::Tablet(device_id, &measurement_list,
                                        &data_type_list, max_rows);
+    } else {
+        std::vector<storage::ColumnCategory> column_category_list;
+        column_category_list.reserve(column_num);
+        for (int i = 0; i < column_num; i++) {
+            column_category_list.emplace_back(static_cast<storage::ColumnCategory>(*(category + i)));
+        }
+        tablet = new storage::Tablet(device_id, measurement_list,
+            data_type_list, column_category_list, max_rows);
+    }
     tablet->init();
     return tablet;
 }
@@ -253,6 +265,12 @@ ERRNO tsfile_writer_write_tablet(TsFileWriter writer, Tablet tablet) {
     auto *w = static_cast<storage::TsFileWriter *>(writer);
     const auto *tbl = static_cast<storage::Tablet *>(tablet);
     return w->write_tablet(*tbl);
+}
+
+ERRNO tsfile_writer_write_table(TsFileWriter writer, Tablet tablet) {
+    auto *w = static_cast<storage::TsFileWriter *>(writer);
+    const auto *tbl = static_cast<storage::Tablet *>(tablet);
+    return w->write_table(*tbl);
 }
 
 ERRNO tsfile_writer_flush_data(TsFileWriter writer) {

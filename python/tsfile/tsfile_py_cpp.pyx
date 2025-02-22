@@ -91,11 +91,23 @@ cdef dict COMPRESSION_TYPE_MAP = {
     CompressorPy.LZ4: CompressionType.TS_COMPRESSION_LZ4,
 }
 
+cdef dict CATEGORY_MAP = {
+    CategoryPy.TAG: ColumnCategory.TAG,
+    CategoryPy.FIELD: ColumnCategory.FIELD
+}
+
 cdef TSDataType to_c_data_type(object data_type):
     try:
         return TS_DATA_TYPE_MAP[data_type]
     except KeyError:
         raise ValueError(f"Unsupported Python TSDataType: {data_type}")
+
+cdef ColumnCategory to_c_category_type(object category):
+    try:
+        return CATEGORY_MAP[category]
+    except KeyError:
+        raise ValueError(f"Unsupported Python Column Category: {category}")
+
 
 cdef TSEncoding to_c_encoding_type(object encoding_type):
     try:
@@ -108,12 +120,6 @@ cdef CompressionType to_c_compression_type(object compression_type):
         return COMPRESSION_TYPE_MAP[compression_type]
     except KeyError:
         raise ValueError(f"Unsupported Python Compressor: {compression_type}")
-
-cdef ColumnCategory to_c_category(object category):
-    if category == CategoryPy.TAG:
-        return <ColumnCategory> ColumnCategory.TAG
-    if category == CategoryPy.FIELD:
-        return <ColumnCategory> ColumnCategory.FIELD
 
 cdef TimeseriesSchema* to_c_timeseries_schema(object py_schema):
     cdef TimeseriesSchema* c_schema
@@ -164,7 +170,7 @@ cdef TableSchema* to_c_table_schema(object py_schema):
     c_schema.column_schemas = <ColumnSchema *> malloc(c_schema.column_num * sizeof(ColumnSchema))
     for i in range(c_schema.column_num):
         c_schema.column_schemas[i].column_name = strdup(py_schema.columns[i].column_name.encode('utf-8'))
-        c_schema.column_schemas[i].column_category = to_c_category(py_schema.columns[i].category)
+        c_schema.column_schemas[i].column_category = to_c_category_type(py_schema.columns[i].category)
         c_schema.column_schemas[i].data_type = to_c_data_type(py_schema.columns[i].data_type)
     return c_schema
 
@@ -176,23 +182,32 @@ cdef Tablet to_c_tablet(object tablet):
     cdef int64_t timestamp
     cdef bytes device_id_bytes = PyUnicode_AsUTF8String(tablet.get_device_id())
     cdef const char * device_id_c = device_id_bytes
+    cdef char** columns_names
+    cdef TSDataType* column_types
+    cdef ColumnCategory* column_category
 
 
     column_num = len(tablet.get_column_name_list())
     columns_names = <char**> malloc(sizeof(char *) * column_num)
     columns_types = <TSDataType *> malloc(sizeof(TSDataType) * column_num)
+    column_category = NULL
+    if tablet.get_category_list() is not None:
+        for i in range(column_num):
+            column_category[i] = to_c_category_type(tablet.get_category_list()[i])
     for i in range(column_num):
         columns_names[i] = strdup(tablet.get_column_name_list()[i].encode('utf-8'))
         columns_types[i] = to_c_data_type(tablet.get_data_type_list()[i])
 
-    max_row_num = tablet.get_max_row_num();
+    max_row_num = tablet.get_max_row_num()
 
-    ctablet = tablet_new_with_device(device_id_c, columns_names, columns_types, column_num,
+    ctablet = tablet_new_with_device(device_id_c, columns_names, columns_types, column_category, column_num,
                                      max_row_num)
     free(columns_types)
     for i in range(column_num):
         free(columns_names[i])
     free(columns_names)
+    if column_category != NULL:
+        free(column_category)
 
     for row in range(max_row_num):
         timestamp_py = tablet.get_timestamp_list()[row]

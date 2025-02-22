@@ -98,7 +98,16 @@ cdef class TsFileWriterPy:
         finally:
             free_c_row_record(record_c)
 
-    def close(self):
+    def write_table(self, tablet : TabletPy):
+        cdef Tablet ctablet = to_c_tablet(tablet)
+        cdef ErrorCode errno
+        try:
+            errno = tsfile_writer_write_table(self.writer, ctablet)
+            check_error(errno)
+        finally:
+            free_c_tablet(ctablet)
+
+    cpdef close(self):
         """
         Flush data and Close tsfile writer.
         """

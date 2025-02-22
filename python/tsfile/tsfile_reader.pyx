@@ -41,7 +41,7 @@ cdef class ResultSetPy:
     cdef ResultSet result
     cdef object metadata
     cdef object device_name
-    cdef object invalid_result_set
+    cdef object not_invalid_result_set
     cdef object tsfile_reader
     cdef object __weakref__
 
@@ -49,7 +49,7 @@ cdef class ResultSetPy:
     def __init__(self, tsfile_reader : TsFileReaderPy):
         self.metadata = None
         self.device_name = None
-        self.invalid_result_set = False
+        self.not_invalid_result_set = False
         self.tsfile_reader = weakref.ref(tsfile_reader)
         pass
 
@@ -159,8 +159,11 @@ cdef class ResultSetPy:
         return self.is_null_by_index(ind)
 
     def check_result_set_invalid(self):
-        if self.invalid_result_set:
+        if self.not_invalid_result_set:
             raise Exception("Invalid result set. TsFile Reader not exists")
+
+    def get_result_set_invalid(self):
+        return self.not_invalid_result_set
 
     def close(self):
         """
@@ -177,9 +180,10 @@ cdef class ResultSetPy:
                 reader.notify_result_set_discard(self)
 
         self.result = NULL
+        self.not_invalid_result_set = True
 
     def set_invalid_result_set(self, invalid : bool):
-        self.invalid_result_set = invalid
+        self.not_invalid_result_set = invalid
         self.close()
 
     def __dealloc__(self):

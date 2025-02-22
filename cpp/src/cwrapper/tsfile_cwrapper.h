@@ -31,6 +31,7 @@ typedef enum {
     TS_DATATYPE_DOUBLE = 4,
     TS_DATATYPE_TEXT = 5,
     TS_DATATYPE_VECTOR = 6,
+    TS_DATATYPE_STRING = 11,
     TS_DATATYPE_NULL_TYPE = 254,
     TS_DATATYPE_INVALID = 255
 } TSDataType;
@@ -117,8 +118,8 @@ extern "C" {
 
 /*--------------------------Tablet API------------------------ */
 Tablet tablet_new_with_device(const char* device_id, char** column_name_list,
-                              TSDataType* data_types, int column_num,
-                              int max_rows);
+                              TSDataType* data_types, ColumnCategory* category,
+                              int column_num, int max_rows);
 
 Tablet tablet_new(const char** column_name_list, TSDataType* data_types,
                   int column_num);
@@ -184,6 +185,7 @@ ERRNO tsfile_writer_register_device(TsFileWriter writer,
 
 /*-------------------TsFile Writer write and flush data------------------ */
 ERRNO tsfile_writer_write_tablet(TsFileWriter writer, Tablet tablet);
+ERRNO tsfile_writer_write_table(TsFileWriter writer, Tablet tablet);
 ERRNO tsfile_writer_write_ts_record(TsFileWriter writer, TsRecord record);
 ERRNO tsfile_writer_flush_data(TsFileWriter writer);
 

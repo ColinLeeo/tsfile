@@ -72,6 +72,9 @@ class Tablet(object):
     def get_max_row_num(self):
         return self.max_row_num
 
+    def get_category_list(self):
+        return self.category_list
+
     def add_column(self, column_name: str, column_type: TSDataType):
         self.column_name_list.append(column_name)
         self.type_list.append(column_type)
@@ -110,7 +113,8 @@ class Tablet(object):
         if not isinstance(value, expected_type.to_py_type()):
             raise TypeError(f"Expected {expected_type.to_py_type()} got {type(value)}")
 
-        self._check_numeric_range(value, expected_type)
+        if expected_type in (TSDataType.INT32, TSDataType.INT64, TSDataType.FLOAT, TSDataType.DOUBLE):
+            self._check_numeric_range(value, expected_type)
 
         self.data_list[col_index][row_index] = value
 

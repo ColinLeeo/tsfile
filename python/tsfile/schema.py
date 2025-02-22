@@ -64,9 +64,8 @@ class DeviceSchema:
 class ColumnSchema:
     column_name = None
     data_type = None
-    category = None
 
-    def __init__(self, column_name: str, data_type: TSDataType, category: ColumnCategory):
+    def __init__(self, column_name: str, data_type: TSDataType,  category: ColumnCategory = ColumnCategory.FIELD):
         self.column_name = column_name
         self.data_type = data_type
         self.category = category

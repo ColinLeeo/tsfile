@@ -81,7 +81,7 @@ TEST_F(CWrapperTest, WriterFlushTabletAndReadData) {
         }
         Tablet tablet =
             tablet_new_with_device(device_name, measurements_name, data_types,
-                                   measurement_num, max_rows);
+                                   nullptr, measurement_num, max_rows);
         free(device_name);
         free(data_types);
         for (int j = 0; j < measurement_num; j++) {

@@ -19,7 +19,8 @@ import os
 
 import pytest
 
-from tsfile import TsFileWriter, TimeseriesSchema, DeviceSchema
+from tsfile import TsFileWriter, TimeseriesSchema, DeviceSchema, ColumnCategory
+from tsfile import ColumnSchema, TableSchema
 from tsfile import Tablet, RowRecord, Field
 from tsfile import TSDataType
 
@@ -55,6 +56,39 @@ def test_tablet_write():
     finally:
         if os.path.exists("tablet_write.tsfile"):
             os.remove("tablet_write.tsfile")
+
+def test_table_write():
+    try:
+        with TsFileWriter("table_write.tsfile") as writer:
+            column1 = ColumnSchema("device", TSDataType.STRING, ColumnCategory.TAG)
+            column2 = ColumnSchema("sensor", TSDataType.STRING, ColumnCategory.TAG)
+            column3 = ColumnSchema("value1", TSDataType.DOUBLE)
+            column4 = ColumnSchema("value2", TSDataType.INT32, ColumnCategory.FIELD)
+            table = TableSchema("test_table", [column1, column2, column3, column4])
+            writer.register_table(table)
+            row_num = 100
+
+            tablet = Tablet("test_table", ["device", "sensor", "value1", "value2"],
+                            [TSDataType.STRING, TSDataType.STRING, TSDataType.DOUBLE, TSDataType.INT32],
+                            [ColumnCategory.TAG, ColumnCategory.TAG, ColumnCategory.FIELD, ColumnCategory.FIELD],
+                            row_num)
+            for i in range(100):
+                tablet.add_timestamp(i, i)
+                tablet.add_value_by_name("device", i, "device" + str(i))
+                tablet.add_value_by_name("sensor", i, "sensor" + str(i))
+                tablet.add_value_by_name("value1", i, i * 10.1)
+                tablet.add_value_by_index(3, i, 1 * 100)
+
+            writer.write_table(tablet)
+    finally:
+        if os.path.exists("table_write.tsfile"):
+            os.remove("table_write.tsfile")
+
+
+
+
+
+
 
 
 

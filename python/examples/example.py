@@ -80,7 +80,7 @@ with reader.query_timeseries(DEVICE_NAME, ["temp1"], 0, 100) as result:
 reader.close()
 
 ## Table Model Write and Read
-table_data_dir = os.path.join(os.path.dirname(__file__), "table_test.tsfile")
+table_data_dir = os.path.join(os.path.dirname(__file__), "table_model.tsfile")
 if os.path.exists(table_data_dir):
     os.remove(table_data_dir)
 
@@ -104,7 +104,7 @@ with TsFileWriter(table_data_dir) as writer:
         tablet.add_value_by_name("id2", i, "test" + str(i))
         tablet.add_value_by_index(2, i, i * 100.2)
 
-    writer.write_tablet(tablet)
+    writer.write_table(tablet)
 
 ### Read table data from tsfile reader.
 # with TsFileReader(table_data_dir) as reader:

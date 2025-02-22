@@ -20,10 +20,12 @@ import pytest
 
 import os
 
-from tsfile import TsFileWriter, TsFileReader
+from tsfile import TsFileWriter, TsFileReader, ColumnCategory
 from tsfile import TimeseriesSchema, DeviceSchema
+from tsfile import ColumnSchema, TableSchema
 from tsfile import TSDataType
 from tsfile import Tablet, RowRecord, Field
+from tsfile import TsFileTableWriter
 
 def test_row_record_write_and_read():
     try:
@@ -95,5 +97,58 @@ def test_tablet_write_and_read():
     finally:
         if os.path.exists("tablet_write_and_read.tsfile"):
             os.remove("tablet_write_and_read.tsfile")
+
+
+def test_table_writer():
+    table = TableSchema("test_table",
+                        [ColumnSchema("device", TSDataType.STRING, ColumnCategory.TAG),
+                         ColumnSchema("value", TSDataType.DOUBLE, ColumnCategory.FIELD)])
+    try:
+        with TsFileTableWriter("table_write.tsfile", table) as writer:
+            tablet = Tablet("test_table", ["device", "value"],
+                            [TSDataType.STRING, TSDataType.DOUBLE],
+                            [ColumnCategory.TAG, ColumnCategory.FIELD], 100)
+            for i in range(100):
+                tablet.add_timestamp(i, i)
+                tablet.add_value_by_name("device", i, "device" + str(i))
+                tablet.add_value_by_index(1, i, i* 100.0)
+            writer.write_table(tablet)
+    finally:
+        if os.path.exists("table_write.tsfile"):
+            os.remove("table_write.tsfile")
+
+
+def test_query_result_detach_from_reader():
+    try:
+        ## Prepare data
+        writer = TsFileWriter("query_result_detach_from_reader.tsfile")
+        timeseries = TimeseriesSchema("level1", TSDataType.INT64)
+        writer.register_timeseries("root.device1", timeseries)
+        max_row_num = 1000
+        for i in range(max_row_num):
+            row = RowRecord("root.device1", i,
+                            [Field("level1", i, TSDataType.INT64)])
+            writer.write_row_record(row)
+
+        writer.close()
+
+        reader = TsFileReader("query_result_detach_from_reader.tsfile")
+        result1 = reader.query_timeseries("root.device1", ["level1"], 0, 100)
+        assert 1 == len(reader.get_active_query_result())
+        result2 = reader.query_timeseries("root.device1", ["level1"], 20, 100)
+        assert 2 == len(reader.get_active_query_result())
+        result1.close()
+        assert 1 == len(reader.get_active_query_result())
+        reader.close()
+        with pytest.raises(Exception):
+            result1.next()
+        with pytest.raises(Exception):
+            result2.next()
+    finally:
+        if os.path.exists("query_result_detach_from_reader.tsfile"):
+            os.remove("query_result_detach_from_reader.tsfile")
+
+
+
 
 
