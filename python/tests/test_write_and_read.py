@@ -71,7 +71,7 @@ def test_tablet_write_and_read():
         tablet_row_num = 1000
         tablet_num = 0
         for i in range(max_row_num // tablet_row_num):
-            tablet = Tablet("root.device1",[f'level{j}' for j in range(measurement_num)],[TSDataType.INT64 for _ in range(measurement_num)], tablet_row_num)
+            tablet = Tablet("root.device1",[f'level{j}' for j in range(measurement_num)],[TSDataType.INT64 for _ in range(measurement_num)], None, tablet_row_num)
             for row in range(tablet_row_num):
                 tablet.add_timestamp(row, row + tablet_num * tablet_row_num)
                 for col in range(measurement_num):
