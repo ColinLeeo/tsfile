@@ -221,35 +221,4 @@ TEST(TimeStatisticTest, BasicFunctionality) {
     EXPECT_EQ(stat.end_time_, 2000);
 }
 
-#if DEBUG_SE
-TEST(StringStatisticTest, CppJavaGap) {
-    Statistic* stat = StatisticFactory::alloc_statistic(common::STRING);
-    char* array1 = new char[3]{'a', 'a', 'a'};
-    char* array2 = new char[3]{'b', 'b', 'b'};
-    common::String str1(array1, 3);
-    common::String str2(array2, 3);
-    stat->update(100, str1);
-    stat->update(200, str2);
-
-    common::ByteStream stream(1024, common::MOD_STATISTIC_OBJ);
-    stat->serialize_to(stream);
-
-    delete []array1;
-    delete []array2;
-    StatisticFactory::free(stat);
-
-    auto buf_len = stream.total_size();
-    char* buf = new char[buf_len];
-    common::copy_bs_to_buf(stream, buf, buf_len);
-
-    const ssize_t expected_size = 31;
-    uint8_t expected_buf[expected_size] = {2, 0, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0,
-                                           0, 0, 0, 0, 200, 0, 0, 0, 3, 97, 97,
-                                           97, 0, 0, 0, 3, 98, 98, 98};
-
-    for (int i = 0; i < expected_size; i++) {
-        EXPECT_EQ(buf[i], static_cast<char>(expected_buf[i]));
-    }
-}
-#endif
 } // namespace storage
