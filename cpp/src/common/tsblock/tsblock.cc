@@ -213,6 +213,7 @@ void TsBlock::tsblock_to_json(ByteStream *byte_stream) {
     byte_stream->write_buf("}\n", 2);
 }
 
+#ifdef DEBUG
 std::string TsBlock::debug_string() {
     std::stringstream out;
     out << "print TsBlock: " << this << std::endl
@@ -286,7 +287,7 @@ std::string RowIterator::debug_string() {
     }
     return out.str();
 }
-
+#endif
 // TODO use memcpy in vector instead of using iter/appender
 int merge_tsblock_by_row(TsBlock *sea, TsBlock *river) {
     int ret = E_OK;

@@ -50,7 +50,8 @@ int SingleDeviceTsBlockReader::init(DeviceQueryTask* device_query_task,
     }
     tuple_desc_.push_back(common::g_time_column_schema);
     time_column_index_ = tuple_desc_.get_column_count() - 1;
-    if (RET_FAIL(common::TsBlock::create_tsblock(&tuple_desc_, current_block_, block_size))) {
+    if (RET_FAIL(common::TsBlock::create_tsblock(&tuple_desc_, current_block_,
+                                                 block_size))) {
         return ret;
     }
     col_appenders_.resize(tuple_desc_.get_column_count());
@@ -232,7 +233,18 @@ void SingleDeviceTsBlockReader::construct_column_context(
         if (aligned_time_series_index == nullptr) {
             assert(false);
         }
-        // TODO: support aligned time series index
+        // Todo: when multi value index is supported in aligned time series index,
+        // we need to change the column context to VectorMeasurementColumnContext
+        SingleMeasurementColumnContext* column_context =
+            new SingleMeasurementColumnContext(tsfile_io_reader_);
+        column_context->init(
+            device_query_task_, time_series_index, time_filter,
+            device_query_task_->get_column_mapping()->get_column_pos(
+                time_series_index->get_measurement_name().to_std_string()),
+            pa_);
+        field_column_contexts_.insert(std::make_pair(
+            time_series_index->get_measurement_name().to_std_string(),
+            column_context));
     } else {
         SingleMeasurementColumnContext* column_context =
             new SingleMeasurementColumnContext(tsfile_io_reader_);

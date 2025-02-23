@@ -102,6 +102,7 @@ class TupleDesc {
         column_list_ = that->column_list_;  // deep copy
     }
 
+#ifdef DEBUG
     std::string debug_string()  // for debug
     {
         std::stringstream out;
@@ -110,7 +111,7 @@ class TupleDesc {
         }
         return out.str();
     }
-
+#endif
    private:
     std::vector<ColumnSchema> column_list_;
 };

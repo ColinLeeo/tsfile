@@ -366,6 +366,7 @@ struct ColumnSchema {
         return res;
     }
 
+#ifdef DEBUG
     std::string debug_string()  // for debug
     {
         std::stringstream out;
@@ -377,6 +378,7 @@ struct ColumnSchema {
             << std::endl;
         return out.str();
     }
+#endif
 };
 
 
