@@ -17,7 +17,9 @@
  * under the License.
  */
 
+#include <cwrapper/tsfile_cwrapper.h>
 #include <time.h>
+#include <writer/tsfile_table_writer.h>
 
 #include <iostream>
 #include <random>
@@ -29,86 +31,42 @@ using namespace storage;
 
 long getNowTime() { return time(nullptr); }
 
-static std::string generate_random_string(int length) {
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(0, 61);
-
-    const std::string chars =
-        "0123456789"
-        "abcdefghijklmnopqrstuvwxyz"
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-    std::string random_string;
-
-    for (int i = 0; i < length; ++i) {
-        random_string += chars[dis(gen)];
-    }
-
-    return random_string;
-}
-
 int demo_write() {
-    TsFileWriter* tsfile_writer_ = new TsFileWriter();
-    libtsfile_init();
-    std::string file_name_ = std::string("tsfile_writer_test_") +
-                             generate_random_string(10) +
-                             std::string(".tsfile");
+    std::string table_name = "table1";
+    WriteFile file;
     int flags = O_WRONLY | O_CREAT | O_TRUNC;
 #ifdef _WIN32
     flags |= O_BINARY;
 #endif
     mode_t mode = 0666;
-    tsfile_writer_->open(file_name_, flags, mode);
-    remove(file_name_.c_str());
-    const int device_num = 50;
-    const int measurement_num = 50;
-    std::vector<MeasurementSchema> schema_vec[50];
-    for (int i = 0; i < device_num; i++) {
-        std::string device_name = "test_device" + std::to_string(i);
-        schema_vec[i].reserve(measurement_num);
-        for (int j = 0; j < measurement_num; j++) {
-            std::string measure_name = "measurement" + std::to_string(j);
-            schema_vec[i].emplace_back(
-                MeasurementSchema(measure_name, common::TSDataType::INT32,
-                                  common::TSEncoding::PLAIN,
-                                  common::CompressionType::UNCOMPRESSED));
-            tsfile_writer_->register_timeseries(device_name, schema_vec[i][j]);
-        }
-    }
+    file.create("test.tsfile", flags, mode);
+    storage::TableSchema* schema = new storage::TableSchema(
+        table_name,
+        {
+            common::ColumnSchema("id1", common::STRING, common::UNCOMPRESSED,
+                                 common::PLAIN, common::ColumnCategory::TAG),
+            common::ColumnSchema("id2", common::STRING,
+                                 common::ColumnCategory::TAG),
+            common::ColumnSchema("s1", common::INT32),
+        });
 
-    std::cout << "input tablet size" << std::endl;
-    int tablet_size;
-    std::cin >> tablet_size;
+    TsFileTableWriter* writer = new TsFileTableWriter(&file, schema);
 
-    int max_rows = 100000;
-    int cur_row = 0;
-    long start = getNowTime();
-    for (; cur_row < max_rows;) {
-        if (cur_row + tablet_size > max_rows) {
-            tablet_size = max_rows - cur_row;
-        }
-        for (int i = 0; i < device_num; i++) {
-            std::string device_name = "test_device" + std::to_string(i);
-            Tablet tablet(device_name, &schema_vec[i], tablet_size);
-            tablet.init();
-            for (int row = 0; row < tablet_size; row++) {
-                tablet.set_timestamp(row, 16225600 + cur_row + row);
-            }
-            for (int j = 0; j < measurement_num; j++) {
-                for (int row = 0; row < tablet_size; row++) {
-                    tablet.set_value(row, j, row + cur_row);
-                }
-            }
-            tsfile_writer_->write_tablet(tablet);
-            tsfile_writer_->flush();
-        }
-        cur_row += tablet_size;
-        std::cout << "finish writing " << cur_row << " rows" << std::endl;
-    }
+    storage::Tablet tablet = storage::Tablet(
+        table_name, {"id1", "id2", "s1"},
+        {common::STRING, common::STRING, common::INT32},
+        {common::ColumnCategory::TAG, common::ColumnCategory::TAG,
+         common::ColumnCategory::FIELD})
 
-    tsfile_writer_->close();
-    long end = getNowTime();
-    printf("interval waitForResults is %ld \n", end - start);
-    return 0;
+        for (int row = 0; row < 5; row++) {
+            long timestamp = row;
+            tablet.add_timestamp(row, timestamp);
+            tablet.add_value(row, "id1", "id1_filed_1");
+            tablet.add_value(row, "id2", "id2_filed_1");
+            tablet.add_value(row, "s1", row);
+        }
+    writer->write_table(tablet);
+    writer->flush();
+    writer->close();
+    delete writer;
 }

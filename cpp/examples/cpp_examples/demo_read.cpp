@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "../c_examples/c_examples.h"
 #include "cpp_examples.h"
 
 std::string field_to_string(storage::Field *value) {
@@ -55,43 +56,11 @@ std::string field_to_string(storage::Field *value) {
 }
 
 int demo_read() {
-    std::cout << "begin to read tsfile from demo_ts.tsfile" << std::endl;
-    std::string device_name = "root.db001.dev001";
-    std::string measurement_name = "m001";
-    storage::Path p1(device_name, measurement_name);
-    std::vector<storage::Path> select_list;
-    select_list.push_back(p1);
-    storage::QueryExpression *query_expr =
-        storage::QueryExpression::create(select_list, nullptr);
-
-    common::init_config_value();
+    ERRNO code = 0
+    std::string table_name = "table1";
     storage::TsFileReader reader;
-    int ret = reader.open("cpp_rw.tsfile");
+    reader.open("test.tsfile");
+    storage::ResultSet* ret = nullptr;
+    code = reader.query(table_name, {"id1", "id2", "s1"}, 0, 100, ret);
 
-    std::cout << "begin to query expr" << std::endl;
-    ASSERT(ret == 0);
-    storage::ResultSet *qds = nullptr;
-    ret = reader.query(query_expr, qds);
-
-    storage::RowRecord *record;
-    std::cout << "begin to dump data from tsfile ---" << std::endl;
-    int row_cout = 0;
-    do {
-        if (qds->next()) {
-            std::cout << "dump QDS :  " << record->get_timestamp() << ",";
-            record = qds->get_row_record();
-            if (record) {
-                int size = record->get_fields()->size();
-                for (int i = 0; i < size; ++i) {
-                    std::cout << field_to_string(record->get_field(i)) << ",";
-                }
-                std::cout << std::endl;
-                row_cout++;
-            }
-        } else {
-            break;
-        }
-    } while (true);
-
-    return (0);
 }
