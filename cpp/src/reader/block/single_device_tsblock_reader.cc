@@ -226,7 +226,7 @@ void SingleDeviceTsBlockReader::close() {
 void SingleDeviceTsBlockReader::construct_column_context(
     const ITimeseriesIndex* time_series_index, Filter* time_filter) {
     if (time_series_index == nullptr ||
-        !time_series_index->is_aligned() &&
+        time_series_index->get_data_type() != common::TSDataType::VECTOR &&
         time_series_index->get_chunk_meta_list()->empty()) {
         return;
     } else if (time_series_index->get_data_type() == common::VECTOR) {

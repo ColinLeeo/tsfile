@@ -360,11 +360,6 @@ class TableSchema {
         }
     }
 
-    void set_table_name(const std::string &table_name) {
-        table_name_ = table_name;
-        to_lowercase_inplace(table_name_);
-    }
-
     int32_t find_id_column_order(const std::string &column_name) {
         std::string lower_case_column_name = to_lower(column_name);
 
