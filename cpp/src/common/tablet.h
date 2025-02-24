@@ -158,7 +158,7 @@ class Tablet {
 
     ~Tablet() { destroy(); }
 
-    const std::string& get_table_name() {
+    const std::string& get_table_name() const{
         return insert_target_name_;
     }
     void set_table_name(const std::string &table_name) {
@@ -209,6 +209,10 @@ class Tablet {
     template <typename T>
     int add_value(uint32_t row_index, const std::string &measurement_name,
                   T val);
+
+    FORCE_INLINE const std::string &get_column_name(uint32_t column_index) const {
+        return schema_vec_->at(column_index).measurement_name_;
+    }
 
     friend class TabletColIterator;
     friend class TsFileWriter;

@@ -266,6 +266,10 @@ class TableSchema {
 
     const std::string &get_table_name() { return table_name_; }
 
+    void set_table_name(const std::string &table_name) {
+        table_name_ = table_name;
+    }
+
     std::vector<std::string> get_measurement_names() const {
         std::vector<std::string> ret(column_schemas_.size());
         for (size_t i = 0; i < column_schemas_.size(); i++) {
@@ -299,6 +303,9 @@ class TableSchema {
         for (auto iter = chunk_group_meta->chunk_meta_list_.begin();
              iter != chunk_group_meta->chunk_meta_list_.end(); iter++) {
             auto &chunk_meta = iter.get();
+            if (chunk_meta->data_type_ == common::VECTOR) {
+                continue;
+            }
             int column_idx = find_column_index(
                 chunk_meta->measurement_name_.to_std_string());
             if (column_idx == -1) {

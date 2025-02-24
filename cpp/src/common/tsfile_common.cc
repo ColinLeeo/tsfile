@@ -237,6 +237,7 @@ int TsFileMeta::deserialize_from(common::ByteStream &in) {
         std::string table_name;
         common::SerializationUtil::read_var_str(table_name, in);
         auto table_schema = std::make_shared<TableSchema>();
+        table_schema->set_table_name(table_name);
         table_schema->deserialize(in);
         table_schemas_.emplace(table_name, std::move(table_schema));
     }
