@@ -41,6 +41,7 @@ int SingleDeviceTsBlockReader::init(DeviceQueryTask* device_query_task,
     tuple_desc_.reset();
     common::init_common();
     auto table_schema = device_query_task->get_table_schema();
+    tuple_desc_.push_back(common::g_time_column_schema);
     for (const auto& column_name : device_query_task_->get_column_names()) {
         common::ColumnSchema column_schema(
             table_schema->get_column_schema(column_name));
@@ -49,8 +50,7 @@ int SingleDeviceTsBlockReader::init(DeviceQueryTask* device_query_task,
             tuple_desc_.push_back(column_schema);
         }
     }
-    tuple_desc_.push_back(common::g_time_column_schema);
-    time_column_index_ = tuple_desc_.get_column_count() - 1;
+    time_column_index_ = 0;
     if (RET_FAIL(common::TsBlock::create_tsblock(&tuple_desc_, current_block_,
                                                  block_size))) {
         return ret;
@@ -187,7 +187,7 @@ void SingleDeviceTsBlockReader::fill_ids() {
             common::String device_id(
                 device_query_task_->get_device_id()->get_segments().at(
                     id_column_context.pos_in_device_id_));
-            col_appenders_[pos]->fill((char*)&device_id, sizeof(device_id),
+            col_appenders_[pos + 1]->fill((char*)&device_id, sizeof(device_id),
                                       current_block_->get_row_count());
         }
     }
@@ -350,8 +350,8 @@ void SingleMeasurementColumnContext::fill_into(
         return;
     }
     for (int32_t pos : pos_in_result_) {
-        col_appenders[pos]->add_row();
-        col_appenders[pos]->append(val, len);
+        col_appenders[pos + 1]->add_row();
+        col_appenders[pos + 1]->append(val, len);
     }
 }
 }  // namespace storage

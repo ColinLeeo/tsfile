@@ -64,6 +64,7 @@ class ResultSet {
     }
     template <typename T>
     T get_value(uint32_t column_index) {
+        column_index--;
         RowRecord* row_record = get_row_record();
         ASSERT(column_index >= 0 && column_index < row_record->get_col_num());
         return row_record->get_field(column_index)->get_value<T>();
@@ -88,6 +89,7 @@ inline common::String* ResultSet::get_value(const std::string& full_name) {
 }
 template <>
 inline common::String* ResultSet::get_value(uint32_t column_index) {
+    column_index--;
     RowRecord* row_record = get_row_record();
     ASSERT(column_index >= 0 && column_index < row_record->get_col_num());
     return row_record->get_field(column_index)->get_string_value();

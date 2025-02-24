@@ -25,7 +25,7 @@ void TableResultSet::init() {
     pa_.init(512, common::MOD_TSFILE_READER);
     index_lookup_.reserve(column_names_.size());
     for (uint32_t i = 0; i < column_names_.size(); ++i) {
-        index_lookup_.insert({column_names_[i], i});
+        index_lookup_.insert({column_names_[i], i + 1});
     }
     result_set_metadata_ = std::make_shared<ResultSetMetadata>(column_names_, data_types_);
 }

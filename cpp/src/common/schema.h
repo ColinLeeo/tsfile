@@ -162,11 +162,6 @@ struct MeasurementSchemaGroup {
  */
 class TableSchema {
    public:
-    static void to_lowercase_inplace(std::string &str) {
-        std::transform(
-            str.begin(), str.end(), str.begin(),
-            [](unsigned char c) -> unsigned char { return std::tolower(c); });
-    }
 
     TableSchema() = default;
 
@@ -377,6 +372,11 @@ class TableSchema {
     }
 
    private:
+    static void to_lowercase_inplace(std::string &str) {
+        std::transform(
+            str.begin(), str.end(), str.begin(),
+            [](unsigned char c) -> unsigned char { return std::tolower(c); });
+    }
     static std::string to_lower(const std::string &str) {
         std::string result;
         std::transform(

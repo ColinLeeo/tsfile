@@ -177,15 +177,15 @@ TEST_F(TsFileTableReaderTest, TableModelQuery) {
                     break;
             }
         }
-        for (int i = 0; i < 5; i++) {
+        for (int i = 2; i <= 6; i++) {
             ASSERT_EQ(table_result_set->get_value<common::String*>(i)->compare(
                           literal_str),
                       0);
         }
-        for (int i = 5; i < 10; i++) {
+        for (int i = 7; i <= 11; i++) {
             ASSERT_EQ(table_result_set->get_value<int64_t>(i), 0);
         }
-        ASSERT_EQ(table_result_set->get_value<int64_t>(10), timestamp);
+        ASSERT_EQ(table_result_set->get_value<int64_t>(1), timestamp);
         timestamp++;
     }
     ASSERT_EQ(timestamp, 10);

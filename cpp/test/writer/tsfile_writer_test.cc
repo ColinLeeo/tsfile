@@ -191,11 +191,11 @@ TEST_F(TsFileWriterTest, WriteDiffDataType) {
             break;
         }
         cur_record_num++;
-        ASSERT_EQ(qds->get_value<float>(0), (float)1.0);
-        ASSERT_EQ(qds->get_value<int64_t>(1), (int64_t)415412);
-        ASSERT_EQ(qds->get_value<bool>(2), true);
-        ASSERT_EQ(qds->get_value<double>(3), (double)2.0);
-        ASSERT_EQ(qds->get_value<common::String*>(4)->compare(literal_str), 0);
+        ASSERT_EQ(qds->get_value<float>(1), (float)1.0);
+        ASSERT_EQ(qds->get_value<int64_t>(2), (int64_t)415412);
+        ASSERT_EQ(qds->get_value<bool>(3), true);
+        ASSERT_EQ(qds->get_value<double>(4), (double)2.0);
+        ASSERT_EQ(qds->get_value<common::String*>(5)->compare(literal_str), 0);
 
         ASSERT_EQ(qds->get_value<float>(measurement_names[0]), (float)1.0);
         ASSERT_EQ(qds->get_value<int64_t>(measurement_names[1]),

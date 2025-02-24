@@ -126,7 +126,7 @@ TEST_F(CWrapperTest, WriterFlushTabletAndReadData) {
     for (int i = 0; i < measurement_num - 1; i++) {
         ASSERT_TRUE(tsfile_result_set_has_next(result_set));
         ASSERT_FALSE(tsfile_result_set_is_null_by_index(result_set, i));
-        ASSERT_EQ(tsfile_result_set_get_value_by_index_int64_t(result_set, i),
+        ASSERT_EQ(tsfile_result_set_get_value_by_index_int64_t(result_set, i + 1),
                   i * 2);
         ASSERT_EQ(tsfile_result_set_get_value_by_name_int64_t(
                       result_set,
