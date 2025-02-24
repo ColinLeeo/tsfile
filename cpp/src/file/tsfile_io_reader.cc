@@ -549,7 +549,6 @@ int TsFileIOReader::do_load_timeseries_index(
           aligned_ts_idx->time_ts_idx_ = new(buf) TimeseriesIndex;
           aligned_ts_idx->time_ts_idx_->clone_from(
               cur_timeseries_index, &in_timeseries_index_pa);
-          ret_timeseries_index = aligned_ts_idx;
         } else if (cur_timeseries_index.get_measurement_name().equal_to(
             target_measurement_name)) {
           void *buf =
@@ -557,6 +556,7 @@ int TsFileIOReader::do_load_timeseries_index(
           aligned_ts_idx->value_ts_idx_ = new(buf) TimeseriesIndex;
           aligned_ts_idx->value_ts_idx_->clone_from(
               cur_timeseries_index, &in_timeseries_index_pa);
+          ret_timeseries_index = aligned_ts_idx;
           found = true;
           break;
         }

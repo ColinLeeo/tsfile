@@ -36,7 +36,11 @@ storage::TsFileTableWriter::TsFileTableWriter(
 storage::TsFileTableWriter::~TsFileTableWriter() = default;
 
 int storage::TsFileTableWriter::register_table(const std::shared_ptr<TableSchema>& table_schema) {
-    return tsfile_writer_->register_table(table_schema);
+    int ret = tsfile_writer_->register_table(table_schema);
+    if (ret == common::E_OK) {
+        table_name_ = table_schema->get_table_name();
+    }
+    return ret;
 }
 
 int storage::TsFileTableWriter::write_table(storage::Tablet &tablet) const {

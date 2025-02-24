@@ -44,7 +44,8 @@ int SingleDeviceTsBlockReader::init(DeviceQueryTask* device_query_task,
     for (const auto& column_name : device_query_task_->get_column_names()) {
         common::ColumnSchema column_schema(
             table_schema->get_column_schema(column_name));
-        if (column_schema.is_valid()) {
+        if (column_schema.is_valid() &&
+            column_schema.data_type_ != common::VECTOR) {
             tuple_desc_.push_back(column_schema);
         }
     }
@@ -224,17 +225,17 @@ void SingleDeviceTsBlockReader::close() {
 
 void SingleDeviceTsBlockReader::construct_column_context(
     const ITimeseriesIndex* time_series_index, Filter* time_filter) {
-    if (time_series_index == nullptr ||
-        time_series_index->get_chunk_meta_list()->empty()) {
+    if (time_series_index == nullptr) {
         return;
-    } else if (time_series_index->is_aligned()) {
+    } else if (time_series_index->get_data_type() == common::VECTOR) {
         const AlignedTimeseriesIndex* aligned_time_series_index =
             dynamic_cast<const AlignedTimeseriesIndex*>(time_series_index);
         if (aligned_time_series_index == nullptr) {
             assert(false);
         }
-        // Todo: when multi value index is supported in aligned time series index,
-        // we need to change the column context to VectorMeasurementColumnContext
+        // Todo: when multi value index is supported in aligned time series
+        // index, we need to change the column context to
+        // VectorMeasurementColumnContext
         SingleMeasurementColumnContext* column_context =
             new SingleMeasurementColumnContext(tsfile_io_reader_);
         column_context->init(

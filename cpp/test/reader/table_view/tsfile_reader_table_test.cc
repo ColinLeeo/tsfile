@@ -212,7 +212,7 @@ TEST_F(TsFileTableReaderTest, TableModelResultMetadata) {
                        tmp_result_set);
     auto* table_result_set = (TableResultSet*)tmp_result_set;
     auto result_set_metadata = table_result_set->get_metadata();
-    ASSERT_EQ(result_set_metadata->get_column_count(), 10);
+    ASSERT_EQ(result_set_metadata->get_column_count(), 11);
     for (int i = 0; i < 5; i++) {
         ASSERT_EQ(result_set_metadata->get_column_name(i), "id" + to_string(i));
         ASSERT_EQ(result_set_metadata->get_column_type(i), TSDataType::STRING);

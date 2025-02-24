@@ -60,6 +60,7 @@ int TableQueryExecutor::query(const std::string &table_name,
                 new DeviceOrderedTsBlockReader(
                     std::move(device_task_iterator), meta_data_querier_,
                     block_size_, tsfile_io_reader_, time_filter, field_filter));
+            break;
         case TableQueryOrdering::TIME:
         default:
             ret = common::E_UNSUPPORTED_ORDER;
