@@ -61,7 +61,7 @@ uint32_t tablet_get_cur_row_size(Tablet tablet) {
 }
 
 ERRNO tablet_add_timestamp(Tablet tablet, uint32_t row_index,
-                           timestamp timestamp) {
+                           Timestamp timestamp) {
     return static_cast<storage::Tablet *>(tablet)->add_timestamp(row_index,
                                                                  timestamp);
 }
@@ -104,7 +104,7 @@ void *tablet_get_value(Tablet tablet, uint32_t row_index, uint32_t schema_index,
 }
 
 // TsRecord API
-TsRecord ts_record_new(const char *device_id, timestamp timestamp,
+TsRecord ts_record_new(const char *device_id, Timestamp timestamp,
                        int timeseries_num) {
     auto *record = new storage::TsRecord(timestamp, device_id, timeseries_num);
     return record;
@@ -263,14 +263,14 @@ ERRNO tsfile_writer_flush_data(TsFileWriter writer) {
 
 ResultSet tsfile_reader_query_table(TsFileReader reader, const char *table_name,
 char **columns, uint32_t column_num,
-                                    timestamp start_time, timestamp end_time) {
+                                    Timestamp start_time, Timestamp end_time) {
     // TODO: Implement query table with tsfile reader.
     return nullptr;
 }
 
 ResultSet tsfile_reader_query_device(TsFileReader reader, const char* device_name,
     char** sensor_name, uint32_t sensor_num,
-                                   timestamp start_time, timestamp end_time) {
+                                   Timestamp start_time, Timestamp end_time) {
     auto *r = static_cast<storage::TsFileReader *>(reader);
     std::vector<std::string> selected_paths;
     selected_paths.reserve(sensor_num);

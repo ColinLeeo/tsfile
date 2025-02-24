@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "../c_examples/c_examples.h"
 #include "cpp_examples.h"
 
 std::string field_to_string(storage::Field *value) {
@@ -77,7 +78,10 @@ int demo_read() {
     std::cout << "begin to dump data from tsfile ---" << std::endl;
     int row_cout = 0;
     do {
-        if (qds->next()) {
+        bool has_next;
+        int errcode = qds->next(has_next);
+        HANDLE_ERROR(errcode);
+        if (has_next) {
             std::cout << "dump QDS :  " << record->get_timestamp() << ",";
             record = qds->get_row_record();
             if (record) {

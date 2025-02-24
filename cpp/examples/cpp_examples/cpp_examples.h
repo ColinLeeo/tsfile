@@ -29,5 +29,13 @@
 #include "reader/tsfile_reader.h"
 #include "writer/tsfile_writer.h"
 
+#define HANDLE_ERROR(err_no)                  \
+    do {                                      \
+        if (err_no != 0) {                    \
+            printf("get err no: %d", err_no); \
+            return err_no;                    \
+        }                                     \
+    } while (0)
+
 int demo_read();
 int demo_write();

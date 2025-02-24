@@ -109,7 +109,7 @@ typedef void* TsRecord;
 typedef void* ResultSet;
 
 typedef int32_t ERRNO;
-typedef int64_t timestamp;
+typedef int64_t Timestamp;
 
 #ifdef __cplusplus
 extern "C" {
@@ -126,10 +126,10 @@ Tablet tablet_new(const char** column_name_list, TSDataType* data_types,
 uint32_t tablet_get_cur_row_size(Tablet tablet);
 
 ERRNO tablet_add_timestamp(Tablet tablet, uint32_t row_index,
-                           timestamp timestamp);
+                           Timestamp timestamp);
 
 #define TABLET_ADD_VALUE_BY_NAME(type)                                        \
-    ERRNO tablet_add_value_by_name_##type(Tablet* tablet, uint32_t row_index, \
+    ERRNO tablet_add_value_by_name_##type(Tablet tablet, uint32_t row_index, \
                                           char* column_name, type value);
 
 TABLET_ADD_VALUE_BY_NAME(int32_t);
@@ -137,6 +137,8 @@ TABLET_ADD_VALUE_BY_NAME(int64_t);
 TABLET_ADD_VALUE_BY_NAME(float);
 TABLET_ADD_VALUE_BY_NAME(double);
 TABLET_ADD_VALUE_BY_NAME(bool);
+
+ERRNO tablet_add_value_by_name_string(Tablet tablet, uint32_t row_index, char* column_name, char* value);
 
 #define TABLE_ADD_VALUE_BY_INDEX(type)                                        \
     ERRNO tablet_add_value_by_index_##type(Tablet tablet, uint32_t row_index, \
@@ -148,11 +150,13 @@ TABLE_ADD_VALUE_BY_INDEX(float);
 TABLE_ADD_VALUE_BY_INDEX(double);
 TABLE_ADD_VALUE_BY_INDEX(bool);
 
+ERRNO tablet_add_value_by_index_string(Tablet tablet, uint32_t row_index, uint32_t column_index, char* value);
+
 void* tablet_get_value(Tablet tablet, uint32_t row_index, uint32_t schema_index,
                        TSDataType* type);
 
 /*--------------------------TsRecord API------------------------ */
-TsRecord ts_record_new(const char* device_id, timestamp timestamp,
+TsRecord ts_record_new(const char* device_id, Timestamp timestamp,
                        int timeseries_num);
 
 #define INSERT_DATA_INTO_TS_RECORD_BY_NAME(type)     \
@@ -190,11 +194,11 @@ ERRNO tsfile_writer_flush_data(TsFileWriter writer);
 /*-------------------TsFile reader query data------------------ */
 ResultSet tsfile_reader_query_table(TsFileReader reader, const char* table_name,
                                     char** columns, uint32_t column_num,
-                                    timestamp start_time, timestamp end_time);
+                                    Timestamp start_time, Timestamp end_time);
 ResultSet tsfile_reader_query_device(TsFileReader reader,
                                      const char* device_name,
                                      char** sensor_name, uint32_t sensor_num,
-                                     timestamp start_time, timestamp end_time);
+                                     Timestamp start_time, Timestamp end_time);
 bool tsfile_result_set_has_next(ResultSet result_set);
 
 #define TSFILE_RESULT_SET_GET_VALUE_BY_NAME(type)                         \

@@ -29,25 +29,6 @@ using namespace storage;
 
 long getNowTime() { return time(nullptr); }
 
-static std::string generate_random_string(int length) {
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(0, 61);
-
-    const std::string chars =
-        "0123456789"
-        "abcdefghijklmnopqrstuvwxyz"
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-    std::string random_string;
-
-    for (int i = 0; i < length; ++i) {
-        random_string += chars[dis(gen)];
-    }
-
-    return random_string;
-}
-
 int demo_write() {
     TsFileWriter* tsfile_writer_ = new TsFileWriter();
     libtsfile_init();
