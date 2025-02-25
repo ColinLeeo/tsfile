@@ -152,6 +152,13 @@ struct MeasurementSchemaGroup {
     MeasurementSchemaMap measurement_schema_map_;
     bool is_aligned_ = false;
     TimeChunkWriter *time_chunk_writer_ = nullptr;
+
+    ~MeasurementSchemaGroup() {
+        if (time_chunk_writer_ != nullptr) {
+            delete time_chunk_writer_;
+            time_chunk_writer_ = nullptr;
+        }
+    }
 };
 
 /**
