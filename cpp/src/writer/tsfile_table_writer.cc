@@ -29,7 +29,7 @@ storage::TsFileTableWriter::TsFileTableWriter(
     if (table_schema != nullptr) {
         std::shared_ptr<TableSchema> table_schema_ptr(table_schema);
         tsfile_writer_->register_table(table_schema_ptr);
-        table_name_ = table_schema->get_table_name();
+        exclusive_table_name_ = table_schema->get_table_name();
     }
 }
 
@@ -37,14 +37,16 @@ storage::TsFileTableWriter::~TsFileTableWriter() = default;
 
 int storage::TsFileTableWriter::register_table(const std::shared_ptr<TableSchema>& table_schema) {
     int ret = tsfile_writer_->register_table(table_schema);
+    // if multiple tables are registered, set
+    exclusive_table_name_ = "";
     return ret;
 }
 
 int storage::TsFileTableWriter::write_table(storage::Tablet &tablet) const {
     if (tablet.get_table_name().empty()) {
-        tablet.set_table_name(table_name_);
-    } else if (!table_name_.empty() && tablet.get_table_name() != table_name_) {
-        return common::E_INVALID_ARG;
+        tablet.set_table_name(exclusive_table_name_);
+    } else if (!exclusive_table_name_.empty() && tablet.get_table_name() != exclusive_table_name_) {
+        return common::E_TABLE_NOT_EXIST;
     }
     return tsfile_writer_->write_table(tablet);
 }

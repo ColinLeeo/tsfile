@@ -433,6 +433,9 @@ int TsFileWriter::do_check_schema_table(
         for (uint32_t i = 0; i < column_cnt; i++) {
             auto& col_name = tablet.get_column_name(i);
             int col_index = table_schema->find_column_index(col_name);
+            if (col_index == -1) {
+                return E_COLUMN_NOT_EXIST;
+            }
             const common::ColumnCategory column_category = table_schema->get_column_categories()[col_index];
             tablet.column_categories_.emplace_back(column_category);
         }

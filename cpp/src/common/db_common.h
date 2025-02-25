@@ -113,6 +113,8 @@ FORCE_INLINE TSEncoding get_default_encoding_for_type(TSDataType type) {
         return PLAIN;
     } else if (type == common::TEXT) {
         return PLAIN;
+    } else if (type == common::STRING) {
+        return PLAIN;
     } else {
         ASSERT(false);
     }
