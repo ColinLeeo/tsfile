@@ -165,6 +165,7 @@ TEST_F(TsFileWriterTableTest, WriteNonExistColumnTest) {
     auto tablet = gen_tablet(&write_table_schema, 0, 1);
     ASSERT_EQ(tsfile_table_writer_->write_table(tablet),
               common::E_COLUMN_NOT_EXIST);
+    tsfile_table_writer_->close();
 }
 
 TEST_F(TsFileWriterTableTest, WriteNonExistTableTest) {
@@ -175,4 +176,5 @@ TEST_F(TsFileWriterTableTest, WriteNonExistTableTest) {
     tablet.set_table_name("non_exist");
     ASSERT_EQ(tsfile_table_writer_->write_table(tablet),
               common::E_TABLE_NOT_EXIST);
+    tsfile_table_writer_->close();
 }
