@@ -28,6 +28,8 @@
 #include "reader/qds_without_timegenerator.h"
 #include "reader/tsfile_reader.h"
 #include "writer/tsfile_writer.h"
+#include "writer/tsfile_table_writer.h"
+#include "file/write_file.h"
 
 #define HANDLE_ERROR(err_no)                  \
     do {                                      \
