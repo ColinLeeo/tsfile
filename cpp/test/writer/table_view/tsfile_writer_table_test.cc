@@ -149,6 +149,7 @@ TEST_F(TsFileWriterTableTest, WriteNonExistColumnTest) {
     auto column_categories = table_schema->get_column_categories();
     measurment_schemas.emplace_back(
         std::make_shared<MeasurementSchema>("non_exist", TSDataType::INT64));
+    column_categories.emplace_back(ColumnCategory::FIELD);
     std::vector<ColumnSchema> column_schemas;
     for (size_t i = 0; i < measurment_schemas.size(); ++i) {
         column_schemas.emplace_back(
