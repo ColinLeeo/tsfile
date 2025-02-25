@@ -29,8 +29,6 @@
 
 using namespace storage;
 
-long getNowTime() { return time(nullptr); }
-
 int demo_write() {
     std::string table_name = "table1";
     WriteFile file;

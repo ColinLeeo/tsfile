@@ -23,7 +23,7 @@
 #include "../c_examples/c_examples.h"
 #include "cpp_examples.h"
 
-std::string field_to_string(storage::Field *value) {
+std::string field_to_string(storage::Field* value) {
     if (value->type_ == common::TEXT) {
         return std::string(value->value_.sval_);
     } else {
@@ -56,11 +56,53 @@ std::string field_to_string(storage::Field *value) {
 }
 
 int demo_read() {
-    ERRNO code = 0
+    ERRNO code = 0;
     std::string table_name = "table1";
     storage::TsFileReader reader;
     reader.open("test.tsfile");
     storage::ResultSet* ret = nullptr;
-    code = reader.query(table_name, {"id1", "id2", "s1"}, 0, 100, ret);
-
+    std::vector<std::string> columns;
+    columns.push_back("id1");
+    columns.push_back("id2");
+    columns.push_back("s1");
+    code = reader.query(table_name, columns, 0, 100, ret);
+    auto metadata = ret->get_metadata();
+    int column_num = metadata->get_column_count();
+    for (int i = 0; i < column_num; i++) {
+        std::cout << "column name: " << metadata->get_column_name(i)
+                  << std::endl;
+        std::cout << "column type: " << metadata->get_column_type(i)
+                  << std::endl;
+    }
+    bool has_next = false;
+    while (ret->next(has_next) && has_next) {
+        Timestamp timestamp = ret->get_value<Timestamp>(1);
+        for (int i = 0; i < column_num; i++) {
+            if (ret->is_null(i)) {
+                std::cout << "null" << std::endl;
+            } else {
+                switch (metadata->get_column_type(i)) {
+                    case common::INT32:
+                        std::cout << ret->get_value<int32_t>(i) << std::endl;
+                        break;
+                    case common::INT64:
+                        std::cout << ret->get_value<int64_t>(i) << std::endl;
+                        break;
+                    case common::FLOAT:
+                        std::cout << ret->get_value<float>(i) << std::endl;
+                        break;
+                    case common::DOUBLE:
+                        std::cout << ret->get_value<double>(i) << std::endl;
+                        break;
+                    case common::STRING:
+                        std::cout << ret->get_value<std::string>(i)
+                                  << std::endl;
+                        break;
+                    default:;
+                }
+            }
+        }
+    }
+    ret->close();
+    reader.close();
 }
