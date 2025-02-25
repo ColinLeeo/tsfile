@@ -227,9 +227,12 @@ TEST_F(TsFileTableReaderTest, TableModelResultMetadata) {
 }
 
 TEST_F(TsFileTableReaderTest, TableModelGetSchema) {
+    auto tmp_table_schema = gen_table_schema(0);
     auto tsfile_table_writer_ =
-        std::make_shared<TsFileTableWriter>(&write_file_, nullptr);
-    for (int i = 0; i < 10; i++) {
+        std::make_shared<TsFileTableWriter>(&write_file_, tmp_table_schema);
+    auto tmp_tablet = gen_tablet(tmp_table_schema, 0, 1);
+    ASSERT_EQ(tsfile_table_writer_->write_table(tmp_tablet), common::E_OK);
+    for (int i = 1; i < 10; i++) {
         auto table_schema = gen_table_schema(i);
         auto tablet = gen_tablet(table_schema, 0, 1);
         auto table_schema_ptr = std::shared_ptr<TableSchema>(table_schema);
