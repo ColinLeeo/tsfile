@@ -19,20 +19,6 @@
 
 #include "tsfile_table_writer.h"
 
-storage::TsFileTableWriter::TsFileTableWriter(
-    storage::WriteFile *writer_file,
-    TableSchema *table_schema,
-    uint64_t memory_threshold) {
-    tsfile_writer_ = std::make_shared<TsFileWriter>();
-    tsfile_writer_->init(writer_file);
-    tsfile_writer_->set_generate_table_schema(false);
-    if (table_schema != nullptr) {
-        std::shared_ptr<TableSchema> table_schema_ptr(table_schema);
-        tsfile_writer_->register_table(table_schema_ptr);
-        exclusive_table_name_ = table_schema->get_table_name();
-    }
-}
-
 storage::TsFileTableWriter::~TsFileTableWriter() = default;
 
 int storage::TsFileTableWriter::register_table(const std::shared_ptr<TableSchema>& table_schema) {
