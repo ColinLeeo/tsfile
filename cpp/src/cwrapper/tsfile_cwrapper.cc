@@ -111,7 +111,7 @@ TsRecord ts_record_new(const char *device_id, Timestamp timestamp,
 }
 
 #define INSERT_DATA_INTO_TS_RECORD_BY_NAME_DEF(type)                 \
-    ERRNO insert_data_into_ts_record_by_name_##type(                  \
+    ERRNO insert_data_into_ts_record_by_name_##type(                 \
         TsRecord data, const char *measurement_name, type value) {   \
         auto *record = (storage::TsRecord *)data;                    \
         storage::DataPoint point(measurement_name, value);           \
@@ -262,20 +262,22 @@ ERRNO tsfile_writer_flush_data(TsFileWriter writer) {
 // Query
 
 ResultSet tsfile_reader_query_table(TsFileReader reader, const char *table_name,
-char **columns, uint32_t column_num,
+                                    char **columns, uint32_t column_num,
                                     Timestamp start_time, Timestamp end_time) {
     // TODO: Implement query table with tsfile reader.
     return nullptr;
 }
 
-ResultSet tsfile_reader_query_device(TsFileReader reader, const char* device_name,
-    char** sensor_name, uint32_t sensor_num,
-                                   Timestamp start_time, Timestamp end_time) {
+ResultSet tsfile_reader_query_device(TsFileReader reader,
+                                     const char *device_name,
+                                     char **sensor_name, uint32_t sensor_num,
+                                     Timestamp start_time, Timestamp end_time) {
     auto *r = static_cast<storage::TsFileReader *>(reader);
     std::vector<std::string> selected_paths;
     selected_paths.reserve(sensor_num);
     for (uint32_t i = 0; i < sensor_num; i++) {
-        selected_paths.push_back(std::string(device_name) + "." + std::string(sensor_name[i]));
+        selected_paths.push_back(std::string(device_name) + "." +
+                                 std::string(sensor_name[i]));
     }
     storage::ResultSet *qds = nullptr;
     r->query(selected_paths, start_time, end_time, qds);
@@ -295,6 +297,14 @@ bool tsfile_result_set_has_next(ResultSet result_set) {
         auto *r = static_cast<storage::ResultSet *>(result_set);               \
         return r->get_value<type>(column_name);                                \
     }
+
+char *tsfile_result_set_get_value_by_name_string(ResultSet result_set,
+                                                 const char *column_name) {
+    auto *r = static_cast<storage::ResultSet *>(result_set);
+    common::String *ret = r->get_value<common::String *>(column_name);
+    // Caller should free return's char* 's space.
+    return strdup(ret->buf_);
+}
 TSFILE_RESULT_SET_GET_VALUE_BY_NAME_DEF(bool);
 TSFILE_RESULT_SET_GET_VALUE_BY_NAME_DEF(int32_t);
 TSFILE_RESULT_SET_GET_VALUE_BY_NAME_DEF(int64_t);
@@ -313,6 +323,13 @@ TSFILE_RESULT_SET_GET_VALUE_BY_INDEX_DEF(int64_t);
 TSFILE_RESULT_SET_GET_VALUE_BY_INDEX_DEF(float);
 TSFILE_RESULT_SET_GET_VALUE_BY_INDEX_DEF(double);
 TSFILE_RESULT_SET_GET_VALUE_BY_INDEX_DEF(bool);
+char *tsfile_result_set_get_value_by_index_string(ResultSet result_set,
+                                                  uint32_t column_index) {
+    auto *r = static_cast<storage::ResultSet *>(result_set);
+    common::String *ret = r->get_value<common::String *>(column_index);
+    // Caller should free return's char* 's space.
+    return strdup(ret->buf_);
+}
 
 bool tsfile_result_set_is_null_by_name(ResultSet result_set,
                                        const char *column_name) {
@@ -329,7 +346,8 @@ bool tsfile_result_set_is_null_by_index(const ResultSet result_set,
 ResultSetMetaData tsfile_result_set_get_metadata(ResultSet result_set) {
     auto *r = static_cast<storage::QDSWithoutTimeGenerator *>(result_set);
     ResultSetMetaData meta_data;
-    std::shared_ptr<storage::ResultSetMetadata> result_set_metadata = r->get_metadata();
+    std::shared_ptr<storage::ResultSetMetadata> result_set_metadata =
+        r->get_metadata();
     meta_data.column_num = result_set_metadata->get_column_count();
     meta_data.column_names =
         static_cast<char **>(malloc(meta_data.column_num * sizeof(char *)));
@@ -365,7 +383,7 @@ TableSchema tsfile_reader_get_table_schema(TsFileReader reader,
 }
 
 DeviceSchema tsfile_reader_get_device_schema(TsFileReader reader,
-                                                 const char *device_id) {
+                                             const char *device_id) {
     auto *r = static_cast<storage::TsFileReader *>(reader);
     std::vector<storage::MeasurementSchema> measurement_schemas;
     r->get_timeseries_schema(
@@ -396,21 +414,21 @@ TableSchema *tsfile_reader_get_all_table_schemas(TsFileReader reader,
 }
 
 // delete pointer
-void free_tsfile_ts_record(TsRecord* record) {
+void free_tsfile_ts_record(TsRecord *record) {
     if (*record != nullptr) {
         delete static_cast<storage::TsRecord *>(*record);
     }
     *record = nullptr;
 }
 
-void free_tablet(Tablet* tablet) {
+void free_tablet(Tablet *tablet) {
     if (*tablet != nullptr) {
         delete static_cast<storage::Tablet *>(*tablet);
     }
     *tablet = nullptr;
 }
 
-void free_tsfile_result_set(ResultSet* result_set) {
+void free_tsfile_result_set(ResultSet *result_set) {
     if (*result_set != nullptr) {
         delete static_cast<storage::ResultSet *>(*result_set);
     }

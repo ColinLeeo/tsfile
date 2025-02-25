@@ -33,12 +33,17 @@ ERRNO write_tsfile() {
     HANDLE_ERROR(code);
 
     // Table schema.
-    TableSchema table_schema = {
-        .table_name = table_name,
-        .column_schemas =
-            (ColumnSchema[]){ColumnSchema{"id1", TS_DATATYPE_TEXT, TAG},
-                             ColumnSchema{"id2", TS_DATATYPE_TEXT, TAG},
-                             ColumnSchema{"s1", TS_DATATYPE_INT32, FIELD}}};
+    TableSchema table_schema = {.table_name = table_name,
+                                .column_schemas = (ColumnSchema[]){
+                                    (ColumnSchema){.column_name = "id1",
+                                                 .data_type = TS_DATATYPE_TEXT,
+                                                 .column_category = TAG},
+                                    (ColumnSchema){.column_name = "id2",
+                                                 .data_type = TS_DATATYPE_TEXT,
+                                                 .column_category = TAG},
+                                    (ColumnSchema){.column_name = "s1",
+                                                 .data_type = TS_DATATYPE_INT32,
+                                                 .column_category = FIELD}}};
 
     // Register a table with tsfile writer.
     code = tsfile_writer_register_table(writer, &table_schema);
@@ -66,5 +71,4 @@ ERRNO write_tsfile() {
 
     // Close writer.
     HANDLE_ERROR(tsfile_writer_close(writer));
-
 }
