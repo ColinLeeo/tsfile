@@ -165,7 +165,7 @@ class Tablet {
         insert_target_name_ = table_name;
     }
     size_t get_column_count() const { return schema_vec_->size(); }
-    int get_cur_row_size() const { return cur_row_size_; }
+    uint32_t get_cur_row_size() const { return cur_row_size_; }
 
     /**
      * @brief Adds a timestamp to the specified row.

@@ -98,7 +98,9 @@ class TsFileTableWriter {
 
    private:
     std::shared_ptr<TsFileWriter> tsfile_writer_;
-    std::string table_name_;
+    // if this TsFile only contains one table, this will be its name, otherwise,
+    // it will be an empty string
+    std::string exclusive_table_name_;
 };
 
 }  // namespace storage

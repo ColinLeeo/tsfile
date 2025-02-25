@@ -56,7 +56,7 @@ int SingleDeviceTsBlockReader::init(DeviceQueryTask* device_query_task,
         return ret;
     }
     col_appenders_.resize(tuple_desc_.get_column_count());
-    for (int i = 0; i < tuple_desc_.get_column_count(); i++) {
+    for (uint32_t i = 0; i < tuple_desc_.get_column_count(); i++) {
         col_appenders_[i] = new common::ColAppender(i, current_block_);
     }
     row_appender_ = new common::RowAppender(current_block_);
@@ -226,9 +226,8 @@ void SingleDeviceTsBlockReader::close() {
 void SingleDeviceTsBlockReader::construct_column_context(
     const ITimeseriesIndex* time_series_index, Filter* time_filter) {
     if (time_series_index == nullptr ||
-        time_series_index->get_data_type() != common::TSDataType::VECTOR &&
-        time_series_index->get_chunk_meta_list()->empty()) {
-        return;
+        (time_series_index->get_data_type() != common::TSDataType::VECTOR &&
+        time_series_index->get_chunk_meta_list()->empty())) {
     } else if (time_series_index->get_data_type() == common::VECTOR) {
         const AlignedTimeseriesIndex* aligned_time_series_index =
             dynamic_cast<const AlignedTimeseriesIndex*>(time_series_index);

@@ -47,7 +47,7 @@ Tablet tablet_new(const char **column_name_list, TSDataType *data_types,
                   uint32_t column_num) {
     std::vector<std::string> measurement_list;
     std::vector<common::TSDataType> data_type_list;
-    for (int i = 0; i < column_num; i++) {
+    for (uint32_t i = 0; i < column_num; i++) {
         measurement_list.emplace_back(column_name_list[i]);
         data_type_list.push_back(
             static_cast<common::TSDataType>(*(data_types + i)));
@@ -274,7 +274,7 @@ ResultSet tsfile_reader_query_device(TsFileReader reader, const char* device_nam
     auto *r = static_cast<storage::TsFileReader *>(reader);
     std::vector<std::string> selected_paths;
     selected_paths.reserve(sensor_num);
-    for (int i = 0; i < sensor_num; i++) {
+    for (uint32_t i = 0; i < sensor_num; i++) {
         selected_paths.push_back(std::string(device_name) + "." + std::string(sensor_name[i]));
     }
     storage::ResultSet *qds = nullptr;
@@ -376,7 +376,7 @@ DeviceSchema tsfile_reader_get_device_schema(TsFileReader reader,
     schema.timeseries_num = measurement_schemas.size();
     schema.timeseries_schema = static_cast<TimeseriesSchema *>(
         malloc(sizeof(TimeseriesSchema) * schema.timeseries_num));
-    for (uint32_t i = 0; i < schema.timeseries_num; i++) {
+    for (int i = 0; i < schema.timeseries_num; i++) {
         schema.timeseries_schema[i].timeseries_name =
             strdup(measurement_schemas[i].measurement_name_.c_str());
         schema.timeseries_schema[i].data_type =

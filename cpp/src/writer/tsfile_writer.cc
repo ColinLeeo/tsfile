@@ -413,7 +413,7 @@ int TsFileWriter::do_check_schema_table(
             "", g_config_value_.time_encoding_type_,
             g_config_value_.time_compress_type_);
 
-        for (int i = 0; i < table_schema->get_measurement_schemas().size(); ++i) {
+        for (uint32_t i = 0; i < table_schema->get_measurement_schemas().size(); ++i) {
             if (table_schema->get_column_categories().at(i) == common::ColumnCategory::FIELD) {
                 auto table_column_schema = table_schema->get_measurement_schemas().at(i);
                 auto device_column_schema = new MeasurementSchema(table_column_schema->measurement_name_,
@@ -433,6 +433,9 @@ int TsFileWriter::do_check_schema_table(
         for (uint32_t i = 0; i < column_cnt; i++) {
             auto& col_name = tablet.get_column_name(i);
             int col_index = table_schema->find_column_index(col_name);
+            if (col_index == -1) {
+                return E_COLUMN_NOT_EXIST;
+            }
             const common::ColumnCategory column_category = table_schema->get_column_categories()[col_index];
             tablet.column_categories_.emplace_back(column_category);
         }
@@ -744,7 +747,7 @@ TsFileWriter::split_tablet_by_device(const Tablet &tablet) {
     std::vector<std::pair<std::shared_ptr<IDeviceID>, int>> result;
     std::shared_ptr<IDeviceID> last_device_id =
         std::make_shared<StringArrayDeviceID>("last_device_id");
-    for (int i = 0; i < tablet.get_cur_row_size(); i++) {
+    for (uint32_t i = 0; i < tablet.get_cur_row_size(); i++) {
         std::shared_ptr<IDeviceID> cur_device_id(tablet.get_device_id(i));
         if (*cur_device_id != *last_device_id) {
             result.emplace_back(std::move(last_device_id), i);
