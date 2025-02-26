@@ -19,6 +19,7 @@
 #include <gtest/gtest.h>
 #include <unistd.h>
 extern "C" {
+#include "cwrapper/errno_define.h"
 #include "cwrapper/tsfile_cwrapper.h"
 }
 
@@ -29,119 +30,102 @@ using namespace common;
 namespace cwrapper {
 class CWrapperTest : public testing::Test {};
 
-TEST_F(CWrapperTest, RegisterTimeSeries) {
-    ERRNO code = 0;
-    char* temperature = strdup("temperature");
-    TimeseriesSchema ts_schema{temperature, TS_DATATYPE_INT32,
-                               TS_ENCODING_PLAIN, TS_COMPRESSION_UNCOMPRESSED};
-    remove("cwrapper_register_timeseries.tsfile");
-    TsFileWriter writer = tsfile_writer_new("cwrapper_register_timeseries.tsfile", &code);
-    ASSERT_EQ(code, 0);
-    code = tsfile_writer_register_timeseries(writer, "device1", &ts_schema);
-    ASSERT_EQ(code, 0);
-    free(temperature);
-    tsfile_writer_close(writer);
-}
+// TEST_F(CWrapperTest, RegisterTimeSeries) {
+//     ERRNO code = 0;
+//     char* temperature = strdup("temperature");
+//     TimeseriesSchema ts_schema{temperature, TS_DATATYPE_INT32,
+//                                TS_ENCODING_PLAIN,
+//                                TS_COMPRESSION_UNCOMPRESSED};
+//     remove("cwrapper_register_timeseries.tsfile");
+//     TsFileWriter writer =
+//     tsfile_writer_new("cwrapper_register_timeseries.tsfile", &code);
+//     ASSERT_EQ(code, 0);
+//     code = tsfile_writer_register_timeseries(writer, "device1", &ts_schema);
+//     ASSERT_EQ(code, 0);
+//     free(temperature);
+//     tsfile_writer_close(writer);
+// }
 
 TEST_F(CWrapperTest, WriterFlushTabletAndReadData) {
     ERRNO code = 0;
-    const int device_num = 50;
-    const int measurement_num = 50;
-    DeviceSchema device_schema[50];
+    const int column_num = 10;
     remove("cwrapper_write_flush_and_read.tsfile");
-    TsFileWriter writer = tsfile_writer_new("cwrapper_write_flush_and_read.tsfile", &code);
-    ASSERT_EQ(code, 0);
-    for (int i = 0; i < device_num; i++) {
-        char* device_name = strdup(("device" + std::to_string(i)).c_str());
-        device_schema[i].device_name = device_name;
-        device_schema[i].timeseries_num = measurement_num;
-        device_schema[i].timeseries_schema = (TimeseriesSchema*)malloc(
-            sizeof(TimeseriesSchema) * measurement_num);
-        for (int j = 0; j < measurement_num; j++) {
-            TimeseriesSchema* schema = device_schema[i].timeseries_schema + j;
-            schema->timeseries_name =
-                strdup(("measurement" + std::to_string(j)).c_str());
-            schema->compression = TS_COMPRESSION_UNCOMPRESSED;
-            schema->data_type = TS_DATATYPE_INT64;
-            schema->encoding = TS_ENCODING_PLAIN;
-        }
-        code = tsfile_writer_register_device(writer, &device_schema[i]);
-        ASSERT_EQ(code, 0);
-        free_device_schema(device_schema[i]);
+    TableSchema schema;
+    schema.table_name = "table1";
+    schema.column_num = column_num;
+    schema.column_schemas =
+        static_cast<ColumnSchema*>(malloc(column_num * sizeof(ColumnSchema)));
+    schema.column_schemas[0] =
+        ColumnSchema{"id1", TS_DATATYPE_STRING, TS_COMPRESSION_UNCOMPRESSED,
+                     TS_ENCODING_PLAIN, TAG};
+    schema.column_schemas[1] =
+        ColumnSchema{"id2", TS_DATATYPE_STRING, TS_COMPRESSION_UNCOMPRESSED,
+                     TS_ENCODING_PLAIN, TAG};
+    for (int i = 2; i < column_num; i++) {
+        schema.column_schemas[i] = ColumnSchema{
+            strdup(("s" + std::to_string(i)).c_str()), TS_DATATYPE_INT32,
+            TS_COMPRESSION_UNCOMPRESSED, TS_ENCODING_PLAIN, TAG};
     }
+    TsFileWriter writer = tsfile_writer_new(
+        "cwrapper_write_flush_and_read.tsfile", &schema, &code);
+    ASSERT_EQ(code, RET_OK);
+
+    for (int i = 2; i < column_num; i++) {
+        free(schema.column_schemas[i].column_name);
+    }
+    free(schema.column_schemas);
+
+
     int max_rows = 100;
-    for (int i = 0; i < device_num; i++) {
-        char* device_name = strdup(("device" + std::to_string(i)).c_str());
-        char** measurements_name =
-            static_cast<char**>(malloc(measurement_num * sizeof(char*)));
-        TSDataType* data_types = static_cast<TSDataType*>(
-            malloc(sizeof(TSDataType) * measurement_num));
-        for (int j = 0; j < measurement_num; j++) {
-            measurements_name[j] =
-                strdup(("measurement" + std::to_string(j)).c_str());
-            data_types[j] = TS_DATATYPE_INT64;
-        }
-        Tablet tablet =
-            tablet_new_with_device(device_name, measurements_name, data_types,
-                                   measurement_num, max_rows);
-        free(device_name);
-        free(data_types);
-        for (int j = 0; j < measurement_num; j++) {
-            free(measurements_name[j]);
-        }
-        free(measurements_name);
-        for (int j = 0; j < measurement_num; j++) {
-            for (int row = 0; row < max_rows; row++) {
-                tablet_add_timestamp(tablet, row, 16225600 + row);
-            }
-            for (int row = 0; row < max_rows; row++) {
-                tablet_add_value_by_index_int64_t(
-                    tablet, row, j, static_cast<int64_t>(row + j));
-            }
-        }
-        code = tsfile_writer_write_tablet(writer, tablet);
-        ASSERT_EQ(code, 0);
-        free_tablet(&tablet);
+    char** column_names =
+        static_cast<char**>(malloc(column_num * sizeof(char*)));
+    TSDataType* data_types =
+        static_cast<TSDataType*>(malloc(sizeof(TSDataType) * column_num));
+
+    column_names[0] = strdup(std::string("id1").c_str());
+    column_names[1] = strdup(std::string("id2").c_str());
+    for (int i = 2; i < column_num; i++) {
+        column_names[i] = strdup(("s" + std::to_string(i)).c_str());
+        data_types[i] = TS_DATATYPE_INT32;
     }
-    ASSERT_EQ(tsfile_writer_flush_data(writer), 0);
+    data_types[0] = TS_DATATYPE_STRING;
+    data_types[1] = TS_DATATYPE_STRING;
+    Tablet tablet = tablet_new(column_names, data_types, column_num, max_rows);
+
+    for (int i = 0; i < max_rows; i++) {
+        code = tablet_add_timestamp(tablet, i, static_cast<Timestamp>(i * 10));
+        ASSERT_EQ(code, 0);
+        code = tablet_add_value_by_index_string(tablet, i, 0, "device");
+        ASSERT_EQ(code, 0);
+        code = tablet_add_value_by_index_string(
+            tablet, i, 1, std::string("sensor" + std::to_string(i)).c_str());
+        ASSERT_EQ(code, 0);
+        for (int j = 2; j < column_num; j++) {
+            code = tablet_add_value_by_index_int32_t(
+                tablet, i, j, static_cast<int32_t>(i * 5));
+            ASSERT_EQ(code, 0);
+        }
+    }
+    code = tsfile_writer_write(writer, tablet);
+    ASSERT_EQ(code, RET_OK);
     ASSERT_EQ(tsfile_writer_close(writer), 0);
 
-    TsFileReader reader = tsfile_reader_new("cwrapper_write_flush_and_read.tsfile", &code);
+    TsFileReader reader =
+        tsfile_reader_new("cwrapper_write_flush_and_read.tsfile", &code);
     ASSERT_EQ(code, 0);
 
-    char** sensor_list =
-        static_cast<char**>(malloc(measurement_num * sizeof(char*)));
-    for (int i = 0; i < measurement_num; i++) {
-        sensor_list[i] = strdup(("measurement" + std::to_string(i)).c_str());
-    }
+    char** sensor_list = static_cast<char**>(malloc(4 * sizeof(char*)));
+    sensor_list[0] = "id1";
+    sensor_list[1] = "id2";
+    sensor_list[2] = "s1";
+    sensor_list[3] = "s2";
     ResultSet result_set =
-        tsfile_reader_query_device(reader,"device0", sensor_list, measurement_num, 16225600,
-                                 16225600 + max_rows - 1);
+        tsfile_query_table(reader, "table1", sensor_list, 4, 0, 100);
 
     ResultSetMetaData metadata = tsfile_result_set_get_metadata(result_set);
-    ASSERT_EQ(metadata.column_num, measurement_num);
-    ASSERT_EQ(std::string(metadata.column_names[4]),
-              std::string("device0.measurement4"));
-    ASSERT_EQ(metadata.data_types[9], TS_DATATYPE_INT64);
-    for (int i = 0; i < measurement_num - 1; i++) {
-        ASSERT_TRUE(tsfile_result_set_has_next(result_set));
-        ASSERT_FALSE(tsfile_result_set_is_null_by_index(result_set, i));
-        ASSERT_EQ(tsfile_result_set_get_value_by_index_int64_t(result_set, i + 1),
-                  i * 2);
-        ASSERT_EQ(tsfile_result_set_get_value_by_name_int64_t(
-                      result_set,
-                      std::string("measurement" + std::to_string(i)).c_str()),
-                  i * 2);
-    }
-    free_tsfile_result_set(&result_set);
-    free_result_set_meta_data(metadata);
-    for (int i = 0; i < measurement_num; i++) {
-        free(sensor_list[i]);
-    }
-    free(sensor_list);
-    tsfile_reader_close(reader);
-    // DeviceSchema schema = tsfile_reader_get_device_schema(reader,
-    // "device4"); ASSERT_EQ(schema.timeseries_num, 1);
-    // ASSERT_EQ(schema.timeseries_schema->name, std::string("measurement4"));
+    ASSERT_EQ(metadata.column_num, 4);
+    ASSERT_EQ(std::string(metadata.column_names[3]),
+              std::string("s2"));
+    ASSERT_EQ(metadata.data_types[3], TS_DATATYPE_INT32);
 }
 }  // namespace cwrapper

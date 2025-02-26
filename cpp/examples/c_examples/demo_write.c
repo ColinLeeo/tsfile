@@ -27,31 +27,32 @@
 ERRNO write_tsfile() {
     ERRNO code = 0;
     char* table_name = "table1";
+    TableSchema table_schema = {.table_name = table_name,
+                            .column_schemas = (ColumnSchema[]){
+                                (ColumnSchema){.column_name = "id1",
+                                             .data_type = TS_DATATYPE_TEXT,
+                                             .column_category = TAG},
+                                (ColumnSchema){.column_name = "id2",
+                                             .data_type = TS_DATATYPE_TEXT,
+                                             .column_category = TAG},
+                                (ColumnSchema){.column_name = "s1",
+                                             .data_type = TS_DATATYPE_INT32,
+                                             .column_category = FIELD}}};
 
     // Create tsfile writer with specify path.
-    TsFileWriter writer = tsfile_writer_new("test.tsfile", &code);
+    TsFileWriter writer = tsfile_writer_new("test.tsfile", &table_schema, &code);
     HANDLE_ERROR(code);
 
     // Table schema.
-    TableSchema table_schema = {.table_name = table_name,
-                                .column_schemas = (ColumnSchema[]){
-                                    (ColumnSchema){.column_name = "id1",
-                                                 .data_type = TS_DATATYPE_TEXT,
-                                                 .column_category = TAG},
-                                    (ColumnSchema){.column_name = "id2",
-                                                 .data_type = TS_DATATYPE_TEXT,
-                                                 .column_category = TAG},
-                                    (ColumnSchema){.column_name = "s1",
-                                                 .data_type = TS_DATATYPE_INT32,
-                                                 .column_category = FIELD}}};
+
 
     // Register a table with tsfile writer.
     code = tsfile_writer_register_table(writer, &table_schema);
     HANDLE_ERROR(code);
 
     // Create tablet to insert data.
-    Tablet tablet = tablet_new_with_device(
-        table_name, (char*[]){"id1", "id2", "s1"},
+    Tablet tablet = tablet_new(
+        (char*[]){"id1", "id2", "s1"},
         (TSDataType[]){TS_DATATYPE_TEXT, TS_DATATYPE_TEXT, TS_DATATYPE_INT32},
         3, 1024);
 

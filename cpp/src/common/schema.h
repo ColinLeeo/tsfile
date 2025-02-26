@@ -280,6 +280,10 @@ class TableSchema {
         return ret;
     }
 
+    int32_t get_columns_num() const {
+        return column_schemas_.size();
+    }
+
     int find_column_index(const std::string &column_name) {
         std::string lower_case_column_name = to_lower(column_name);
         auto it = column_pos_index_.find(lower_case_column_name);
