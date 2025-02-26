@@ -26,6 +26,10 @@
 #include "reader/tsfile_reader.h"
 #include "writer/tsfile_writer.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 static bool is_init = false;
 
 Tablet tablet_new_with_device(const char *device_id, char **column_name_list,
@@ -74,6 +78,13 @@ ERRNO tablet_add_timestamp(Tablet tablet, uint32_t row_index,
             row_index, column_name, value);                                  \
     }
 
+ERRNO tablet_add_value_by_name_string(Tablet tablet, uint32_t row_index,
+                                      const char* column_name, char* value) {
+    return static_cast<storage::Tablet *>(tablet)->add_value(
+        row_index, column_name, common::String(value));
+
+}
+
 TABLET_ADD_VALUE_BY_NAME_DEF(int32_t);
 TABLET_ADD_VALUE_BY_NAME_DEF(int64_t);
 TABLET_ADD_VALUE_BY_NAME_DEF(float);
@@ -87,6 +98,14 @@ TABLET_ADD_VALUE_BY_NAME_DEF(bool);
         return static_cast<storage::Tablet *>(tablet)->add_value(             \
             row_index, column_index, value);                                  \
     }
+
+ERRNO tablet_add_value_by_index_string(Tablet tablet, uint32_t row_index,
+                                      uint32_t column_index, char* value) {
+    return static_cast<storage::Tablet *>(tablet)->add_value(
+        row_index, column_index, common::String(value));
+
+}
+
 
 TABLE_ADD_VALUE_BY_INDEX_DEF(int32_t);
 TABLE_ADD_VALUE_BY_INDEX_DEF(int64_t);
@@ -461,3 +480,7 @@ void free_table_schema(TableSchema schema) {
     free(schema.column_schemas);
 }
 void free_column_schema(ColumnSchema schema) { free(schema.column_name); }
+
+#ifdef __cplusplus
+}
+#endif

@@ -54,7 +54,7 @@ int demo_write() {
         table_name, {"id1", "id2", "s1"},
         {common::STRING, common::STRING, common::INT32},
         {common::ColumnCategory::TAG, common::ColumnCategory::TAG,
-         common::ColumnCategory::FIELD})
+         common::ColumnCategory::FIELD});
 
         for (int row = 0; row < 5; row++) {
             long timestamp = row;
@@ -67,4 +67,5 @@ int demo_write() {
     writer->flush();
     writer->close();
     delete writer;
+    return 0;
 }

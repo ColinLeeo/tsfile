@@ -20,6 +20,7 @@
 #include "common/db_common.h"
 #include "common/path.h"
 #include "common/record.h"
+#include "common/tablet.h"
 #include "common/row_record.h"
 #include "common/schema.h"
 #include "reader/expression.h"

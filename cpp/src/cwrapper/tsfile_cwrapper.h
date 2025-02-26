@@ -124,7 +124,7 @@ Tablet tablet_new_with_device(const char* device_id, char** column_name_list,
                               int max_rows);
 
 Tablet tablet_new(const char** column_name_list, TSDataType* data_types,
-                  int column_num);
+                  uint32_t column_num);
 
 uint32_t tablet_get_cur_row_size(Tablet tablet);
 
@@ -133,7 +133,7 @@ ERRNO tablet_add_timestamp(Tablet tablet, uint32_t row_index,
 
 #define TABLET_ADD_VALUE_BY_NAME(type)                                       \
     ERRNO tablet_add_value_by_name_##type(Tablet tablet, uint32_t row_index, \
-                                          char* column_name, type value);
+                                          const char* column_name, type value);
 
 TABLET_ADD_VALUE_BY_NAME(int32_t);
 TABLET_ADD_VALUE_BY_NAME(int64_t);
@@ -142,7 +142,7 @@ TABLET_ADD_VALUE_BY_NAME(double);
 TABLET_ADD_VALUE_BY_NAME(bool);
 
 ERRNO tablet_add_value_by_name_string(Tablet tablet, uint32_t row_index,
-                                      char* column_name, char* value);
+                                      const char* column_name, char* value);
 
 #define TABLE_ADD_VALUE_BY_INDEX(type)                                        \
     ERRNO tablet_add_value_by_index_##type(Tablet tablet, uint32_t row_index, \
@@ -228,8 +228,8 @@ TSFILE_RESULT_SET_GET_VALUE_BY_INDEX(float);
 TSFILE_RESULT_SET_GET_VALUE_BY_INDEX(double);
 TSFILE_RESULT_SET_GET_VALUE_BY_INDEX(bool);
 
-char* tsfile_result_set_get_value_by_name_string(ResultSet result_set,
-                                                 const char* column_name);
+char* tsfile_result_set_get_value_by_index_string(ResultSet result_set,
+                                                 uint32_t column_index);
 bool tsfile_result_set_is_null_by_name(ResultSet result_set,
                                        const char* column_name);
 

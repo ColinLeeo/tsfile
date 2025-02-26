@@ -82,6 +82,9 @@ int demo_read() {
                 std::cout << "null" << std::endl;
             } else {
                 switch (metadata->get_column_type(i)) {
+                        case common::BOOLEAN:
+                            std::cout << ret->get_value<bool>(i) << std::endl;
+                    break;
                     case common::INT32:
                         std::cout << ret->get_value<int32_t>(i) << std::endl;
                         break;
@@ -95,7 +98,7 @@ int demo_read() {
                         std::cout << ret->get_value<double>(i) << std::endl;
                         break;
                     case common::STRING:
-                        std::cout << ret->get_value<std::string>(i)
+                        std::cout << ret->get_value<common::String*>(i)
                                   << std::endl;
                         break;
                     default:;
