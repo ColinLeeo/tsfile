@@ -42,8 +42,7 @@ void init_tsfile_config() {
     }
 }
 
-TsFileWriter tsfile_writer_new(const char *pathname, TableSchema *schema,
-                               ERRNO *err_code) {
+WriteFile write_file_new(const char *pathname, ERRNO *err_code) {
     int ret;
     init_tsfile_config();
 
@@ -59,13 +58,14 @@ TsFileWriter tsfile_writer_new(const char *pathname, TableSchema *schema,
     mode_t mode = 0666;
     storage::WriteFile *file = new storage::WriteFile;
     ret = file->create(pathname, flags, mode);
-    if (ret != common::E_OK) {
-        *err_code = ret;
-        return nullptr;
-    }
+    *err_code = ret;
+    return file;
+}
 
+TsFileWriter tsfile_writer_new(WriteFile file, TableSchema *schema,
+                               ERRNO *err_code) {
+    init_tsfile_config();
     std::vector<common::ColumnSchema> column_schemas;
-
     for (int i = 0; i < schema->column_num; i++) {
         ColumnSchema cur_schema = schema->column_schemas[i];
         column_schemas.emplace_back(common::ColumnSchema(
@@ -79,7 +79,9 @@ TsFileWriter tsfile_writer_new(const char *pathname, TableSchema *schema,
     // There is no need to free table_schema.
     storage::TableSchema *table_schema =
         new storage::TableSchema(schema->table_name, column_schemas);
-    return new storage::TsFileTableWriter(file, table_schema);
+    *err_code = common::E_OK;
+    return new storage::TsFileTableWriter(
+        static_cast<storage::WriteFile *>(file), table_schema);
 }
 
 TsFileReader tsfile_reader_new(const char *pathname, ERRNO *err_code) {
@@ -549,6 +551,11 @@ void free_table_schema(TableSchema schema) {
     free(schema.column_schemas);
 }
 void free_column_schema(ColumnSchema schema) { free(schema.column_name); }
+void free_write_file(WriteFile *write_file) {
+    auto f = static_cast<storage::WriteFile *>(*write_file);
+    delete f;
+    *write_file = nullptr;
+}
 
 #ifdef __cplusplus
 }

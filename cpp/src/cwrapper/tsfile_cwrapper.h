@@ -106,6 +106,8 @@ typedef struct tsfile_conf {
     int mem_threshold_kb;
 } TsFileConf;
 
+typedef void* WriteFile;
+
 typedef void* TsFileReader;
 typedef void* TsFileWriter;
 
@@ -121,9 +123,22 @@ typedef int64_t Timestamp;
 /*--------------------------TsFile Reader and Writer------------------------ */
 
 /**
+ * @brief Creates a file for writing.
+ *
+ * @param pathname     Target file path to create.
+ * @param err_code     [out] E_OK(0), or check error code in errno_define.h.
+ *
+ * @return WriteFile Valid handle on success.
+ *
+ * @note Call free_write_file() to release resources.
+ */
+
+WriteFile write_file_new(const char* pathname, ERRNO* err_code);
+
+/**
  * @brief Creates a TsFileWriter for writing TsFiles.
  *
- * @param pathname     Target TsFile path. Must be a valid path.
+ * @param file     Target file where the table data will be written.
  * @param schema       Table schema definition.
  *                     - Ownership: Caller must free it after writer creating.
  * @param err_code     [out] E_OK(0), or check error code in errno_define.h.
@@ -132,7 +147,7 @@ typedef int64_t Timestamp;
  *
  * @note Call tsfile_writer_close() to release resources.
  */
-TsFileWriter tsfile_writer_new(const char* pathname, TableSchema* schema,
+TsFileWriter tsfile_writer_new(WriteFile file, TableSchema* schema,
                                ERRNO* err_code);
 
 /**
@@ -466,6 +481,7 @@ void free_device_schema(DeviceSchema schema);
 void free_timeseries_schema(TimeseriesSchema schema);
 void free_table_schema(TableSchema schema);
 void free_column_schema(ColumnSchema schema);
+void free_write_file(WriteFile* write_file);
 
 #ifdef __cplusplus
 }

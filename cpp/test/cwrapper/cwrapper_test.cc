@@ -69,8 +69,9 @@ TEST_F(CWrapperTest, WriterFlushTabletAndReadData) {
                          TS_DATATYPE_INT64, TS_COMPRESSION_UNCOMPRESSED,
                          TS_ENCODING_PLAIN, FIELD};
     }
-    TsFileWriter writer = tsfile_writer_new(
-        "cwrapper_write_flush_and_read.tsfile", &schema, &code);
+    WriteFile file =
+        write_file_new("cwrapper_write_flush_and_read.tsfile", &code);
+    TsFileWriter writer = tsfile_writer_new(file, &schema, &code);
     ASSERT_EQ(code, RET_OK);
 
     char** column_names =
@@ -89,6 +90,7 @@ TEST_F(CWrapperTest, WriterFlushTabletAndReadData) {
     }
 
     Tablet tablet = tablet_new(column_names, data_types, column_num, 10);
+
     int num_timestamp = 10;
     char* literal = new char[std::strlen("device_id") + 1];
     std::strcpy(literal, "device_id");
@@ -116,6 +118,7 @@ TEST_F(CWrapperTest, WriterFlushTabletAndReadData) {
     ASSERT_EQ(code, RET_OK);
     ASSERT_EQ(tsfile_writer_close(writer), 0);
 
+
     TsFileReader reader =
         tsfile_reader_new("cwrapper_write_flush_and_read.tsfile", &code);
     ASSERT_EQ(code, 0);
@@ -125,14 +128,18 @@ TEST_F(CWrapperTest, WriterFlushTabletAndReadData) {
     int row = 0;
     while (tsfile_result_set_next(result_set, &code) && code == RET_OK) {
         for (int i = 0; i < schema.column_num; i++) {
+            char* ret = nullptr;
             switch (schema.column_schemas[i].data_type) {
                 case TS_DATATYPE_STRING:
-                    ASSERT_EQ(std::string("device_id"), std::string(tsfile_result_set_get_value_by_name_string(
-                        result_set, schema.column_schemas[i].column_name)));
+                    ret = tsfile_result_set_get_value_by_name_string(
+                        result_set, schema.column_schemas[i].column_name);
+                    ASSERT_EQ(std::string("device_id"), std::string(ret));
+                    free(ret);
                     break;
                 case TS_DATATYPE_INT64:
                     ASSERT_EQ(row, tsfile_result_set_get_value_by_name_int64_t(
-                        result_set, schema.column_schemas[i].column_name));
+                                       result_set,
+                                       schema.column_schemas[i].column_name));
                     break;
                 default:
                     break;
@@ -140,34 +147,43 @@ TEST_F(CWrapperTest, WriterFlushTabletAndReadData) {
         }
         for (int i = 7; i <= 11; i++) {
             ASSERT_EQ(row, tsfile_result_set_get_value_by_index_int64_t(
-                             result_set, i));
+                               result_set, i));
         }
         row++;
     }
     ASSERT_EQ(row, num_timestamp);
     uint32_t size;
-    TableSchema* all_schema = tsfile_reader_get_all_table_schemas(reader, &size);
+    TableSchema* all_schema =
+        tsfile_reader_get_all_table_schemas(reader, &size);
     ASSERT_EQ(1, size);
-    ASSERT_EQ(std::string(all_schema[0].table_name), std::string(schema.table_name));
+    ASSERT_EQ(std::string(all_schema[0].table_name),
+              std::string(schema.table_name));
     ASSERT_EQ(all_schema[0].column_num, schema.column_num);
     int count_int64_t = 0;
     int count_string = 0;
     for (int i = 0; i < column_num; i++) {
         if (all_schema[0].column_schemas[i].data_type == TS_DATATYPE_INT64) {
             count_int64_t++;
-        } else if (all_schema[0].column_schemas[i].data_type == TS_DATATYPE_STRING) {
+        } else if (all_schema[0].column_schemas[i].data_type ==
+                   TS_DATATYPE_STRING) {
             count_string++;
         }
     }
 
     ASSERT_EQ(5, count_int64_t);
     ASSERT_EQ(5, count_string);
-
-
+    free_tablet(&tablet);
     tsfile_reader_close(reader);
     free_tsfile_result_set(&result_set);
     free_table_schema(schema);
     free_table_schema(*all_schema);
     free(all_schema);
+    for (int i = 0; i < column_num; i++) {
+        free(column_names[i]);
+    }
+    free(column_names);
+    free(data_types);
+    free_write_file(&file);
+
 }
 }  // namespace cwrapper
