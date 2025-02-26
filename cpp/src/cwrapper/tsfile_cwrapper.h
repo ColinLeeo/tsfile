@@ -313,7 +313,7 @@ ERRNO tsfile_writer_write(TsFileWriter writer, Tablet tablet);
  */
 ResultSet tsfile_query_table(TsFileReader reader, const char* table_name,
                              char** columns, uint32_t column_num,
-                             Timestamp start_time, Timestamp end_time);
+                             Timestamp start_time, Timestamp end_time, ERRNO* err_code);
 // ResultSet tsfile_reader_query_device(TsFileReader reader,
 //                                      const char* device_name,
 //                                      char** sensor_name, uint32_t sensor_num,

@@ -64,7 +64,7 @@ TEST_F(CWrapperTest, WriterFlushTabletAndReadData) {
     for (int i = 2; i < column_num; i++) {
         schema.column_schemas[i] = ColumnSchema{
             strdup(("s" + std::to_string(i)).c_str()), TS_DATATYPE_INT32,
-            TS_COMPRESSION_UNCOMPRESSED, TS_ENCODING_PLAIN, TAG};
+            TS_COMPRESSION_UNCOMPRESSED, TS_ENCODING_PLAIN, FIELD};
     }
     TsFileWriter writer = tsfile_writer_new(
         "cwrapper_write_flush_and_read.tsfile", &schema, &code);
@@ -91,6 +91,10 @@ TEST_F(CWrapperTest, WriterFlushTabletAndReadData) {
     data_types[0] = TS_DATATYPE_STRING;
     data_types[1] = TS_DATATYPE_STRING;
     Tablet tablet = tablet_new(column_names, data_types, column_num, max_rows);
+    for(int i = 2; i < column_num; i++) {
+        free(column_names[i]);
+    }
+    free(column_names);
 
     for (int i = 0; i < max_rows; i++) {
         code = tablet_add_timestamp(tablet, i, static_cast<Timestamp>(i * 10));
@@ -117,15 +121,20 @@ TEST_F(CWrapperTest, WriterFlushTabletAndReadData) {
     char** sensor_list = static_cast<char**>(malloc(4 * sizeof(char*)));
     sensor_list[0] = "id1";
     sensor_list[1] = "id2";
-    sensor_list[2] = "s1";
-    sensor_list[3] = "s2";
+    sensor_list[2] = "s3";
+    sensor_list[3] = "s4";
     ResultSet result_set =
-        tsfile_query_table(reader, "table1", sensor_list, 4, 0, 100);
+        tsfile_query_table(reader, "table1", sensor_list, 4, 0, 100, &code);
 
     ResultSetMetaData metadata = tsfile_result_set_get_metadata(result_set);
     ASSERT_EQ(metadata.column_num, 4);
     ASSERT_EQ(std::string(metadata.column_names[3]),
-              std::string("s2"));
+              std::string("s4"));
     ASSERT_EQ(metadata.data_types[3], TS_DATATYPE_INT32);
+    while(tsfile_result_set_next(result_set, &code) && code == E_OK) {
+        std::cout<< tsfile_result_set_is_null_by_index(result_set, 1);
+    }
+
+
 }
 }  // namespace cwrapper

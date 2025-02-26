@@ -290,14 +290,14 @@ ERRNO tsfile_writer_write(TsFileWriter writer, Tablet tablet) {
 
 ResultSet tsfile_query_table(TsFileReader reader, const char *table_name,
                              char **columns, uint32_t column_num,
-                             Timestamp start_time, Timestamp end_time) {
+                             Timestamp start_time, Timestamp end_time, ERRNO* err_code) {
     auto *r = static_cast<storage::TsFileReader *>(reader);
     storage::ResultSet *table_result_set = nullptr;
     std::vector<std::string> column_names;
     for (int i = 0; i < column_num; i++) {
         column_names.emplace_back(columns[i]);
     }
-    r->query(table_name, column_names, start_time, end_time, table_result_set);
+    *err_code = r->query(table_name, column_names, start_time, end_time, table_result_set);
     return table_result_set;
 }
 
@@ -385,6 +385,10 @@ bool tsfile_result_set_is_null_by_index(const ResultSet result_set,
 
 ResultSetMetaData tsfile_result_set_get_metadata(ResultSet result_set) {
     auto *r = static_cast<storage::TableResultSet *>(result_set);
+    if (result_set == NULL) {
+        return ResultSetMetaData();
+    }
+
     ResultSetMetaData meta_data;
     std::shared_ptr<storage::ResultSetMetadata> result_set_metadata =
         r->get_metadata();
