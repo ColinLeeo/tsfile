@@ -21,6 +21,7 @@
 
 #include <file/write_file.h>
 #include <reader/qds_without_timegenerator.h>
+#include <unistd.h>
 #include <writer/tsfile_table_writer.h>
 
 #include "common/tablet.h"
@@ -45,7 +46,13 @@ TsFileWriter tsfile_writer_new(const char *pathname, TableSchema *schema,
                                ERRNO *err_code) {
     int ret;
     init_tsfile_config();
-    int flags = O_WRONLY | O_CREAT | O_TRUNC;
+
+    if (access(pathname, F_OK) == 0) {
+        *err_code = common::E_ALREADY_EXIST;
+        return nullptr;
+    }
+
+    int flags = O_RDWR | O_CREAT | O_TRUNC;
 #ifdef _WIN32
     flags |= O_BINARY;
 #endif
@@ -169,112 +176,114 @@ TABLE_ADD_VALUE_BY_INDEX_DEF(int64_t);
 TABLE_ADD_VALUE_BY_INDEX_DEF(float);
 TABLE_ADD_VALUE_BY_INDEX_DEF(double);
 TABLE_ADD_VALUE_BY_INDEX_DEF(bool);
-//
-// // TsRecord API
-// TsRecord ts_record_new(const char *device_id, Timestamp timestamp,
-//                        int timeseries_num) {
-//     auto *record = new storage::TsRecord(timestamp, device_id,
-//     timeseries_num); return record;
-// }
-//
-// #define INSERT_DATA_INTO_TS_RECORD_BY_NAME_DEF(type)                 \
-//     ERRNO insert_data_into_ts_record_by_name_##type(                 \
-//         TsRecord data, const char *measurement_name, type value) {   \
-//         auto *record = (storage::TsRecord *)data;                    \
-//         storage::DataPoint point(measurement_name, value);           \
-//         if (record->points_.size() + 1 > record->points_.capacity()) \
-//             return common::E_BUF_NOT_ENOUGH;                         \
-//         record->points_.push_back(point);                            \
-//         return common::E_OK;                                         \
-//     }
-//
-// INSERT_DATA_INTO_TS_RECORD_BY_NAME_DEF(int32_t);
-// INSERT_DATA_INTO_TS_RECORD_BY_NAME_DEF(int64_t);
-// INSERT_DATA_INTO_TS_RECORD_BY_NAME_DEF(bool);
-// INSERT_DATA_INTO_TS_RECORD_BY_NAME_DEF(float);
-// INSERT_DATA_INTO_TS_RECORD_BY_NAME_DEF(double);
-//
-// TsFileWriter tsfile_writer_new_with_conf(const char *pathname,
-//                                          const mode_t flag, ERRNO *err_code,
-//                                          TsFileConf *conf) {
-//     init_tsfile_config();
-//     auto *writer = new storage::TsFileWriter();
-//     const int ret = writer->open(pathname, O_CREAT | O_RDWR, flag);
-//     if (ret != common::E_OK) {
-//         delete writer;
-//         *err_code = ret;
-//         return nullptr;
-//     }
-//     return writer;
-// }
-//
-// ERRNO tsfile_writer_register_table(TsFileWriter writer, TableSchema *schema)
-// {
-//     std::vector<storage::MeasurementSchema *> measurement_schemas;
-//     std::vector<common::ColumnCategory> column_categories;
-//     measurement_schemas.resize(schema->column_num);
-//     for (int i = 0; i < schema->column_num; i++) {
-//         ColumnSchema *cur_schema = schema->column_schemas + i;
-//         measurement_schemas[i] = new storage::MeasurementSchema(
-//             cur_schema->column_name,
-//             static_cast<common::TSDataType>(cur_schema->data_type));
-//         column_categories.push_back(
-//             static_cast<common::ColumnCategory>(cur_schema->column_category));
-//     }
-//     auto tsfile_writer = static_cast<storage::TsFileWriter *>(writer);
-//     return
-//     tsfile_writer->register_table(std::make_shared<storage::TableSchema>(
-//         schema->table_name, measurement_schemas, column_categories));
-// }
-//
-// ERRNO tsfile_writer_register_timeseries(TsFileWriter writer,
-//                                         const char *device_id,
-//                                         const TimeseriesSchema *schema) {
-//     auto *w = static_cast<storage::TsFileWriter *>(writer);
-//
-//     int ret = w->register_timeseries(
-//         device_id,
-//         storage::MeasurementSchema(
-//             schema->timeseries_name,
-//             static_cast<common::TSDataType>(schema->data_type),
-//             static_cast<common::TSEncoding>(schema->encoding),
-//             static_cast<common::CompressionType>(schema->compression)));
-//     return ret;
-// }
-//
-// ERRNO tsfile_writer_register_device(TsFileWriter writer,
-//                                     const device_schema *device_schema) {
-//     auto *w = static_cast<storage::TsFileWriter *>(writer);
-//     for (int column_id = 0; column_id < device_schema->timeseries_num;
-//          column_id++) {
-//         TimeseriesSchema schema =
-//         device_schema->timeseries_schema[column_id]; const ERRNO ret =
-//         w->register_timeseries(
-//             device_schema->device_name,
-//             storage::MeasurementSchema(
-//                 schema.timeseries_name,
-//                 static_cast<common::TSDataType>(schema.data_type),
-//                 static_cast<common::TSEncoding>(schema.encoding),
-//                 static_cast<common::CompressionType>(schema.compression)));
-//         if (ret != common::E_OK) {
-//             return ret;
-//         }
-//     }
-//     return common::E_OK;
-// }
-//
-// ERRNO tsfile_writer_write_ts_record(TsFileWriter writer, TsRecord data) {
-//     auto *w = static_cast<storage::TsFileWriter *>(writer);
-//     const storage::TsRecord *record = static_cast<storage::TsRecord *>(data);
-//     const int ret = w->write_record(*record);
-//     return ret;
-// }
-//
-// ERRNO tsfile_writer_write_tablet(TsFileWriter writer, Tablet tablet) {
-//     auto *w = static_cast<storage::TsFileWriter *>(writer);
-//     const auto *tbl = static_cast<storage::Tablet *>(tablet);
-//     return w->write_tablet(*tbl);
-// }
+
+/*
+// TsRecord API
+TsRecord ts_record_new(const char *device_id, Timestamp timestamp,
+                   int timeseries_num) {
+auto *record = new storage::TsRecord(timestamp, device_id,
+timeseries_num); return record;
+}
+
+#define INSERT_DATA_INTO_TS_RECORD_BY_NAME_DEF(type)                 \
+ERRNO insert_data_into_ts_record_by_name_##type(                 \
+    TsRecord data, const char *measurement_name, type value) {   \
+    auto *record = (storage::TsRecord *)data;                    \
+    storage::DataPoint point(measurement_name, value);           \
+    if (record->points_.size() + 1 > record->points_.capacity()) \
+        return common::E_BUF_NOT_ENOUGH;                         \
+    record->points_.push_back(point);                            \
+    return common::E_OK;                                         \
+}
+
+INSERT_DATA_INTO_TS_RECORD_BY_NAME_DEF(int32_t);
+INSERT_DATA_INTO_TS_RECORD_BY_NAME_DEF(int64_t);
+INSERT_DATA_INTO_TS_RECORD_BY_NAME_DEF(bool);
+INSERT_DATA_INTO_TS_RECORD_BY_NAME_DEF(float);
+INSERT_DATA_INTO_TS_RECORD_BY_NAME_DEF(double);
+
+TsFileWriter tsfile_writer_new_with_conf(const char *pathname,
+                                     const mode_t flag, ERRNO *err_code,
+                                     TsFileConf *conf) {
+init_tsfile_config();
+auto *writer = new storage::TsFileWriter();
+const int ret = writer->open(pathname, O_CREAT | O_RDWR, flag);
+if (ret != common::E_OK) {
+    delete writer;
+    *err_code = ret;
+    return nullptr;
+}
+return writer;
+}
+
+ERRNO tsfile_writer_register_table(TsFileWriter writer, TableSchema *schema)
+{
+std::vector<storage::MeasurementSchema *> measurement_schemas;
+std::vector<common::ColumnCategory> column_categories;
+measurement_schemas.resize(schema->column_num);
+for (int i = 0; i < schema->column_num; i++) {
+    ColumnSchema *cur_schema = schema->column_schemas + i;
+    measurement_schemas[i] = new storage::MeasurementSchema(
+        cur_schema->column_name,
+        static_cast<common::TSDataType>(cur_schema->data_type));
+    column_categories.push_back(
+        static_cast<common::ColumnCategory>(cur_schema->column_category));
+}
+auto tsfile_writer = static_cast<storage::TsFileWriter *>(writer);
+return
+tsfile_writer->register_table(std::make_shared<storage::TableSchema>(
+    schema->table_name, measurement_schemas, column_categories));
+}
+
+ERRNO tsfile_writer_register_timeseries(TsFileWriter writer,
+                                    const char *device_id,
+                                    const TimeseriesSchema *schema) {
+auto *w = static_cast<storage::TsFileWriter *>(writer);
+
+int ret = w->register_timeseries(
+    device_id,
+    storage::MeasurementSchema(
+        schema->timeseries_name,
+        static_cast<common::TSDataType>(schema->data_type),
+        static_cast<common::TSEncoding>(schema->encoding),
+        static_cast<common::CompressionType>(schema->compression)));
+return ret;
+}
+
+ERRNO tsfile_writer_register_device(TsFileWriter writer,
+                                const device_schema *device_schema) {
+auto *w = static_cast<storage::TsFileWriter *>(writer);
+for (int column_id = 0; column_id < device_schema->timeseries_num;
+     column_id++) {
+    TimeseriesSchema schema =
+    device_schema->timeseries_schema[column_id]; const ERRNO ret =
+    w->register_timeseries(
+        device_schema->device_name,
+        storage::MeasurementSchema(
+            schema.timeseries_name,
+            static_cast<common::TSDataType>(schema.data_type),
+            static_cast<common::TSEncoding>(schema.encoding),
+            static_cast<common::CompressionType>(schema.compression)));
+    if (ret != common::E_OK) {
+        return ret;
+    }
+}
+return common::E_OK;
+}
+
+ERRNO tsfile_writer_write_ts_record(TsFileWriter writer, TsRecord data) {
+auto *w = static_cast<storage::TsFileWriter *>(writer);
+const storage::TsRecord *record = static_cast<storage::TsRecord *>(data);
+const int ret = w->write_record(*record);
+return ret;
+}
+
+ERRNO tsfile_writer_write_tablet(TsFileWriter writer, Tablet tablet) {
+auto *w = static_cast<storage::TsFileWriter *>(writer);
+const auto *tbl = static_cast<storage::Tablet *>(tablet);
+return w->write_tablet(*tbl);
+}
+*/
 ERRNO tsfile_writer_write(TsFileWriter writer, Tablet tablet) {
     auto *w = static_cast<storage::TsFileTableWriter *>(writer);
     auto *tbl = static_cast<storage::Tablet *>(tablet);
@@ -290,14 +299,16 @@ ERRNO tsfile_writer_write(TsFileWriter writer, Tablet tablet) {
 
 ResultSet tsfile_query_table(TsFileReader reader, const char *table_name,
                              char **columns, uint32_t column_num,
-                             Timestamp start_time, Timestamp end_time, ERRNO* err_code) {
+                             Timestamp start_time, Timestamp end_time,
+                             ERRNO *err_code) {
     auto *r = static_cast<storage::TsFileReader *>(reader);
     storage::ResultSet *table_result_set = nullptr;
     std::vector<std::string> column_names;
-    for (int i = 0; i < column_num; i++) {
+    for (uint32_t i = 0; i < column_num; i++) {
         column_names.emplace_back(columns[i]);
     }
-    *err_code = r->query(table_name, column_names, start_time, end_time, table_result_set);
+    *err_code = r->query(table_name, column_names, start_time, end_time,
+                         table_result_set);
     return table_result_set;
 }
 
@@ -320,7 +331,7 @@ ResultSet tsfile_query_table(TsFileReader reader, const char *table_name,
 
 bool tsfile_result_set_next(ResultSet result_set, ERRNO *err_code) {
     auto *r = static_cast<storage::TableResultSet *>(result_set);
-    bool has_next = false;
+    bool has_next = true;
     int ret = common::E_OK;
     ret = r->next(has_next);
     *err_code = ret;
@@ -347,7 +358,7 @@ char *tsfile_result_set_get_value_by_name_string(ResultSet result_set,
     auto *r = static_cast<storage::TableResultSet *>(result_set);
     common::String *ret = r->get_value<common::String *>(column_name);
     // Caller should free return's char* 's space.
-    return strdup(ret->buf_);
+    return strndup(ret->buf_, ret->len_);
 }
 
 #define TSFILE_RESULT_SET_GET_VALUE_BY_INDEX_DEF(type)                        \
@@ -408,7 +419,7 @@ ResultSetMetaData tsfile_result_set_get_metadata(ResultSet result_set) {
 
 char *tsfile_result_set_metadata_get_column_name(ResultSetMetaData result_set,
                                                  uint32_t column_index) {
-    if (column_index < 0 || column_index >= result_set.column_num) {
+    if (column_index >= result_set.column_num) {
         return nullptr;
     }
     return result_set.column_names[column_index];
@@ -472,18 +483,18 @@ TableSchema *tsfile_reader_get_all_table_schemas(TsFileReader reader,
         ret[i].column_schemas = static_cast<ColumnSchema *>(
             malloc(column_num * sizeof(ColumnSchema)));
         auto column_schemas = table_schemas[i]->get_measurement_schemas();
-        for (int i = 0; i < column_num; i++) {
-            ret[i].column_schemas[i].column_name =
-                strdup(column_schemas[i]->measurement_name_.c_str());
-            ret[i].column_schemas[i].data_type =
-                static_cast<TSDataType>(column_schemas[i]->data_type_);
-            ret[i].column_schemas[i].encoding =
-                static_cast<TSEncoding>(column_schemas[i]->encoding_);
-            ret[i].column_schemas[i].compression = static_cast<CompressionType>(
-                column_schemas[i]->compression_type_);
-            ret[i].column_schemas[i].column_category =
+        for (int j = 0; j < column_num; j++) {
+            ret[i].column_schemas[j].column_name =
+                strdup(column_schemas[j]->measurement_name_.c_str());
+            ret[i].column_schemas[j].data_type =
+                static_cast<TSDataType>(column_schemas[j]->data_type_);
+            ret[i].column_schemas[j].encoding =
+                static_cast<TSEncoding>(column_schemas[j]->encoding_);
+            ret[i].column_schemas[j].compression = static_cast<CompressionType>(
+                column_schemas[j]->compression_type_);
+            ret[i].column_schemas[j].column_category =
                 static_cast<ColumnCategory>(
-                    table_schemas[i]->get_column_categories()[i]);
+                    table_schemas[i]->get_column_categories()[j]);
         }
     }
     *size = table_num;

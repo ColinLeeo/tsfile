@@ -242,7 +242,8 @@ ERRNO tablet_add_value_by_name_string(Tablet tablet, uint32_t row_index,
  */
 #define TABLE_ADD_VALUE_BY_INDEX(type)                                        \
     ERRNO tablet_add_value_by_index_##type(Tablet tablet, uint32_t row_index, \
-                                           uint32_t column_index, const type value);
+                                           uint32_t column_index,             \
+                                           const type value);
 
 TABLE_ADD_VALUE_BY_INDEX(int32_t);
 TABLE_ADD_VALUE_BY_INDEX(int64_t);
@@ -256,29 +257,34 @@ TABLE_ADD_VALUE_BY_INDEX(bool);
  * @param value [in] Null-terminated string. Copied internally.
  */
 ERRNO tablet_add_value_by_index_string(Tablet tablet, uint32_t row_index,
-                                       uint32_t column_index, const char* value);
+                                       uint32_t column_index,
+                                       const char* value);
 
-// /*--------------------------TsRecord API------------------------ */
-// TsRecord ts_record_new(const char* device_id, Timestamp timestamp,
-//                        int timeseries_num);
-//
-// #define INSERT_DATA_INTO_TS_RECORD_BY_NAME(type)     \
-//     ERRNO insert_data_into_ts_record_by_name_##type( \
-//         TsRecord data, const char* measurement_name, type value);
-//
-// INSERT_DATA_INTO_TS_RECORD_BY_NAME(int32_t);
-// INSERT_DATA_INTO_TS_RECORD_BY_NAME(int64_t);
-// INSERT_DATA_INTO_TS_RECORD_BY_NAME(bool);
-// INSERT_DATA_INTO_TS_RECORD_BY_NAME(float);
-// INSERT_DATA_INTO_TS_RECORD_BY_NAME(double);
+/*--------------------------TsRecord API------------------------ */
+/*
+TsRecord ts_record_new(const char* device_id, Timestamp timestamp,
+                      int timeseries_num);
+
+#define INSERT_DATA_INTO_TS_RECORD_BY_NAME(type)     \
+   ERRNO insert_data_into_ts_record_by_name_##type( \
+       TsRecord data, const char* measurement_name, type value);
+
+INSERT_DATA_INTO_TS_RECORD_BY_NAME(int32_t);
+INSERT_DATA_INTO_TS_RECORD_BY_NAME(int64_t);
+INSERT_DATA_INTO_TS_RECORD_BY_NAME(bool);
+INSERT_DATA_INTO_TS_RECORD_BY_NAME(float);
+INSERT_DATA_INTO_TS_RECORD_BY_NAME(double);
+/*
 
 /*--------------------------TsFile Writer Register------------------------ */
-// ERRNO tsfile_writer_register_table(TsFileWriter writer, TableSchema* schema);
-// ERRNO tsfile_writer_register_timeseries(TsFileWriter writer,
-//                                         const char* device_id,
-//                                         const TimeseriesSchema* schema);
-// ERRNO tsfile_writer_register_device(TsFileWriter writer,
-//                                     const DeviceSchema* device_schema);
+/*
+ERRNO tsfile_writer_register_table(TsFileWriter writer, TableSchema* schema);
+ERRNO tsfile_writer_register_timeseries(TsFileWriter writer,
+                                       const char* device_id,
+                                       const TimeseriesSchema* schema);
+ERRNO tsfile_writer_register_device(TsFileWriter writer,
+                                   const DeviceSchema* device_schema);
+                                   */
 
 /*-------------------TsFile Writer write data------------------ */
 
@@ -313,7 +319,8 @@ ERRNO tsfile_writer_write(TsFileWriter writer, Tablet tablet);
  */
 ResultSet tsfile_query_table(TsFileReader reader, const char* table_name,
                              char** columns, uint32_t column_num,
-                             Timestamp start_time, Timestamp end_time, ERRNO* err_code);
+                             Timestamp start_time, Timestamp end_time,
+                             ERRNO* err_code);
 // ResultSet tsfile_reader_query_device(TsFileReader reader,
 //                                      const char* device_name,
 //                                      char** sensor_name, uint32_t sensor_num,
@@ -441,6 +448,12 @@ int tsfile_result_set_metadata_get_column_num(ResultSetMetaData result_set);
 // DeviceSchema tsfile_reader_get_device_schema(TsFileReader reader,
 //                                              const char* device_id);
 
+/**
+ * @brief Gets all table schema in the tsfile.
+ *
+ * @return TableSchema, contains table and column info.
+ * @note Caller should call free_table_schema and free to free the ptr.
+ */
 TableSchema* tsfile_reader_get_all_table_schemas(TsFileReader reader,
                                                  uint32_t* size);
 
