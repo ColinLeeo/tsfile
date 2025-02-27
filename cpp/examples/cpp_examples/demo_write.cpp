@@ -30,9 +30,12 @@
 using namespace storage;
 
 int demo_write() {
-    libtsfile_init();
     int code = 0;
+    libtsfile_init();
+
     std::string table_name = "table1";
+
+    // Create a file with specify path to write tsfile.
     storage::WriteFile file;
     int flags = O_WRONLY | O_CREAT | O_TRUNC;
 #ifdef _WIN32
@@ -40,7 +43,9 @@ int demo_write() {
 #endif
     mode_t mode = 0666;
     file.create("test_cpp.tsfile", flags, mode);
-    storage::TableSchema* schema = new storage::TableSchema(
+
+    // Create table schema to describe a table in a tsfile.
+    auto* schema = new storage::TableSchema(
         table_name,
         {
             common::ColumnSchema("id1", common::STRING, common::UNCOMPRESSED,
@@ -51,34 +56,38 @@ int demo_write() {
                                  common::PLAIN, common::ColumnCategory::FIELD),
         });
 
-    TsFileTableWriter* writer = new TsFileTableWriter(&file, schema);
 
+
+    // Create a file with specify path to write tsfile.
+    auto* writer = new TsFileTableWriter(&file, schema);
+
+    // Create tablet to insert data.
     storage::Tablet tablet = storage::Tablet(
         table_name, {"id1", "id2", "s1"},
         {common::STRING, common::STRING, common::INT64},
         {common::ColumnCategory::TAG, common::ColumnCategory::TAG,
          common::ColumnCategory::FIELD},
         10);
-    char* literal = new char[std::strlen("id1_filed_1") + 1];
-    std::strcpy(literal, "id1_filed_1");
-    common::String literal_str(literal, std::strlen("id1_filed_1"));
-    char* literal2 = new char[std::strlen("id1_filed_2") + 1];
-    std::strcpy(literal, "id1_filed_2");
-    common::String literal_str2(literal2, std::strlen("id1_filed_2"));
+
+
     for (int row = 0; row < 5; row++) {
         long timestamp = row;
         tablet.add_timestamp(row, timestamp);
-        tablet.add_value(row, "id1", literal_str);
-        tablet.add_value(row, "id2", literal_str2);
+        tablet.add_value(row, "id1", "id1_filed_1");
+        tablet.add_value(row, "id2", "id1_filed_2");
         tablet.add_value(row, "s1", static_cast<int64_t>(row));
     }
-    code = writer->write_table(tablet);
-    HANDLE_ERROR(code);
-    delete[] literal;
-    delete[] literal2;
-    code = writer->flush();
-    HANDLE_ERROR(code);
+
+    // Write tablet data.
+    HANDLE_ERROR(writer->write_table(tablet));
+
+    // Flush data
+    HANDLE_ERROR(writer->flush());
+
+    // Close writer.
     HANDLE_ERROR(writer->close());
+
     delete writer;
+
     return 0;
 }

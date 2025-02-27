@@ -24,21 +24,31 @@
 #include "cpp_examples.h"
 
 using namespace storage;
+
 int demo_read() {
+
     int code = 0;
     libtsfile_init();
     std::string table_name = "table1";
+
+    // Create tsfile reader and open tsfile with specify path.
     storage::TsFileReader reader;
     reader.open("test_cpp.tsfile");
+
+    // Query data with tsfile reader.
     storage::ResultSet* temp_ret = nullptr;
     std::vector<std::string> columns;
     columns.emplace_back("id1");
     columns.emplace_back("id2");
     columns.emplace_back("s1");
-    code = reader.query(table_name, columns, 0, 100, temp_ret);
-    HANDLE_ERROR(code);
 
-    auto ret = static_cast<storage::TableResultSet*>(temp_ret);
+    // Column vector contains the columns you want to select.
+    HANDLE_ERROR(reader.query(table_name, columns, 0, 100, temp_ret));
+
+    // Get query handler.
+    auto ret = dynamic_cast<storage::TableResultSet*>(temp_ret);
+
+    // Metadata in query handler.
     auto metadata = ret->get_metadata();
     int column_num = metadata->get_column_count();
     for (int i = 0; i < column_num; i++) {
@@ -47,9 +57,11 @@ int demo_read() {
         std::cout << "column type: " << metadata->get_column_type(i)
                   << std::endl;
     }
-    bool has_next = false;
 
+    // Check and get next data.
+    bool has_next = false;
     while ((code = ret->next(has_next)) == common::E_OK && has_next) {
+        // Timestamp at column 1 and column index begin from 1.
         Timestamp timestamp = ret->get_value<Timestamp>(1);
         for (int i = 0; i < column_num; i++) {
             if (ret->is_null(i)) {
@@ -80,6 +92,10 @@ int demo_read() {
             }
         }
     }
+
+    // Close query result set.
     ret->close();
+
+    // Close reader.
     reader.close();
 }

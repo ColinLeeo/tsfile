@@ -431,6 +431,8 @@ bool tsfile_result_set_is_null_by_index(ResultSet result_set,
  * @param result_set [in] Valid ResultSet handle.
  * @return ResultSetMetaData Metadata handle. Caller should free the
  * ResultSetMataData after usage.
+ * @note Before calling this func, check if result_set is NULL, which means
+ * the query may be not correct.
  */
 ResultSetMetaData tsfile_result_set_get_metadata(ResultSet result_set);
 
@@ -459,7 +461,6 @@ TSDataType tsfile_result_set_metadata_get_data_type(
 int tsfile_result_set_metadata_get_column_num(ResultSetMetaData result_set);
 
 // Desc table schema.
-
 // DeviceSchema tsfile_reader_get_device_schema(TsFileReader reader,
 //                                              const char* device_id);
 
@@ -467,7 +468,7 @@ int tsfile_result_set_metadata_get_column_num(ResultSetMetaData result_set);
  * @brief Gets specific table's schema in the tsfile.
  *
  * @return TableSchema, contains table and column info.
- * @note Caller should call free_table_schema and free to free the ptr.
+ * @note Caller should call free_table_schema to free the tableschema.
  */
 TableSchema tsfile_reader_get_table_schema(TsFileReader reader,
                                        const char* table_name);

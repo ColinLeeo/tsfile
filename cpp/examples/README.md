@@ -33,6 +33,8 @@ mvn package -P with-cpp clean verify
 ```
 Output location: cpp/target/build/lib
 
+If maven is not installed, may use 'mvnw' in linux/macos or 'mvnw.cmd' in win instead"
+
 ### Method 2: Script Build
 Run the build script:
 

@@ -484,7 +484,22 @@ int tsfile_result_set_metadata_get_column_num(ResultSetMetaData result_set) {
 
 TableSchema tsfile_reader_get_table_schema(TsFileReader reader,
                                            const char *table_name) {
-    auto *r = static_cast<TsFileReader *>(reader);
+    auto *r = static_cast<storage::TsFileReader *>(reader);
+    auto table_shcema = r->get_table_schema(table_name);
+    TableSchema ret_schema;
+    ret_schema.table_name = strdup(table_shcema->get_table_name().c_str());
+    int column_num = table_shcema->get_columns_num();
+    ret_schema.column_num = column_num;
+    ret_schema.column_schemas = static_cast<ColumnSchema*>(malloc(sizeof(ColumnSchema) * column_num));
+    for (int i = 0; i < column_num; i++) {
+        auto column_schema = table_shcema->get_measurement_schemas()[i];
+        ret_schema.column_schemas[i].column_name = strdup(column_schema->measurement_name_.c_str());
+        ret_schema.column_schemas[i].data_type = static_cast<TSDataType>(column_schema->data_type_);
+        ret_schema.column_schemas[i].compression = static_cast<CompressionType>(column_schema->compression_type_);
+        ret_schema.column_schemas[i].encoding = static_cast<TSEncoding>(column_schema->encoding_);
+        ret_schema.column_schemas[i].column_category = static_cast<ColumnCategory>(table_shcema->get_column_categories()[i]);
+    }
+    return ret_schema;
 }
 
 TableSchema *tsfile_reader_get_all_table_schemas(TsFileReader reader,

@@ -24,25 +24,41 @@
 
 #include "c_examples.h"
 
+// This example shows you how to write tsfile.
 ERRNO write_tsfile() {
     ERRNO code = 0;
     char* table_name = "table1";
-    TableSchema table_schema = {
-        .table_name = table_name,
-        .column_schemas =
-            (ColumnSchema[]){(ColumnSchema){.column_name = "id1",
-                                            .data_type = TS_DATATYPE_STRING,
-                                            .column_category = TAG},
-                             (ColumnSchema){.column_name = "id2",
-                                            .data_type = TS_DATATYPE_STRING,
-                                            .column_category = TAG},
-                             (ColumnSchema){.column_name = "s1",
-                                            .data_type = TS_DATATYPE_INT32,
-                                            .column_category = FIELD}}};
+
+    // Create table schema to describe a table in a tsfile.
+    TableSchema table_schema;
+    table_schema.table_name = strdup(table_name);
+    table_schema.column_num = 3;
+    table_schema.column_schemas =
+        (ColumnSchema*)malloc(sizeof(ColumnSchema) * 3);
+    table_schema.column_schemas[0] =
+        ColumnSchema{.column_name = strdup("id1"),
+                     .data_type = TS_DATATYPE_STRING,
+                     .compression = TS_COMPRESSION_UNCOMPRESSED,
+                     .encoding = TS_ENCODING_PLAIN,
+                     .column_category = TAG};
+    table_schema.column_schemas[1] =
+        ColumnSchema{.column_name = strdup("id2"),
+                     .data_type = TS_DATATYPE_STRING,
+                     .compression = TS_COMPRESSION_UNCOMPRESSED,
+                     .encoding = TS_ENCODING_PLAIN,
+                     .column_category = TAG};
+    table_schema.column_schemas[2] =
+        ColumnSchema{.column_name = strdup("s1"),
+                     .data_type = TS_DATATYPE_INT32,
+                     .compression = TS_COMPRESSION_UNCOMPRESSED,
+                     .encoding = TS_ENCODING_PLAIN,
+                     .column_category = FIELD};
+
+    // Create a file with specify path to write tsfile.
     WriteFile file = write_file_new("test_c.tsfile", &code);
     HANDLE_ERROR(code);
 
-    // Create tsfile writer with specify path.
+    // Create tsfile writer with specify table schema.
     TsFileWriter writer = tsfile_writer_new(file, &table_schema, &code);
     HANDLE_ERROR(code);
 
@@ -64,11 +80,17 @@ ERRNO write_tsfile() {
     // Write tablet data.
     HANDLE_ERROR(tsfile_writer_write(writer, tablet));
 
+    // Free tablet.
     free_tablet(&tablet);
+
+    // Free table schema we used before.
+    free_table_schema(table_schema);
 
     // Close writer.
     HANDLE_ERROR(tsfile_writer_close(writer));
 
-    // Close write file.
+    // Close write file after closing writer.
     free_write_file(&file);
+
+    return 0;
 }

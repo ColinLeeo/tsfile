@@ -25,6 +25,7 @@
 
 // This example shows you how to read tsfile.
 ERRNO read_tsfile() {
+
     ERRNO code = 0;
     char* table_name = "table1";
 
@@ -35,6 +36,10 @@ ERRNO read_tsfile() {
     ResultSet ret = tsfile_query_table(
         reader, table_name, (char*[]){"id1", "id2", "s1"}, 3, 0, 10, &code);
     HANDLE_ERROR(code);
+
+    if (ret == NULL) {
+        HANDLE_ERROR(RET_INVALID_QUERY);
+    }
 
     // Get query result metadata: column name and datatype
     ResultSetMetaData metadata = tsfile_result_set_get_metadata(ret);
@@ -47,12 +52,13 @@ ERRNO read_tsfile() {
 
     // Get data by column name or index.
     while (tsfile_result_set_next(ret, &code) && code == RET_OK) {
+        // Timestamp at column 1 and column index begin from 1.
         Timestamp timestamp =
             tsfile_result_set_get_value_by_index_int64_t(ret, 1);
         printf("%ld ", timestamp);
         for (int i = 1; i < column_num; i++) {
             if (tsfile_result_set_is_null_by_index(ret, i)) {
-                printf("null ");
+                printf(" null ");
             } else {
                 switch (metadata.data_types[i]) {
                     case TS_DATATYPE_BOOLEAN:
@@ -65,7 +71,7 @@ ERRNO read_tsfile() {
                                                                             i));
                         break;
                     case TS_DATATYPE_INT64:
-                        printf("%lld",
+                        printf("%ld",
                                tsfile_result_set_get_value_by_index_int64_t(ret,
                                                                             i));
                         break;
@@ -91,9 +97,14 @@ ERRNO read_tsfile() {
         }
     }
 
-    // Free
+    // Free query meta data
     free_result_set_meta_data(metadata);
-    free_tsfile_result_set(ret);
+
+    // Free query handler.
+    free_tsfile_result_set(&ret);
+
+    // Close tsfile reader.
     tsfile_reader_close(reader);
+
     return 0;
 }
