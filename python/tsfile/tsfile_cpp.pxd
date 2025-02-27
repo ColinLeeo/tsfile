@@ -122,12 +122,11 @@ cdef extern from "./tsfile_cwrapper.h":
 
     # writer : write tablet data and flush
     ErrorCode _tsfile_writer_write_tablet(TsFileWriter writer, Tablet tablet);
-
+    ErrorCode _tsfile_writer_write_table(TsFileWriter writer, Tablet tablet);
     # tablet : new and add timestamp/value into tablet 
     Tablet _tablet_new_with_target_name(const char * device_id,
                                         char** column_name_list,
                                         TSDataType * data_types,
-                                        ColumnCategory * column_category,
                                         int column_num, int max_rows);
 
     Tablet tablet_new(const char** column_names, TSDataType * data_types, int column_num);

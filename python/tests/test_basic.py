@@ -25,8 +25,8 @@ from tsfile.constants import *
 def test_tablet():
     column_names = ["temp1", "temp2", "value1", "value2"]
     data_types = [TSDataType.INT32, TSDataType.INT64, TSDataType.FLOAT, TSDataType.DOUBLE]
-    column_category = [ColumnCategory.TAG, ColumnCategory.FIELD, ColumnCategory.FIELD, ColumnCategory.TAG]
-    tablet = Tablet("test", column_names, data_types, column_category)
+    tablet = Tablet(column_names, data_types)
+    tablet.set_table_name("test")
 
     assert "test" == tablet.get_target_name()
     assert 4 == len(tablet.get_column_name_list())

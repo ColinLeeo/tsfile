@@ -534,23 +534,23 @@ TsFileWriter _tsfile_writer_new(const char *pathname, ERRNO *err_code) {
     return writer;
 }
 
-Tablet _tablet_new_with_target_name(const char *device_id, char **column_name_list,
-                              TSDataType *data_types,
-                              ColumnCategory *column_category, int column_num,
-                              int max_rows) {
+Tablet _tablet_new_with_target_name(const char *device_id,
+                                    char **column_name_list,
+                                    TSDataType *data_types, int column_num,
+                                    int max_rows) {
     std::vector<std::string> measurement_list;
     std::vector<common::TSDataType> data_type_list;
-    std::vector<common::ColumnCategory> categories;
     for (int i = 0; i < column_num; i++) {
         measurement_list.emplace_back(column_name_list[i]);
         data_type_list.push_back(
             static_cast<common::TSDataType>(*(data_types + i)));
-        categories.emplace_back(
-            static_cast<common::ColumnCategory>(*(column_category + i)));
     }
-    auto *tablet = new storage::Tablet(device_id, measurement_list,
-                                       data_type_list, categories, max_rows);
-    return tablet;
+    if (device_id != nullptr) {
+        return new storage::Tablet(device_id, &measurement_list,
+                                   &data_type_list, max_rows);
+    } else {
+        return new storage::Tablet(measurement_list, data_type_list, max_rows);
+    }
 }
 
 ERRNO _tsfile_writer_register_table(TsFileWriter writer, TableSchema *schema) {
@@ -604,10 +604,17 @@ ERRNO _tsfile_writer_register_device(TsFileWriter writer,
     }
     return common::E_OK;
 }
+
 ERRNO _tsfile_writer_write_tablet(TsFileWriter writer, Tablet tablet) {
     auto *w = static_cast<storage::TsFileWriter *>(writer);
     const auto *tbl = static_cast<storage::Tablet *>(tablet);
     return w->write_tablet(*tbl);
+}
+
+ERRNO _tsfile_writer_write_table(TsFileWriter writer, Tablet tablet) {
+    auto *w = static_cast<storage::TsFileWriter *>(writer);
+    auto *tbl = static_cast<storage::Tablet *>(tablet);
+    return w->write_table(*tbl);
 }
 
 ERRNO _tsfile_writer_close(TsFileWriter writer) {
@@ -627,8 +634,8 @@ ERRNO _tsfile_writer_close(TsFileWriter writer) {
 ResultSet _tsfile_reader_query_device(TsFileReader reader,
                                       const char *device_name,
                                       char **sensor_name, uint32_t sensor_num,
-                                      Timestamp start_time,
-                                      Timestamp end_time, ERRNO *err_code) {
+                                      Timestamp start_time, Timestamp end_time,
+                                      ERRNO *err_code) {
     auto *r = static_cast<storage::TsFileReader *>(reader);
     std::vector<std::string> selected_paths;
     selected_paths.reserve(sensor_num);

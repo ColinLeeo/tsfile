@@ -138,7 +138,7 @@ cdef class ResultSetPy:
         if tsfile_result_set_is_null_by_name_c(self.result, column_name):
             return None
         ind = self.metadata.get_column_name_index(column_name)
-        return self.get_value_by_index(ind)
+        return self.get_value_by_index(ind + 1)
 
     def is_null_by_index(self, index : int):
         """
@@ -148,9 +148,9 @@ cdef class ResultSetPy:
         at the given column index position represents a null value.
         """
         self.check_result_set_invalid()
-        if index >= len(self.metadata.column_list) or index < 0:
+        if index > len(self.metadata.column_list) or index < 1:
             raise IndexError(
-                f"Column index {index} out of range (column count: {self.metadata.column_num})"
+                f"Column index {index} out of range (column count: {len(self.metadata.column_list)})"
             )
         return tsfile_result_set_is_null_by_index(self.result, index)
 
@@ -160,7 +160,7 @@ cdef class ResultSetPy:
         """
         self.check_result_set_invalid()
         ind = self.metadata.get_column_name_index(name)
-        return self.is_null_by_index(ind)
+        return self.is_null_by_index(ind + 1)
 
     def check_result_set_invalid(self):
         if self.not_invalid_result_set:

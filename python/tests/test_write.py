@@ -25,6 +25,7 @@ from tsfile import Tablet, RowRecord, Field
 from tsfile import TSDataType
 
 def test_row_record_write():
+    pass
     # try:
     #     writer = TsFileWriter("record_write.tsfile")
     #     timeseries = TimeseriesSchema("level1", TSDataType.INT64)
@@ -45,7 +46,8 @@ def test_tablet_write():
         device = DeviceSchema("root.device1", [timeseries1, timeseries2])
         writer.register_device(device)
 
-        tablet = Tablet("root.device1", ["level1", "level2"], [TSDataType.INT64, TSDataType.DOUBLE])
+        tablet = Tablet(["level1", "level2"], [TSDataType.INT64, TSDataType.DOUBLE], 100)
+        tablet.set_table_name("root.device1")
         for i in range(100):
             tablet.add_timestamp(i, i)
             tablet.add_value_by_index(0, i, i + 1)
@@ -68,10 +70,10 @@ def test_table_write():
             writer.register_table(table)
             row_num = 100
 
-            tablet = Tablet("test_table", ["device", "sensor", "value1", "value2"],
+            tablet = Tablet( ["device", "sensor", "value1", "value2"],
                             [TSDataType.STRING, TSDataType.STRING, TSDataType.DOUBLE, TSDataType.INT32],
-                            [ColumnCategory.TAG, ColumnCategory.TAG, ColumnCategory.FIELD, ColumnCategory.FIELD],
                             row_num)
+            tablet.set_table_name("test_table")
             for i in range(100):
                 tablet.add_timestamp(i, i)
                 tablet.add_value_by_name("device", i, "device" + str(i))

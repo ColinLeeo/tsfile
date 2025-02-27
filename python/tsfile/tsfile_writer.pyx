@@ -102,7 +102,7 @@ cdef class TsFileWriterPy:
         cdef Tablet ctablet = to_c_tablet(tablet)
         cdef ErrorCode errno
         try:
-            errno = _tsfile_writer_write_tablet(self.writer, ctablet)
+            errno = _tsfile_writer_write_table(self.writer, ctablet)
             check_error(errno)
         finally:
             free_c_tablet(ctablet)

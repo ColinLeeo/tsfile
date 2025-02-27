@@ -180,37 +180,34 @@ cdef Tablet to_c_tablet(object tablet):
     cdef int max_row_num
     cdef TSDataType data_type
     cdef int64_t timestamp
-    cdef bytes device_id_bytes = PyUnicode_AsUTF8String(tablet.get_target_name())
-    cdef const char * device_id_c = device_id_bytes
+    cdef bytes device_id_bytes
+    cdef const char * device_id_c
     cdef char** columns_names
     cdef TSDataType* column_types
-    cdef ColumnCategory* column_category
     cdef bytes row_bytes
     cdef char *row_str
 
+    if tablet.get_target_name() is not None:
+        device_id_bytes = PyUnicode_AsUTF8String(tablet.get_target_name())
+        device_id_c = device_id_bytes
+    else:
+        device_id_c = NULL
 
     column_num = len(tablet.get_column_name_list())
     columns_names = <char**> malloc(sizeof(char *) * column_num)
     columns_types = <TSDataType *> malloc(sizeof(TSDataType) * column_num)
-    column_category = NULL
-    if tablet.get_category_list() is not None:
-        column_category =<ColumnCategory *> malloc(sizeof(ColumnCategory) * column_num)
-        for i in range(column_num):
-            column_category[i] = to_c_category_type(tablet.get_category_list()[i])
     for i in range(column_num):
         columns_names[i] = strdup(tablet.get_column_name_list()[i].encode('utf-8'))
         columns_types[i] = to_c_data_type(tablet.get_data_type_list()[i])
 
     max_row_num = tablet.get_max_row_num()
 
-    ctablet = _tablet_new_with_target_name(device_id_c, columns_names, columns_types, column_category, column_num,
+    ctablet = _tablet_new_with_target_name(device_id_c, columns_names, columns_types, column_num,
                                      max_row_num)
     free(columns_types)
     for i in range(column_num):
         free(columns_names[i])
     free(columns_names)
-    if column_category != NULL:
-        free(column_category)
 
     for row in range(max_row_num):
         timestamp_py = tablet.get_timestamp_list()[row]
