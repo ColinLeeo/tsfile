@@ -184,9 +184,6 @@ ERRNO tsfile_writer_close(TsFileWriter writer);
 ERRNO tsfile_reader_close(TsFileReader reader);
 
 /*--------------------------Tablet API------------------------ */
-Tablet tablet_new_with_device(const char* device_id, char** column_name_list,
-                              TSDataType* data_types, ColumnCategory* category,
-                              int column_num, int max_rows);
 
 /**
  * @brief Creates a Tablet for batch data.
@@ -241,22 +238,34 @@ TABLET_ADD_VALUE_BY_NAME(float);
 TABLET_ADD_VALUE_BY_NAME(double);
 TABLET_ADD_VALUE_BY_NAME(bool);
 
+/**
+ * @brief Adds a string value to a Tablet row by column name.
+ *
+ * @param value [in] Null-terminated string. Ownership remains with caller.
+ * @return ERRNO.
+ */
 ERRNO tablet_add_value_by_name_string(Tablet tablet, uint32_t row_index,
-                                      const char* column_name, char* value);
+                                      const char* column_name,
+                                      const char* value);
 
-#define TABLET_ADD_VALUE_BY_INDEX(type)                                       \
+/**
+ * @brief Adds a value to a Tablet row by column index (generic types).
+ *
+ * @param column_index [in] Column position (0 ≤ index < column_num).
+ * @return ERRNO - E_OK(0) or check errno_define.h.
+ *
+ * @note Generated for types: int32_t, int64_t, float, double, bool
+ */
+#define TABLE_ADD_VALUE_BY_INDEX(type)                                        \
     ERRNO tablet_add_value_by_index_##type(Tablet tablet, uint32_t row_index, \
                                            uint32_t column_index,             \
                                            const type value);
 
-TABLET_ADD_VALUE_BY_INDEX(int32_t);
-TABLET_ADD_VALUE_BY_INDEX(int64_t);
-TABLET_ADD_VALUE_BY_INDEX(float);
-TABLET_ADD_VALUE_BY_INDEX(double);
-TABLET_ADD_VALUE_BY_INDEX(bool);
-
-ERRNO tablet_add_value_by_index_string(Tablet tablet, uint32_t row_index,
-                                       uint32_t column_index, char* value);
+TABLE_ADD_VALUE_BY_INDEX(int32_t);
+TABLE_ADD_VALUE_BY_INDEX(int64_t);
+TABLE_ADD_VALUE_BY_INDEX(float);
+TABLE_ADD_VALUE_BY_INDEX(double);
+TABLE_ADD_VALUE_BY_INDEX(bool);
 
 /**
  * @brief Adds a string value to a Tablet row by column index.
@@ -273,8 +282,8 @@ TsRecord ts_record_new(const char* device_id, Timestamp timestamp,
                       int timeseries_num);
 
 #define INSERT_DATA_INTO_TS_RECORD_BY_NAME(type)     \
-    ERRNO insert_data_into_ts_record_by_name_##type( \
-        TsRecord data, const char* measurement_name, const type value);
+   ERRNO insert_data_into_ts_record_by_name_##type( \
+       TsRecord data, const char* measurement_name, type value);
 
 INSERT_DATA_INTO_TS_RECORD_BY_NAME(int32_t);
 INSERT_DATA_INTO_TS_RECORD_BY_NAME(int64_t);
@@ -293,21 +302,24 @@ ERRNO tsfile_writer_register_device(TsFileWriter writer,
                                    const DeviceSchema* device_schema);
                                    */
 
-/*-------------------TsFile Writer write and flush data------------------ */
-ERRNO tsfile_writer_write_tablet(TsFileWriter writer, Tablet tablet);
-ERRNO tsfile_writer_write_table(TsFileWriter writer, Tablet tablet);
-ERRNO tsfile_writer_write_ts_record(TsFileWriter writer, TsRecord record);
-ERRNO tsfile_writer_flush_data(TsFileWriter writer);
+/*-------------------TsFile Writer write data------------------ */
+
+/**
+ * @brief Writes data from a Tablet to the TsFile.
+ *
+ * @param writer [in] Valid TsFileWriter handle. Must be initialized.
+ * @param tablet [in] Tablet containing data. Should be freed after successful
+ * write.
+ * @return ERRNO - E_OK(0), or check error code in errno_define.h.
+ *
+ */
+
+ERRNO tsfile_writer_write(TsFileWriter writer, Tablet tablet);
+// ERRNO tsfile_writer_write_tablet(TsFileWriter writer, Tablet tablet);
+// ERRNO tsfile_writer_write_ts_record(TsFileWriter writer, TsRecord record);
+// ERRNO tsfile_writer_flush_data(TsFileWriter writer);
 
 /*-------------------TsFile reader query data------------------ */
-ResultSet tsfile_reader_query_table(TsFileReader reader, const char* table_name,
-                                    char** columns, uint32_t column_num,
-                                    timestamp start_time, timestamp end_time);
-ResultSet tsfile_reader_query_device(TsFileReader reader,
-                                     const char* device_name,
-                                     char** sensor_name, uint32_t sensor_num,
-                                     timestamp start_time, timestamp end_time);
-bool tsfile_result_set_next(ResultSet result_set);
 
 /**
  * @brief Queries time series data from a specific table within time range.
