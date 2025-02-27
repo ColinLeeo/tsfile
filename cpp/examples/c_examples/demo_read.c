@@ -29,11 +29,11 @@ ERRNO read_tsfile() {
     char* table_name = "table1";
 
     // Create tsfile reader with specify tsfile's path
-    TsFileReader reader = tsfile_reader_new("test.tsfile", &code);
+    TsFileReader reader = tsfile_reader_new("test_c.tsfile", &code);
     HANDLE_ERROR(code);
 
     ResultSet ret =
-        tsfile_reader_query_table(reader, table_name, (char*[]){"id1", "id2", "s1"}, 3, 0, 10);
+        tsfile_query_table(reader, table_name, (char*[]){"id1", "id2", "s1"}, 3, 0, 10, &code);
 
     // Get query result metadata: column name and datatype
     ResultSetMetaData metadata = tsfile_result_set_get_metadata(ret);
@@ -45,7 +45,7 @@ ERRNO read_tsfile() {
     }
 
     // Get data by column name or index.
-    while (tsfile_result_set_has_next(ret)) {
+    while (tsfile_result_set_next(ret, &code) && code == RET_OK) {
         Timestamp timestamp = tsfile_result_set_get_value_by_index_int64_t(ret, 1);
         printf("%ld ", timestamp);
         for (int i = 1; i < sensor_num; i++) {

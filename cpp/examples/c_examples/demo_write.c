@@ -30,31 +30,26 @@ ERRNO write_tsfile() {
     TableSchema table_schema = {.table_name = table_name,
                             .column_schemas = (ColumnSchema[]){
                                 (ColumnSchema){.column_name = "id1",
-                                             .data_type = TS_DATATYPE_TEXT,
+                                             .data_type = TS_DATATYPE_STRING,
                                              .column_category = TAG},
                                 (ColumnSchema){.column_name = "id2",
-                                             .data_type = TS_DATATYPE_TEXT,
+                                             .data_type = TS_DATATYPE_STRING,
                                              .column_category = TAG},
                                 (ColumnSchema){.column_name = "s1",
                                              .data_type = TS_DATATYPE_INT32,
                                              .column_category = FIELD}}};
-
-    // Create tsfile writer with specify path.
-    TsFileWriter writer = tsfile_writer_new("test.tsfile", &table_schema, &code);
+    WriteFile file = write_file_new("test_c.tsfile", &code);
     HANDLE_ERROR(code);
 
-    // Table schema.
-
-
-    // Register a table with tsfile writer.
-    code = tsfile_writer_register_table(writer, &table_schema);
+    // Create tsfile writer with specify path.
+    TsFileWriter writer = tsfile_writer_new(file, &table_schema, &code);
     HANDLE_ERROR(code);
 
     // Create tablet to insert data.
     Tablet tablet = tablet_new(
         (char*[]){"id1", "id2", "s1"},
-        (TSDataType[]){TS_DATATYPE_TEXT, TS_DATATYPE_TEXT, TS_DATATYPE_INT32},
-        3, 1024);
+        (TSDataType[]){TS_DATATYPE_STRING, TS_DATATYPE_STRING, TS_DATATYPE_INT32},
+        3, 5);
 
     for (int row = 0; row < 5; row++) {
         Timestamp timestamp = row;
@@ -65,10 +60,8 @@ ERRNO write_tsfile() {
     }
 
     // Write tablet data.
-    HANDLE_ERROR(tsfile_writer_write_tablet(writer, tablet));
+    HANDLE_ERROR(tsfile_writer_write(writer, tablet));
 
-    // Flush tablet data.
-    HANDLE_ERROR(tsfile_writer_flush_data(writer));
 
     // Close writer.
     HANDLE_ERROR(tsfile_writer_close(writer));

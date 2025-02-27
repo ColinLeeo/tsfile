@@ -18,6 +18,7 @@
  */
 
 #include "cwrapper/tsfile_cwrapper.h"
+#include "cwrapper/errno_define.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -23,49 +23,20 @@
 #include "../c_examples/c_examples.h"
 #include "cpp_examples.h"
 
-std::string field_to_string(storage::Field* value) {
-    if (value->type_ == common::TEXT) {
-        return std::string(value->value_.sval_);
-    } else {
-        std::stringstream ss;
-        switch (value->type_) {
-            case common::BOOLEAN:
-                ss << (value->value_.bval_ ? "true" : "false");
-                break;
-            case common::INT32:
-                ss << value->value_.ival_;
-                break;
-            case common::INT64:
-                ss << value->value_.lval_;
-                break;
-            case common::FLOAT:
-                ss << value->value_.fval_;
-                break;
-            case common::DOUBLE:
-                ss << value->value_.dval_;
-                break;
-            case common::NULL_TYPE:
-                ss << "NULL";
-                break;
-            default:
-                ASSERT(false);
-                break;
-        }
-        return ss.str();
-    }
-}
-
+using namespace storage;
 int demo_read() {
     ERRNO code = 0;
+    libtsfile_init();
     std::string table_name = "table1";
     storage::TsFileReader reader;
-    reader.open("test.tsfile");
-    storage::ResultSet* ret = nullptr;
+    reader.open("test_cpp.tsfile");
+    storage::ResultSet* temp_ret = nullptr;
     std::vector<std::string> columns;
-    columns.push_back("id1");
-    columns.push_back("id2");
-    columns.push_back("s1");
-    code = reader.query(table_name, columns, 0, 100, ret);
+    columns.emplace_back("id1");
+    columns.emplace_back("id2");
+    columns.emplace_back("s1");
+    code = reader.query(table_name, columns, 0, 100, temp_ret);
+    auto ret = static_cast<storage::TableResultSet*>(temp_ret);
     auto metadata = ret->get_metadata();
     int column_num = metadata->get_column_count();
     for (int i = 0; i < column_num; i++) {
@@ -75,7 +46,7 @@ int demo_read() {
                   << std::endl;
     }
     bool has_next = false;
-    while (ret->next(has_next) && has_next) {
+    while (ret->next(has_next) == common::E_OK && has_next) {
         Timestamp timestamp = ret->get_value<Timestamp>(1);
         for (int i = 0; i < column_num; i++) {
             if (ret->is_null(i)) {
