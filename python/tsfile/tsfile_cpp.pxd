@@ -27,11 +27,11 @@ cdef extern from "./tsfile_cwrapper.h":
     ctypedef int64_t timestamp
 
     # reader and writer etc
-    ctypedef void* TsFileReader
-    ctypedef void* TsFileWriter
-    ctypedef void* Tablet
-    ctypedef void* TsRecord
-    ctypedef void* ResultSet
+    ctypedef void * TsFileReader
+    ctypedef void * TsFileWriter
+    ctypedef void * Tablet
+    ctypedef void * TsRecord
+    ctypedef void * ResultSet
 
     # enum types
     ctypedef enum TSDataType:
@@ -77,99 +77,89 @@ cdef extern from "./tsfile_cwrapper.h":
 
     # struct types
     ctypedef struct ColumnSchema:
-        char* column_name
+        char * column_name
         TSDataType data_type
         ColumnCategory column_category
 
     ctypedef struct TableSchema:
-        char* table_name
-        ColumnSchema* column_schemas
+        char * table_name
+        ColumnSchema * column_schemas
         int column_num
 
     ctypedef struct TimeseriesSchema:
-        char* timeseries_name
+        char * timeseries_name
         TSDataType data_type
         TSEncoding encoding
         CompressionType compression
 
     ctypedef struct DeviceSchema:
-        char* device_name
-        TimeseriesSchema* timeseries_schema
+        char * device_name
+        TimeseriesSchema * timeseries_schema
         int timeseries_num
 
     ctypedef struct ResultSetMetaData:
         char** column_names
-        TSDataType* data_types
+        TSDataType * data_types
         int column_num
-        
-
 
     # Function Declarations
 
     # reader：new and close
-    TsFileReader tsfile_reader_new(const char* pathname, ErrorCode* err_code);
+    TsFileReader tsfile_reader_new(const char * pathname, ErrorCode * err_code);
     ErrorCode tsfile_reader_close(TsFileReader reader)
 
     # writer： new and close
-    TsFileWriter tsfile_writer_new(const char * pathname, ErrorCode* err_code);
-    ErrorCode tsfile_writer_close(TsFileWriter writer)
+    TsFileWriter _tsfile_writer_new(const char * pathname, ErrorCode * err_code);
+    ErrorCode _tsfile_writer_close(TsFileWriter writer);
 
     # writer : register table, device and timeseries
-    ErrorCode tsfile_writer_register_table(TsFileWriter writer, TableSchema* schema);
-    ErrorCode tsfile_writer_register_timeseries(TsFileWriter writer, const char* device_name,
-                                                TimeseriesSchema* schema);
-    ErrorCode tsfile_writer_register_device(TsFileWriter writer, DeviceSchema* device_schema);
+    ErrorCode _tsfile_writer_register_table(TsFileWriter writer, TableSchema * schema);
+    ErrorCode _tsfile_writer_register_timeseries(TsFileWriter writer,
+                                                 const char * device_id,
+                                                 const TimeseriesSchema * schema);
+    ErrorCode _tsfile_writer_register_device(TsFileWriter writer,
+                                             const DeviceSchema * device_schema);
 
     # writer : write tablet data and flush
-    ErrorCode tsfile_writer_write_tablet(TsFileWriter writer, Tablet tablet);
-    ErrorCode tsfile_writer_write_table(TsFileWriter writer, Tablet tablet);
-    ErrorCode tsfile_writer_write_ts_record(TsFileWriter writer, TsRecord record);
-
-    ErrorCode tsfile_writer_flush_data(TsFileWriter writer);
+    ErrorCode _tsfile_writer_write_tablet(TsFileWriter writer, Tablet tablet);
 
     # tablet : new and add timestamp/value into tablet 
-    Tablet tablet_new_with_device(const char* device_id, const char** column_name_list, TSDataType* data_types,
-                                    ColumnCategory* category, int column_num, int max_rows);
-    Tablet tablet_new(const char** column_names, TSDataType* data_types, int column_num);
+    Tablet _tablet_new_with_target_name(const char * device_id,
+                                        char** column_name_list,
+                                        TSDataType * data_types,
+                                        ColumnCategory * column_category,
+                                        int column_num, int max_rows);
+
+    Tablet tablet_new(const char** column_names, TSDataType * data_types, int column_num);
 
     ErrorCode tablet_add_timestamp(Tablet tablet, uint32_t row_index, int64_t timestamp);
-    ErrorCode tablet_add_value_by_index_int64_t(Tablet tablet, uint32_t row_index, uint32_t column_index, int64_t value);
-    ErrorCode tablet_add_value_by_index_int32_t(Tablet tablet, uint32_t row_index, uint32_t column_index, int32_t value);
+    ErrorCode tablet_add_value_by_index_int64_t(Tablet tablet, uint32_t row_index, uint32_t column_index,
+                                                int64_t value);
+    ErrorCode tablet_add_value_by_index_int32_t(Tablet tablet, uint32_t row_index, uint32_t column_index,
+                                                int32_t value);
     ErrorCode tablet_add_value_by_index_double(Tablet tablet, uint32_t row_index, uint32_t column_index, double value);
     ErrorCode tablet_add_value_by_index_float(Tablet tablet, uint32_t row_index, uint32_t column_index, float value);
     ErrorCode tablet_add_value_by_index_bool(Tablet tablet, uint32_t row_index, uint32_t column_index, bint value);
     ErrorCode tablet_add_value_by_index_string(Tablet tablet, uint32_t row_index,
-                                       uint32_t column_index, char* value);
+                                               uint32_t column_index, char * value);
 
-    void free_tablet(Tablet* tablet);
-
-    # row_record
-    TsRecord ts_record_new(const char * device_id, int64_t timestamp, int timeseries_num);
-    ErrorCode insert_data_into_ts_record_by_name_int32_t(TsRecord data, const char *measurement_name, const int32_t value);
-    ErrorCode insert_data_into_ts_record_by_name_int64_t(TsRecord data, const char *measurement_name, const int64_t value);
-    ErrorCode insert_data_into_ts_record_by_name_float(TsRecord data, const char *measurement_name, const float value);
-    ErrorCode insert_data_into_ts_record_by_name_double(TsRecord data, const char *measurement_name, const double value);
-    ErrorCode insert_data_into_ts_record_by_name_bool(TsRecord data, const char *measurement_name,const  bint value);
-
-    void free_tsfile_ts_record(TsRecord* record);
-
+    void free_tablet(Tablet * tablet);
 
     # resulSet : query data from tsfile reader
-    ResultSet tsfile_reader_query_table(TsFileReader reader,
-                                        const char* table_name,
+    ResultSet tsfile_query_table(TsFileReader reader,
+                                        const char * table_name,
                                         const char** columns, uint32_t column_num,
-                                         int64_t start_time, int64_t end_time);
-    ResultSet tsfile_reader_query_device(TsFileReader reader,
-                                         const char * device_name,
-                                         char** sensor_name, uint32_t sensor_num,
-                                         timestamp start_time, timestamp end_time);
+                                        int64_t start_time, int64_t end_time, ErrorCode *err_code)
+    ResultSet _tsfile_reader_query_device(TsFileReader reader,
+                                          const char *device_name,
+                                          char ** sensor_name, uint32_t sensor_num,
+                                          int64_t start_time, int64_t end_time, ErrorCode *err_code)
 
     # resultSet : get data from resultSet
-    bint tsfile_result_set_next(ResultSet result_set);
+    bint tsfile_result_set_next(ResultSet result_set, ErrorCode * err_code);
     bint tsfile_result_set_is_null_by_index(ResultSet result_set, uint32_t column_index);
-    bint tsfile_result_set_is_null_by_name(ResultSet result_set, const char* column_name);
-    void free_tsfile_result_set(ResultSet* result_set);
-
+    bint tsfile_result_set_is_null_by_name(ResultSet result_set, const char * column_name);
+    void free_tsfile_result_set(ResultSet * result_set);
 
     int32_t tsfile_result_set_get_value_by_index_int32_t(ResultSet result_set, uint32_t column_index);
     int64_t tsfile_result_set_get_value_by_index_int64_t(ResultSet result_set, uint32_t column_index);

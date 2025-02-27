@@ -28,17 +28,16 @@ from .constants import TSDataType, ColumnCategory
 
 class Tablet(object):
 
-    def __init__(self, device_id: str, column_name_list: list[str], type_list: list[TSDataType],
-                 category_list: list[ColumnCategory] = None, max_row_num: int = 1024):
+    def __init__(self,  column_name_list: list[str], type_list: list[TSDataType],
+                max_row_num: int = 1024):
         self.timestamp_list = [None for _ in range(max_row_num)]
         self.data_list: List[List[Union[int, float, bool, str, bytes, None]]] = [
             [None for _ in range(max_row_num)] for _ in range(len(column_name_list))
         ]
-        self.device_id = device_id
+        self.target_name = None
         self.column_name_list = column_name_list
         self.type_list = type_list
         self.max_row_num = max_row_num
-        self.category_list = category_list
 
         self._type_ranges = {
             TSDataType.INT32: (-2 ** 31, 2 ** 31 - 1),
@@ -54,6 +53,9 @@ class Tablet(object):
         if not (0 <= row_index < self.max_row_num):
             raise IndexError(f"Row index {row_index} out of range [0, {self.max_row_num - 1}]")
 
+    def set_table_name(self, table_name: str):
+        self.target_name = table_name
+
     def get_column_name_list(self):
         return self.column_name_list
 
@@ -63,17 +65,14 @@ class Tablet(object):
     def get_timestamp_list(self):
         return self.timestamp_list
 
-    def get_device_id(self):
-        return self.device_id
+    def get_target_name(self):
+        return self.target_name
 
     def get_value_list(self):
         return self.data_list
 
     def get_max_row_num(self):
         return self.max_row_num
-
-    def get_category_list(self):
-        return self.category_list
 
     def add_column(self, column_name: str, column_type: TSDataType):
         self.column_name_list.append(column_name)

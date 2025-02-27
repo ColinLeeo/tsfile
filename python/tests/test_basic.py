@@ -28,7 +28,7 @@ def test_tablet():
     column_category = [ColumnCategory.TAG, ColumnCategory.FIELD, ColumnCategory.FIELD, ColumnCategory.TAG]
     tablet = Tablet("test", column_names, data_types, column_category)
 
-    assert "test" == tablet.get_device_id()
+    assert "test" == tablet.get_target_name()
     assert 4 == len(tablet.get_column_name_list())
     assert TSDataType.INT32 == tablet.get_data_type_list()[0]
 

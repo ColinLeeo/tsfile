@@ -15,12 +15,33 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-from tsfile import TableSchema
+
+from tsfile import TableSchema, Tablet, TableNotExistError
 from tsfile import TsFileWriter
 
 
-class TsFileTableWriter(TsFileWriter):
+class TsFileTableWriter():
 
     def __init__(self, path : str,  table_schema : TableSchema):
         self.writer = super().__init__(path)
-        super().register_table(table_schema)
+        self.writer.register_table(table_schema)
+        self.exclusive_table_name_ = table_schema.get_table_name()
+
+    def write_table(self, tablet : Tablet):
+        if tablet.get_target_name() == None:
+            tablet.set_target_name(self.exclusive_table_name_)
+        elif self.exclusive_table_name_ is not None and tablet.get_target_name() != self.exclusive_table_name_:
+            raise TableNotExistError
+        self.writer.write_table(tablet)
+
+    def close(self):
+        self.writer.close()
+
+    def __dealloc__(self):
+        self.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()

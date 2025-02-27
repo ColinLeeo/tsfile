@@ -471,7 +471,7 @@ int tsfile_result_set_metadata_get_column_num(ResultSetMetaData result_set);
  * @note Caller should call free_table_schema to free the tableschema.
  */
 TableSchema tsfile_reader_get_table_schema(TsFileReader reader,
-                                       const char* table_name);
+                                           const char* table_name);
 /**
  * @brief Gets all table schema in the tsfile.
  *
@@ -491,6 +491,27 @@ void free_timeseries_schema(TimeseriesSchema schema);
 void free_table_schema(TableSchema schema);
 void free_column_schema(ColumnSchema schema);
 void free_write_file(WriteFile* write_file);
+
+// For Python API
+TsFileWriter _tsfile_writer_new(const char* pathname, ERRNO* err_code);
+Tablet _tablet_new_with_target_name(const char* device_id,
+                                    char** column_name_list,
+                                    TSDataType* data_types,
+                                    ColumnCategory* column_category,
+                                    int column_num, int max_rows);
+ERRNO _tsfile_writer_register_table(TsFileWriter writer, TableSchema* schema);
+ERRNO _tsfile_writer_register_timeseries(TsFileWriter writer,
+                                         const char* device_id,
+                                         const TimeseriesSchema* schema);
+ERRNO _tsfile_writer_register_device(TsFileWriter writer,
+                                     const DeviceSchema* device_schema);
+ERRNO _tsfile_writer_write_tablet(TsFileWriter writer, Tablet tablet);
+ERRNO _tsfile_writer_close(TsFileWriter writer);
+ResultSet _tsfile_reader_query_device(TsFileReader reader,
+                                      const char* device_name,
+                                      char** sensor_name, uint32_t sensor_num,
+                                      Timestamp start_time, Timestamp end_time,
+                                      ERRNO* err_code);
 
 #ifdef __cplusplus
 }

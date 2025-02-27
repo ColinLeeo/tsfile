@@ -180,7 +180,7 @@ cdef Tablet to_c_tablet(object tablet):
     cdef int max_row_num
     cdef TSDataType data_type
     cdef int64_t timestamp
-    cdef bytes device_id_bytes = PyUnicode_AsUTF8String(tablet.get_device_id())
+    cdef bytes device_id_bytes = PyUnicode_AsUTF8String(tablet.get_target_name())
     cdef const char * device_id_c = device_id_bytes
     cdef char** columns_names
     cdef TSDataType* column_types
@@ -203,7 +203,7 @@ cdef Tablet to_c_tablet(object tablet):
 
     max_row_num = tablet.get_max_row_num()
 
-    ctablet = tablet_new_with_device(device_id_c, columns_names, columns_types, column_category, column_num,
+    ctablet = _tablet_new_with_target_name(device_id_c, columns_names, columns_types, column_category, column_num,
                                      max_row_num)
     free(columns_types)
     for i in range(column_num):
@@ -261,30 +261,30 @@ cdef Tablet to_c_tablet(object tablet):
     return ctablet
 
 
-cdef TsRecord to_c_record(object row_record):
-    cdef int field_num = row_record.get_fields_num()
-    cdef int64_t timestamp = <int64_t>row_record.get_timestamp()
-    cdef bytes device_id_bytes = PyUnicode_AsUTF8String(row_record.get_device_id())
-    cdef const char* device_id = device_id_bytes
-    cdef TsRecord record
-    cdef int i
-    cdef TSDataType data_type
-    record = ts_record_new(device_id, timestamp, field_num)
-    for i in range(field_num):
-        field = row_record.get_fields()[i]
-        data_type = to_c_data_type(field.get_data_type())
-        if data_type == TS_DATATYPE_BOOLEAN:
-            insert_data_into_ts_record_by_name_bool(record, PyUnicode_AsUTF8(field.get_field_name()), field.get_bool_value())
-        elif data_type == TS_DATATYPE_INT32:
-            insert_data_into_ts_record_by_name_int32_t(record, PyUnicode_AsUTF8(field.get_field_name()), field.get_int_value())
-        elif data_type == TS_DATATYPE_INT64:
-            insert_data_into_ts_record_by_name_int64_t(record, PyUnicode_AsUTF8(field.get_field_name()), field.get_long_value())
-        elif data_type == TS_DATATYPE_DOUBLE:
-            insert_data_into_ts_record_by_name_double(record, PyUnicode_AsUTF8(field.get_field_name()), field.get_double_value())
-        elif data_type == TS_DATATYPE_FLOAT:
-            insert_data_into_ts_record_by_name_float(record, PyUnicode_AsUTF8(field.get_field_name()), field.get_float_value())
-
-    return record
+# cdef TsRecord to_c_record(object row_record):
+#     cdef int field_num = row_record.get_fields_num()
+#     cdef int64_t timestamp = <int64_t>row_record.get_timestamp()
+#     cdef bytes device_id_bytes = PyUnicode_AsUTF8String(row_record.get_device_id())
+#     cdef const char* device_id = device_id_bytes
+#     cdef TsRecord record
+#     cdef int i
+#     cdef TSDataType data_type
+#     record = ts_record_new(device_id, timestamp, field_num)
+#     for i in range(field_num):
+#         field = row_record.get_fields()[i]
+#         data_type = to_c_data_type(field.get_data_type())
+#         if data_type == TS_DATATYPE_BOOLEAN:
+#             insert_data_into_ts_record_by_name_bool(record, PyUnicode_AsUTF8(field.get_field_name()), field.get_bool_value())
+#         elif data_type == TS_DATATYPE_INT32:
+#             insert_data_into_ts_record_by_name_int32_t(record, PyUnicode_AsUTF8(field.get_field_name()), field.get_int_value())
+#         elif data_type == TS_DATATYPE_INT64:
+#             insert_data_into_ts_record_by_name_int64_t(record, PyUnicode_AsUTF8(field.get_field_name()), field.get_long_value())
+#         elif data_type == TS_DATATYPE_DOUBLE:
+#             insert_data_into_ts_record_by_name_double(record, PyUnicode_AsUTF8(field.get_field_name()), field.get_double_value())
+#         elif data_type == TS_DATATYPE_FLOAT:
+#             insert_data_into_ts_record_by_name_float(record, PyUnicode_AsUTF8(field.get_field_name()), field.get_float_value())
+#
+#     return record
 
 # Free c structs' space
 cdef void free_c_table_schema(TableSchema* c_schema):
@@ -308,8 +308,8 @@ cdef void free_c_device_schema(DeviceSchema* c_schema):
 cdef void free_c_tablet(Tablet tablet):
     free_tablet(&tablet)
 
-cdef void free_c_row_record(TsRecord record):
-    free_tsfile_ts_record(&record)
+# cdef void free_c_row_record(TsRecord record):
+#     free_tsfile_ts_record(&record)
 
 # Reader and writer new.
 cdef TsFileWriter tsfile_writer_new_c(object pathname) except +:
@@ -317,7 +317,7 @@ cdef TsFileWriter tsfile_writer_new_c(object pathname) except +:
     cdef TsFileWriter writer
     cdef bytes encoded_path = PyUnicode_AsUTF8String(pathname)
     cdef const char* c_path = encoded_path
-    writer = tsfile_writer_new(c_path, &errno)
+    writer = _tsfile_writer_new(c_path, &errno)
     check_error(errno)
     return writer
 
@@ -333,7 +333,7 @@ cdef TsFileReader tsfile_reader_new_c(object pathname) except +:
 # Register table and device
 cdef ErrorCode tsfile_writer_register_device_py_cpp(TsFileWriter writer, DeviceSchema *schema):
     cdef ErrorCode errno
-    errno = tsfile_writer_register_device(writer, schema)
+    errno = _tsfile_writer_register_device(writer, schema)
     return errno
 
 cdef ErrorCode tsfile_writer_register_timeseries_py_cpp(TsFileWriter writer, object device_name,
@@ -341,12 +341,12 @@ cdef ErrorCode tsfile_writer_register_timeseries_py_cpp(TsFileWriter writer, obj
     cdef ErrorCode errno
     cdef bytes encoded_device_name = PyUnicode_AsUTF8String(device_name)
     cdef const char* c_device_name = encoded_device_name
-    errno = tsfile_writer_register_timeseries(writer, c_device_name, schema)
+    errno = _tsfile_writer_register_timeseries(writer, c_device_name, schema)
     return errno
 
 cdef ErrorCode tsfile_writer_register_table_py_cpp(TsFileWriter writer, TableSchema *schema):
     cdef ErrorCode errno
-    errno = tsfile_writer_register_table(writer, schema)
+    errno = _tsfile_writer_register_table(writer, schema)
     return errno
 
 cdef bint tsfile_result_set_is_null_by_name_c(ResultSet result_set, object name):
@@ -362,6 +362,7 @@ cdef ResultSet tsfile_reader_query_table_c(TsFileReader reader, object table_nam
     cdef const char* table_name_c = table_name_bytes
     cdef char** columns = <char**> malloc(sizeof(char*) * column_num)
     cdef int i
+    cdef ErrorCode code = 0
     if columns == NULL:
         raise MemoryError("Failed to allocate memory for columns")
     try:
@@ -369,7 +370,8 @@ cdef ResultSet tsfile_reader_query_table_c(TsFileReader reader, object table_nam
             columns[i] = strdup((<str>column_list[i]).encode('utf-8'))
             if columns[i] == NULL:
                 raise MemoryError("Failed to allocate memory for column name")
-        result = tsfile_reader_query_table(reader, table_name_c, columns,  column_num, start_time, end_time)
+        result = tsfile_query_table(reader, table_name_c, columns,  column_num, start_time, end_time, &code)
+        check_error(code)
         return result
     finally:
         if columns != NULL:
@@ -387,6 +389,7 @@ cdef ResultSet tsfile_reader_query_paths_c(TsFileReader reader, object device_na
     cdef bytes device_name_bytes = PyUnicode_AsUTF8String(device_name)
     cdef const char* device_name_c = device_name_bytes
     cdef int i
+    cdef ErrorCode code = 0
     if sensor_list_c == NULL:
         raise MemoryError("Failed to allocate memory for paths")
     try:
@@ -394,7 +397,8 @@ cdef ResultSet tsfile_reader_query_paths_c(TsFileReader reader, object device_na
             sensor_list_c[i] = strdup((<str>sensor_list[i]).encode('utf-8'))
             if sensor_list_c[i] == NULL:
                 raise MemoryError("Failed to allocate memory for path")
-        result = tsfile_reader_query_device(reader, device_name_c, sensor_list_c, path_num, start_time, end_time)
+        result = _tsfile_reader_query_device(reader, device_name_c, sensor_list_c, path_num, start_time, end_time, &code)
+        check_error(code)
         return result
     finally:
         if sensor_list_c != NULL:

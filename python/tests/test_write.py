@@ -25,17 +25,17 @@ from tsfile import Tablet, RowRecord, Field
 from tsfile import TSDataType
 
 def test_row_record_write():
-    try:
-        writer = TsFileWriter("record_write.tsfile")
-        timeseries = TimeseriesSchema("level1", TSDataType.INT64)
-        writer.register_timeseries("root.device1", timeseries)
-
-        record = RowRecord("root.device1", 10,[Field("level1", 10, TSDataType.INT64)])
-        writer.write_row_record(record)
-        writer.close()
-    finally:
-        if os.path.exists("record_write.tsfile"):
-            os.remove("record_write.tsfile")
+    # try:
+    #     writer = TsFileWriter("record_write.tsfile")
+    #     timeseries = TimeseriesSchema("level1", TSDataType.INT64)
+    #     writer.register_timeseries("root.device1", timeseries)
+    #
+    #     record = RowRecord("root.device1", 10,[Field("level1", 10, TSDataType.INT64)])
+    #     writer.write_row_record(record)
+    #     writer.close()
+    # finally:
+    #     if os.path.exists("record_write.tsfile"):
+    #         os.remove("record_write.tsfile")
 
 def test_tablet_write():
     try:

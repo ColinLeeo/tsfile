@@ -68,8 +68,12 @@ cdef class ResultSetPy:
         """
         Check if the query has next rows.
         """
+        cdef ErrorCode code = 0
         self.check_result_set_invalid()
-        return tsfile_result_set_next(self.result)
+        has_next =  tsfile_result_set_next(self.result, &code)
+        check_error(code)
+        return has_next
+
 
     def get_result_column_info(self):
         return {
