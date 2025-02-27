@@ -61,7 +61,7 @@ cdef class ResultSetPy:
         self.result = result
         metadata_c = tsfile_result_set_get_metadata(self.result)
         self.metadata = from_c_result_set_meta_data(metadata_c)
-        self.metadata.set_device_name(device_name)
+        self.metadata.set_table_name(device_name)
         free_result_set_meta_data(metadata_c)
 
     def next(self):
@@ -116,9 +116,10 @@ cdef class ResultSetPy:
         Get value by index from query result set.
         """
         self.check_result_set_invalid()
-        if tsfile_result_set_is_null_by_index(self.result, index):
+        if tsfile_result_set_is_null_by_index(self.result, index - 1):
+            print("None there")
             return None
-        data_type = self.metadata.get_data_type(index)
+        data_type = self.metadata.get_data_type(index - 1)
         if data_type == TSDataTypePy.INT32:
             return tsfile_result_set_get_value_by_index_int32_t(self.result, index)
         elif data_type == TSDataTypePy.INT64:
@@ -136,6 +137,7 @@ cdef class ResultSetPy:
         """
         self.check_result_set_invalid()
         if tsfile_result_set_is_null_by_name_c(self.result, column_name):
+            print("Get None")
             return None
         ind = self.metadata.get_column_name_index(column_name)
         return self.get_value_by_index(ind + 1)
@@ -146,13 +148,15 @@ cdef class ResultSetPy:
 
         This method queries the underlying result set to determine if the value
         at the given column index position represents a null value.
+
+        Index start from 1.
         """
         self.check_result_set_invalid()
-        if index > len(self.metadata.column_list) or index < 1:
+        if index > (len(self.metadata.column_list) + 1) or index < 1:
             raise IndexError(
                 f"Column index {index} out of range (column count: {len(self.metadata.column_list)})"
             )
-        return tsfile_result_set_is_null_by_index(self.result, index)
+        return tsfile_result_set_is_null_by_index(self.result, index - 1)
 
     def is_null_by_name(self, name : str):
         """

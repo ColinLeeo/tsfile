@@ -123,6 +123,7 @@ cdef extern from "./tsfile_cwrapper.h":
     # writer : write tablet data and flush
     ErrorCode _tsfile_writer_write_tablet(TsFileWriter writer, Tablet tablet);
     ErrorCode _tsfile_writer_write_table(TsFileWriter writer, Tablet tablet);
+    ErrorCode _tsfile_writer_write_ts_record(TsFileWriter writer, TsRecord record);
     # tablet : new and add timestamp/value into tablet 
     Tablet _tablet_new_with_target_name(const char * device_id,
                                         char** column_name_list,
@@ -143,6 +144,17 @@ cdef extern from "./tsfile_cwrapper.h":
                                                uint32_t column_index, char * value);
 
     void free_tablet(Tablet * tablet);
+
+    # row_record
+    TsRecord _ts_record_new(const char * device_id, int64_t timestamp, int timeseries_num);
+    ErrorCode _insert_data_into_ts_record_by_name_int32_t(TsRecord data, const char *measurement_name, const int32_t value);
+    ErrorCode _insert_data_into_ts_record_by_name_int64_t(TsRecord data, const char *measurement_name, const int64_t value);
+    ErrorCode _insert_data_into_ts_record_by_name_float(TsRecord data, const char *measurement_name, const float value);
+    ErrorCode _insert_data_into_ts_record_by_name_double(TsRecord data, const char *measurement_name, const double value);
+    ErrorCode _insert_data_into_ts_record_by_name_bool(TsRecord data, const char *measurement_name,const  bint value);
+
+    void _free_tsfile_ts_record(TsRecord* record);
+
 
     # resulSet : query data from tsfile reader
     ResultSet tsfile_query_table(TsFileReader reader,

@@ -23,13 +23,13 @@ from tsfile import TsFileWriter
 class TsFileTableWriter():
 
     def __init__(self, path : str,  table_schema : TableSchema):
-        self.writer = super().__init__(path)
+        self.writer = TsFileWriter(path)
         self.writer.register_table(table_schema)
         self.exclusive_table_name_ = table_schema.get_table_name()
 
     def write_table(self, tablet : Tablet):
         if tablet.get_target_name() == None:
-            tablet.set_target_name(self.exclusive_table_name_)
+            tablet.set_table_name(self.exclusive_table_name_)
         elif self.exclusive_table_name_ is not None and tablet.get_target_name() != self.exclusive_table_name_:
             raise TableNotExistError
         self.writer.write_table(tablet)

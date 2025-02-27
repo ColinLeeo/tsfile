@@ -290,7 +290,7 @@ INSERT_DATA_INTO_TS_RECORD_BY_NAME(int64_t);
 INSERT_DATA_INTO_TS_RECORD_BY_NAME(bool);
 INSERT_DATA_INTO_TS_RECORD_BY_NAME(float);
 INSERT_DATA_INTO_TS_RECORD_BY_NAME(double);
-/*
+*/
 
 /*--------------------------TsFile Writer Register------------------------ */
 /*
@@ -482,7 +482,6 @@ TableSchema* tsfile_reader_get_all_table_schemas(TsFileReader reader,
                                                  uint32_t* size);
 
 // Close and free resource.
-void free_tsfile_ts_record(TsRecord* record);
 void free_tablet(Tablet* tablet);
 void free_tsfile_result_set(ResultSet* result_set);
 void free_result_set_meta_data(ResultSetMetaData result_set_meta_data);
@@ -504,14 +503,29 @@ ERRNO _tsfile_writer_register_timeseries(TsFileWriter writer,
                                          const TimeseriesSchema* schema);
 ERRNO _tsfile_writer_register_device(TsFileWriter writer,
                                      const DeviceSchema* device_schema);
+TsRecord _ts_record_new(const char* device_id, Timestamp timestamp,
+                        int timeseries_num);
+
+#define INSERT_DATA_INTO_TS_RECORD_BY_NAME(type)      \
+    ERRNO _insert_data_into_ts_record_by_name_##type( \
+        TsRecord data, const char* measurement_name, type value);
+
+INSERT_DATA_INTO_TS_RECORD_BY_NAME(int32_t);
+INSERT_DATA_INTO_TS_RECORD_BY_NAME(int64_t);
+INSERT_DATA_INTO_TS_RECORD_BY_NAME(bool);
+INSERT_DATA_INTO_TS_RECORD_BY_NAME(float);
+INSERT_DATA_INTO_TS_RECORD_BY_NAME(double);
+
 ERRNO _tsfile_writer_write_tablet(TsFileWriter writer, Tablet tablet);
 ERRNO _tsfile_writer_write_table(TsFileWriter writer, Tablet tablet);
+ERRNO _tsfile_writer_write_ts_record(TsFileWriter writer, TsRecord record);
 ERRNO _tsfile_writer_close(TsFileWriter writer);
 ResultSet _tsfile_reader_query_device(TsFileReader reader,
                                       const char* device_name,
                                       char** sensor_name, uint32_t sensor_num,
                                       Timestamp start_time, Timestamp end_time,
                                       ERRNO* err_code);
+void _free_tsfile_ts_record(TsRecord* record);
 
 #ifdef __cplusplus
 }

@@ -98,14 +98,14 @@ class TableSchema:
 class ResultSetMetaData:
     column_list = None
     data_types = None
-    device_id = None
+    table_name = None
 
     def __init__(self, column_list: List[str], data_types: List[TSDataType]):
         self.column_list = column_list
         self.data_types = data_types
 
-    def set_device_name(self, device_id: str):
-        self.device_id = device_id
+    def set_table_name(self, table_name: str):
+        self.table_name = table_name
 
     def get_data_type(self, column_index: int) -> TSDataType:
         return self.data_types[column_index]
@@ -114,7 +114,7 @@ class ResultSetMetaData:
         return self.column_list[column_index]
 
     def get_column_name_index(self, column_name: str) -> int:
-        return self.column_list.index(self.device_id + "." + column_name)
+        return self.column_list.index(self.table_name + "." + column_name)
 
     def get_column_num(self):
         return len(self.column_list)

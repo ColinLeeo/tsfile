@@ -85,18 +85,18 @@ cdef class TsFileWriterPy:
         finally:
             free_c_tablet(ctablet)
 
-    # def write_row_record(self, record : RowRecord):
-    #     """
-    #     Write a record into tsfile with tsfile writer.
-    #     :param record: timestamp and data collection
-    #     """
-    #     cdef TsRecord record_c = to_c_record(record)
-    #     cdef ErrorCode errno
-    #     try:
-    #         errno = tsfile_writer_write_ts_record(self.writer, record_c)
-    #         check_error(errno)
-    #     finally:
-    #         free_c_row_record(record_c)
+    def write_row_record(self, record : RowRecord):
+        """
+        Write a record into tsfile with tsfile writer.
+        :param record: timestamp and data collection
+        """
+        cdef TsRecord record_c = to_c_record(record)
+        cdef ErrorCode errno
+        try:
+            errno = _tsfile_writer_write_ts_record(self.writer, record_c)
+            check_error(errno)
+        finally:
+            free_c_row_record(record_c)
 
     def write_table(self, tablet : TabletPy):
         cdef Tablet ctablet = to_c_tablet(tablet)

@@ -258,30 +258,30 @@ cdef Tablet to_c_tablet(object tablet):
     return ctablet
 
 
-# cdef TsRecord to_c_record(object row_record):
-#     cdef int field_num = row_record.get_fields_num()
-#     cdef int64_t timestamp = <int64_t>row_record.get_timestamp()
-#     cdef bytes device_id_bytes = PyUnicode_AsUTF8String(row_record.get_device_id())
-#     cdef const char* device_id = device_id_bytes
-#     cdef TsRecord record
-#     cdef int i
-#     cdef TSDataType data_type
-#     record = ts_record_new(device_id, timestamp, field_num)
-#     for i in range(field_num):
-#         field = row_record.get_fields()[i]
-#         data_type = to_c_data_type(field.get_data_type())
-#         if data_type == TS_DATATYPE_BOOLEAN:
-#             insert_data_into_ts_record_by_name_bool(record, PyUnicode_AsUTF8(field.get_field_name()), field.get_bool_value())
-#         elif data_type == TS_DATATYPE_INT32:
-#             insert_data_into_ts_record_by_name_int32_t(record, PyUnicode_AsUTF8(field.get_field_name()), field.get_int_value())
-#         elif data_type == TS_DATATYPE_INT64:
-#             insert_data_into_ts_record_by_name_int64_t(record, PyUnicode_AsUTF8(field.get_field_name()), field.get_long_value())
-#         elif data_type == TS_DATATYPE_DOUBLE:
-#             insert_data_into_ts_record_by_name_double(record, PyUnicode_AsUTF8(field.get_field_name()), field.get_double_value())
-#         elif data_type == TS_DATATYPE_FLOAT:
-#             insert_data_into_ts_record_by_name_float(record, PyUnicode_AsUTF8(field.get_field_name()), field.get_float_value())
-#
-#     return record
+cdef TsRecord to_c_record(object row_record):
+    cdef int field_num = row_record.get_fields_num()
+    cdef int64_t timestamp = <int64_t>row_record.get_timestamp()
+    cdef bytes device_id_bytes = PyUnicode_AsUTF8String(row_record.get_device_id())
+    cdef const char* device_id = device_id_bytes
+    cdef TsRecord record
+    cdef int i
+    cdef TSDataType data_type
+    record = _ts_record_new(device_id, timestamp, field_num)
+    for i in range(field_num):
+        field = row_record.get_fields()[i]
+        data_type = to_c_data_type(field.get_data_type())
+        if data_type == TS_DATATYPE_BOOLEAN:
+            _insert_data_into_ts_record_by_name_bool(record, PyUnicode_AsUTF8(field.get_field_name()), field.get_bool_value())
+        elif data_type == TS_DATATYPE_INT32:
+            _insert_data_into_ts_record_by_name_int32_t(record, PyUnicode_AsUTF8(field.get_field_name()), field.get_int_value())
+        elif data_type == TS_DATATYPE_INT64:
+            _insert_data_into_ts_record_by_name_int64_t(record, PyUnicode_AsUTF8(field.get_field_name()), field.get_long_value())
+        elif data_type == TS_DATATYPE_DOUBLE:
+            _insert_data_into_ts_record_by_name_double(record, PyUnicode_AsUTF8(field.get_field_name()), field.get_double_value())
+        elif data_type == TS_DATATYPE_FLOAT:
+            _insert_data_into_ts_record_by_name_float(record, PyUnicode_AsUTF8(field.get_field_name()), field.get_float_value())
+
+    return record
 
 # Free c structs' space
 cdef void free_c_table_schema(TableSchema* c_schema):
@@ -305,8 +305,8 @@ cdef void free_c_device_schema(DeviceSchema* c_schema):
 cdef void free_c_tablet(Tablet tablet):
     free_tablet(&tablet)
 
-# cdef void free_c_row_record(TsRecord record):
-#     free_tsfile_ts_record(&record)
+cdef void free_c_row_record(TsRecord record):
+    _free_tsfile_ts_record(&record)
 
 # Reader and writer new.
 cdef TsFileWriter tsfile_writer_new_c(object pathname) except +:

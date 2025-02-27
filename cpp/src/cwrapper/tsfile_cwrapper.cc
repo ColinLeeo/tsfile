@@ -179,31 +179,30 @@ TABLE_ADD_VALUE_BY_INDEX_DEF(float);
 TABLE_ADD_VALUE_BY_INDEX_DEF(double);
 TABLE_ADD_VALUE_BY_INDEX_DEF(bool);
 
-/*
 // TsRecord API
-TsRecord ts_record_new(const char *device_id, Timestamp timestamp,
-                   int timeseries_num) {
-auto *record = new storage::TsRecord(timestamp, device_id,
-timeseries_num); return record;
+TsRecord _ts_record_new(const char *device_id, Timestamp timestamp,
+                        int timeseries_num) {
+    auto *record = new storage::TsRecord(timestamp, device_id, timeseries_num);
+    return record;
 }
 
 #define INSERT_DATA_INTO_TS_RECORD_BY_NAME_DEF(type)                 \
-ERRNO insert_data_into_ts_record_by_name_##type(                 \
-    TsRecord data, const char *measurement_name, type value) {   \
-    auto *record = (storage::TsRecord *)data;                    \
-    storage::DataPoint point(measurement_name, value);           \
-    if (record->points_.size() + 1 > record->points_.capacity()) \
-        return common::E_BUF_NOT_ENOUGH;                         \
-    record->points_.push_back(point);                            \
-    return common::E_OK;                                         \
-}
+    ERRNO _insert_data_into_ts_record_by_name_##type(                \
+        TsRecord data, const char *measurement_name, type value) {   \
+        auto *record = (storage::TsRecord *)data;                    \
+        storage::DataPoint point(measurement_name, value);           \
+        if (record->points_.size() + 1 > record->points_.capacity()) \
+            return common::E_BUF_NOT_ENOUGH;                         \
+        record->points_.push_back(point);                            \
+        return common::E_OK;                                         \
+    }
 
 INSERT_DATA_INTO_TS_RECORD_BY_NAME_DEF(int32_t);
 INSERT_DATA_INTO_TS_RECORD_BY_NAME_DEF(int64_t);
 INSERT_DATA_INTO_TS_RECORD_BY_NAME_DEF(bool);
 INSERT_DATA_INTO_TS_RECORD_BY_NAME_DEF(float);
 INSERT_DATA_INTO_TS_RECORD_BY_NAME_DEF(double);
-
+/*
 TsFileWriter tsfile_writer_new_with_conf(const char *pathname,
                                      const mode_t flag, ERRNO *err_code,
                                      TsFileConf *conf) {
@@ -218,12 +217,6 @@ if (ret != common::E_OK) {
 return writer;
 }
 
-ERRNO tsfile_writer_write_ts_record(TsFileWriter writer, TsRecord data) {
-auto *w = static_cast<storage::TsFileWriter *>(writer);
-const storage::TsRecord *record = static_cast<storage::TsRecord *>(data);
-const int ret = w->write_record(*record);
-return ret;
-}
 */
 ERRNO tsfile_writer_write(TsFileWriter writer, Tablet tablet) {
     auto *w = static_cast<storage::TsFileTableWriter *>(writer);
@@ -463,7 +456,7 @@ TableSchema *tsfile_reader_get_all_table_schemas(TsFileReader reader,
 }
 
 // delete pointer
-void free_tsfile_ts_record(TsRecord *record) {
+void _free_tsfile_ts_record(TsRecord *record) {
     if (*record != nullptr) {
         delete static_cast<storage::TsRecord *>(*record);
     }
@@ -615,6 +608,12 @@ ERRNO _tsfile_writer_write_table(TsFileWriter writer, Tablet tablet) {
     auto *w = static_cast<storage::TsFileWriter *>(writer);
     auto *tbl = static_cast<storage::Tablet *>(tablet);
     return w->write_table(*tbl);
+}
+ERRNO _tsfile_writer_write_ts_record(TsFileWriter writer, TsRecord data) {
+    auto *w = static_cast<storage::TsFileWriter *>(writer);
+    const storage::TsRecord *record = static_cast<storage::TsRecord *>(data);
+    const int ret = w->write_record(*record);
+    return ret;
 }
 
 ERRNO _tsfile_writer_close(TsFileWriter writer) {

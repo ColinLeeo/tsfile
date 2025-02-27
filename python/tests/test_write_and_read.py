@@ -49,7 +49,8 @@ def test_row_record_write_and_read():
         result = reader.query_timeseries("root.device1", ["level1","level2"], 10, 100)
         i = 10
         while result.next():
-            assert result.get_value_by_index(0) == i
+            assert result.get_value_by_index(1) == i
+            assert result.get_value_by_name("level1") == i
             assert result.get_value_by_name("level2") == i * 1.1
             i = i + 1
         print(reader.get_active_query_result())
@@ -86,8 +87,9 @@ def test_tablet_write_and_read():
         result = reader.query_timeseries("root.device1", ["level0"], 0, 1000000)
         row_num = 0
         while result.next():
-            # assert result.is_null_by_index(1) == False
-            # assert result.get_value_by_name("level0") == row_num
+            assert result.is_null_by_index(1) == False
+            assert result.get_value_by_index(1) == row_num
+            assert result.get_value_by_name("level0") == row_num
             row_num = row_num + 1
 
         assert row_num == max_row_num
@@ -106,9 +108,8 @@ def test_table_writer():
                          ColumnSchema("value", TSDataType.DOUBLE, ColumnCategory.FIELD)])
     try:
         with TsFileTableWriter("table_write.tsfile", table) as writer:
-            tablet = Tablet("test_table", ["device", "value"],
-                            [TSDataType.STRING, TSDataType.DOUBLE],
-                            [ColumnCategory.TAG, ColumnCategory.FIELD], 100)
+            tablet = Tablet( ["device", "value"],
+                            [TSDataType.STRING, TSDataType.DOUBLE], 100)
             for i in range(100):
                 tablet.add_timestamp(i, i)
                 tablet.add_value_by_name("device", i, "device" + str(i))
