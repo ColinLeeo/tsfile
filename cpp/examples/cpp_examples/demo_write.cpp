@@ -44,17 +44,20 @@ int demo_write() {
         {
             common::ColumnSchema("id1", common::STRING, common::UNCOMPRESSED,
                                  common::PLAIN, common::ColumnCategory::TAG),
-            common::ColumnSchema("id2", common::STRING,common::UNCOMPRESSED,common::PLAIN,
-                                 common::ColumnCategory::TAG),
-            common::ColumnSchema("s1", common::INT64, common::UNCOMPRESSED,common::PLAIN,
-                common::ColumnCategory::FIELD),
+            common::ColumnSchema("id2", common::STRING, common::UNCOMPRESSED,
+                                 common::PLAIN, common::ColumnCategory::TAG),
+            common::ColumnSchema("s1", common::INT64, common::UNCOMPRESSED,
+                                 common::PLAIN, common::ColumnCategory::FIELD),
         });
 
     TsFileTableWriter* writer = new TsFileTableWriter(&file, schema);
 
-    storage::Tablet tablet = storage::Tablet(table_name,
-        {"id1", "id2", "s1"}, {common::STRING, common::STRING, common::INT64},
-{common::ColumnCategory::TAG, common::ColumnCategory::TAG, common::ColumnCategory::FIELD}, 10);
+    storage::Tablet tablet = storage::Tablet(
+        table_name, {"id1", "id2", "s1"},
+        {common::STRING, common::STRING, common::INT64},
+        {common::ColumnCategory::TAG, common::ColumnCategory::TAG,
+         common::ColumnCategory::FIELD},
+        10);
     char* literal = new char[std::strlen("id1_filed_1") + 1];
     std::strcpy(literal, "id1_filed_1");
     common::String literal_str(literal, std::strlen("id1_filed_1"));
@@ -69,8 +72,8 @@ int demo_write() {
         tablet.add_value(row, "s1", static_cast<int64_t>(row));
     }
     writer->write_table(tablet);
-    delete [] literal;
-    delete [] literal2;
+    delete[] literal;
+    delete[] literal2;
     int code = writer->flush();
     HANDLE_ERROR(code);
     HANDLE_ERROR(writer->close());

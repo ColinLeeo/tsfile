@@ -27,17 +27,18 @@
 ERRNO write_tsfile() {
     ERRNO code = 0;
     char* table_name = "table1";
-    TableSchema table_schema = {.table_name = table_name,
-                            .column_schemas = (ColumnSchema[]){
-                                (ColumnSchema){.column_name = "id1",
-                                             .data_type = TS_DATATYPE_STRING,
-                                             .column_category = TAG},
-                                (ColumnSchema){.column_name = "id2",
-                                             .data_type = TS_DATATYPE_STRING,
-                                             .column_category = TAG},
-                                (ColumnSchema){.column_name = "s1",
-                                             .data_type = TS_DATATYPE_INT32,
-                                             .column_category = FIELD}}};
+    TableSchema table_schema = {
+        .table_name = table_name,
+        .column_schemas =
+            (ColumnSchema[]){(ColumnSchema){.column_name = "id1",
+                                            .data_type = TS_DATATYPE_STRING,
+                                            .column_category = TAG},
+                             (ColumnSchema){.column_name = "id2",
+                                            .data_type = TS_DATATYPE_STRING,
+                                            .column_category = TAG},
+                             (ColumnSchema){.column_name = "s1",
+                                            .data_type = TS_DATATYPE_INT32,
+                                            .column_category = FIELD}}};
     WriteFile file = write_file_new("test_c.tsfile", &code);
     HANDLE_ERROR(code);
 
@@ -46,10 +47,11 @@ ERRNO write_tsfile() {
     HANDLE_ERROR(code);
 
     // Create tablet to insert data.
-    Tablet tablet = tablet_new(
-        (char*[]){"id1", "id2", "s1"},
-        (TSDataType[]){TS_DATATYPE_STRING, TS_DATATYPE_STRING, TS_DATATYPE_INT32},
-        3, 5);
+    Tablet tablet =
+        tablet_new((char*[]){"id1", "id2", "s1"},
+                   (TSDataType[]){TS_DATATYPE_STRING, TS_DATATYPE_STRING,
+                                  TS_DATATYPE_INT32},
+                   3, 5);
 
     for (int row = 0; row < 5; row++) {
         Timestamp timestamp = row;
@@ -61,7 +63,6 @@ ERRNO write_tsfile() {
 
     // Write tablet data.
     HANDLE_ERROR(tsfile_writer_write(writer, tablet));
-
 
     // Close writer.
     HANDLE_ERROR(tsfile_writer_close(writer));

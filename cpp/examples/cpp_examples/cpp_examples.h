@@ -20,17 +20,17 @@
 #include "common/db_common.h"
 #include "common/path.h"
 #include "common/record.h"
-#include "common/tablet.h"
 #include "common/row_record.h"
 #include "common/schema.h"
+#include "common/tablet.h"
+#include "file/write_file.h"
 #include "reader/expression.h"
 #include "reader/filter/filter.h"
 #include "reader/qds_with_timegenerator.h"
 #include "reader/qds_without_timegenerator.h"
 #include "reader/tsfile_reader.h"
-#include "writer/tsfile_writer.h"
 #include "writer/tsfile_table_writer.h"
-#include "file/write_file.h"
+#include "writer/tsfile_writer.h"
 
 #define HANDLE_ERROR(err_no)                  \
     do {                                      \

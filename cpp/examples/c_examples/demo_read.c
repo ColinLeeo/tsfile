@@ -18,8 +18,8 @@
  */
 
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "c_examples.h"
 
@@ -32,8 +32,8 @@ ERRNO read_tsfile() {
     TsFileReader reader = tsfile_reader_new("test_c.tsfile", &code);
     HANDLE_ERROR(code);
 
-    ResultSet ret =
-        tsfile_query_table(reader, table_name, (char*[]){"id1", "id2", "s1"}, 3, 0, 10, &code);
+    ResultSet ret = tsfile_query_table(
+        reader, table_name, (char*[]){"id1", "id2", "s1"}, 3, 0, 10, &code);
 
     // Get query result metadata: column name and datatype
     ResultSetMetaData metadata = tsfile_result_set_get_metadata(ret);
@@ -46,7 +46,8 @@ ERRNO read_tsfile() {
 
     // Get data by column name or index.
     while (tsfile_result_set_next(ret, &code) && code == RET_OK) {
-        Timestamp timestamp = tsfile_result_set_get_value_by_index_int64_t(ret, 1);
+        Timestamp timestamp =
+            tsfile_result_set_get_value_by_index_int64_t(ret, 1);
         printf("%ld ", timestamp);
         for (int i = 1; i < sensor_num; i++) {
             if (tsfile_result_set_is_null_by_index(ret, i)) {
@@ -54,27 +55,36 @@ ERRNO read_tsfile() {
             } else {
                 switch (metadata.data_types[i]) {
                     case TS_DATATYPE_BOOLEAN:
-                        printf("%d", tsfile_result_set_get_value_by_index_bool(ret, i));
-                    break;
+                        printf("%d", tsfile_result_set_get_value_by_index_bool(
+                                         ret, i));
+                        break;
                     case TS_DATATYPE_INT32:
-                        printf("%d", tsfile_result_set_get_value_by_index_int32_t(ret, i));
-                    break;
+                        printf("%d",
+                               tsfile_result_set_get_value_by_index_int32_t(ret,
+                                                                            i));
+                        break;
                     case TS_DATATYPE_INT64:
-                        // 注意：int64_t 应使用 %lld（Linux）或 %I64d（Windows）
-                            printf("%lld", tsfile_result_set_get_value_by_index_int64_t(ret, i));
-                    break;
+                        printf("%lld",
+                               tsfile_result_set_get_value_by_index_int64_t(ret,
+                                                                            i));
+                        break;
                     case TS_DATATYPE_FLOAT:
-                        printf("%f", tsfile_result_set_get_value_by_index_float(ret, i));
-                    break;
+                        printf("%f", tsfile_result_set_get_value_by_index_float(
+                                         ret, i));
+                        break;
                     case TS_DATATYPE_DOUBLE:
-                        printf("%lf", tsfile_result_set_get_value_by_index_double(ret, i));
-                    break;
+                        printf("%lf",
+                               tsfile_result_set_get_value_by_index_double(ret,
+                                                                           i));
+                        break;
                     case TS_DATATYPE_STRING:
-                        printf("%s", tsfile_result_set_get_value_by_index_string(ret, i));
-                    break;
+                        printf("%s",
+                               tsfile_result_set_get_value_by_index_string(ret,
+                                                                           i));
+                        break;
                     default:
                         printf("unknown_type");
-                    break;
+                        break;
                 }
             }
         }

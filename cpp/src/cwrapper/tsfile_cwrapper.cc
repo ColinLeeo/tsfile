@@ -386,7 +386,12 @@ char *tsfile_result_set_get_value_by_index_string(ResultSet result_set,
     auto *r = static_cast<storage::TableResultSet *>(result_set);
     common::String *ret = r->get_value<common::String *>(column_index);
     // Caller should free return's char* 's space.
-    return strdup(ret->buf_);
+    char* dup = (char*) malloc(ret->len_ + 1);
+    if (dup) {
+        memcpy(dup, ret->buf_, ret->len_);
+        dup[ret->len_] = '\0';
+    }
+    return dup;
 }
 
 bool tsfile_result_set_is_null_by_name(ResultSet result_set,
