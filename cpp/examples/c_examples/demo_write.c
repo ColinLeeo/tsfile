@@ -64,6 +64,11 @@ ERRNO write_tsfile() {
     // Write tablet data.
     HANDLE_ERROR(tsfile_writer_write(writer, tablet));
 
+    free_tablet(&tablet);
+
     // Close writer.
     HANDLE_ERROR(tsfile_writer_close(writer));
+
+    // Close write file.
+    free_write_file(&file);
 }

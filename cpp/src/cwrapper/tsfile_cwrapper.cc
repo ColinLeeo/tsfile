@@ -360,7 +360,7 @@ char *tsfile_result_set_get_value_by_name_string(ResultSet result_set,
     auto *r = static_cast<storage::TableResultSet *>(result_set);
     common::String *ret = r->get_value<common::String *>(column_name);
     // Caller should free return's char* 's space.
-    char* dup = (char*) malloc(ret->len_ + 1);
+    char *dup = (char *)malloc(ret->len_ + 1);
     if (dup) {
         memcpy(dup, ret->buf_, ret->len_);
         dup[ret->len_] = '\0';
@@ -386,7 +386,7 @@ char *tsfile_result_set_get_value_by_index_string(ResultSet result_set,
     auto *r = static_cast<storage::TableResultSet *>(result_set);
     common::String *ret = r->get_value<common::String *>(column_index);
     // Caller should free return's char* 's space.
-    char* dup = (char*) malloc(ret->len_ + 1);
+    char *dup = (char *)malloc(ret->len_ + 1);
     if (dup) {
         memcpy(dup, ret->buf_, ret->len_);
         dup[ret->len_] = '\0';
@@ -439,7 +439,7 @@ char *tsfile_result_set_metadata_get_column_name(ResultSetMetaData result_set,
 
 TSDataType tsfile_result_set_metadata_get_data_type(
     ResultSetMetaData result_set, uint32_t column_index) {
-    if (column_index < 0 || column_index >= result_set.column_num) {
+    if (column_index >= result_set.column_num) {
         return TS_DATATYPE_INVALID;
     }
     return result_set.data_types[column_index];
@@ -480,6 +480,12 @@ int tsfile_result_set_metadata_get_column_num(ResultSetMetaData result_set) {
 //     }
 //     return schema;
 // }
+
+
+TableSchema tsfile_reader_get_table_schema(TsFileReader reader,
+                                           const char *table_name) {
+    auto *r = static_cast<TsFileReader *>(reader);
+}
 
 TableSchema *tsfile_reader_get_all_table_schemas(TsFileReader reader,
                                                  uint32_t *size) {
@@ -561,6 +567,7 @@ void free_table_schema(TableSchema schema) {
     free(schema.column_schemas);
 }
 void free_column_schema(ColumnSchema schema) { free(schema.column_name); }
+
 void free_write_file(WriteFile *write_file) {
     auto f = static_cast<storage::WriteFile *>(*write_file);
     delete f;

@@ -34,12 +34,13 @@ ERRNO read_tsfile() {
 
     ResultSet ret = tsfile_query_table(
         reader, table_name, (char*[]){"id1", "id2", "s1"}, 3, 0, 10, &code);
+    HANDLE_ERROR(code);
 
     // Get query result metadata: column name and datatype
     ResultSetMetaData metadata = tsfile_result_set_get_metadata(ret);
-    int sensor_num = metadata.column_num;
+    int column_num = metadata.column_num;
 
-    for (int i = 0; i < sensor_num; i++) {
+    for (int i = 0; i < column_num; i++) {
         printf("column:%s, datatype:%d\n", metadata.column_names[i],
                metadata.data_types[i]);
     }
@@ -49,7 +50,7 @@ ERRNO read_tsfile() {
         Timestamp timestamp =
             tsfile_result_set_get_value_by_index_int64_t(ret, 1);
         printf("%ld ", timestamp);
-        for (int i = 1; i < sensor_num; i++) {
+        for (int i = 1; i < column_num; i++) {
             if (tsfile_result_set_is_null_by_index(ret, i)) {
                 printf("null ");
             } else {
@@ -90,7 +91,9 @@ ERRNO read_tsfile() {
         }
     }
 
+    // Free
     free_result_set_meta_data(metadata);
     free_tsfile_result_set(ret);
+    tsfile_reader_close(reader);
     return 0;
 }

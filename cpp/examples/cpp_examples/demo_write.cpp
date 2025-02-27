@@ -31,6 +31,7 @@ using namespace storage;
 
 int demo_write() {
     libtsfile_init();
+    int code = 0;
     std::string table_name = "table1";
     storage::WriteFile file;
     int flags = O_WRONLY | O_CREAT | O_TRUNC;
@@ -71,10 +72,11 @@ int demo_write() {
         tablet.add_value(row, "id2", literal_str2);
         tablet.add_value(row, "s1", static_cast<int64_t>(row));
     }
-    writer->write_table(tablet);
+    code = writer->write_table(tablet);
+    HANDLE_ERROR(code);
     delete[] literal;
     delete[] literal2;
-    int code = writer->flush();
+    code = writer->flush();
     HANDLE_ERROR(code);
     HANDLE_ERROR(writer->close());
     delete writer;

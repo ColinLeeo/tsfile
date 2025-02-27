@@ -25,7 +25,7 @@
 
 using namespace storage;
 int demo_read() {
-    ERRNO code = 0;
+    int code = 0;
     libtsfile_init();
     std::string table_name = "table1";
     storage::TsFileReader reader;
@@ -36,6 +36,8 @@ int demo_read() {
     columns.emplace_back("id2");
     columns.emplace_back("s1");
     code = reader.query(table_name, columns, 0, 100, temp_ret);
+    HANDLE_ERROR(code);
+
     auto ret = static_cast<storage::TableResultSet*>(temp_ret);
     auto metadata = ret->get_metadata();
     int column_num = metadata->get_column_count();
@@ -46,7 +48,8 @@ int demo_read() {
                   << std::endl;
     }
     bool has_next = false;
-    while (ret->next(has_next) == common::E_OK && has_next) {
+
+    while ((code = ret->next(has_next)) == common::E_OK && has_next) {
         Timestamp timestamp = ret->get_value<Timestamp>(1);
         for (int i = 0; i < column_num; i++) {
             if (ret->is_null(i)) {

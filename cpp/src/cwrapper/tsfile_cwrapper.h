@@ -131,16 +131,17 @@ typedef int64_t Timestamp;
  * @return WriteFile Valid handle on success.
  *
  * @note Call free_write_file() to release resources.
+ * @note Before call free_write_file(), make sure TsFileWriter has been closed.
  */
 
 WriteFile write_file_new(const char* pathname, ERRNO* err_code);
 
 /**
- * @brief Creates a TsFileWriter for writing TsFiles.
+ * @brief Creates a TsFileWriter for writing a TsFile.
  *
  * @param file     Target file where the table data will be written.
  * @param schema       Table schema definition.
- *                     - Ownership: Caller must free it after writer creating.
+ *                     - Ownership: Should be free it by Caller.
  * @param err_code     [out] E_OK(0), or check error code in errno_define.h.
  *
  * @return TsFileWriter Valid handle on success, NULL on failure.
@@ -151,7 +152,7 @@ TsFileWriter tsfile_writer_new(WriteFile file, TableSchema* schema,
                                ERRNO* err_code);
 
 /**
- * @brief Creates a TsFileReader for reading TsFiles.
+ * @brief Creates a TsFileReader for reading a TsFile.
  *
  * @param pathname     Source TsFiles path. Must be a valid path.
  * @param err_code     E_OK(0), or check error code in errno_define.h.
@@ -458,11 +459,18 @@ TSDataType tsfile_result_set_metadata_get_data_type(
 int tsfile_result_set_metadata_get_column_num(ResultSetMetaData result_set);
 
 // Desc table schema.
-// TableSchema tsfile_reader_get_table_schema(TsFileReader reader,
-//                                            const char* table_name);
+
 // DeviceSchema tsfile_reader_get_device_schema(TsFileReader reader,
 //                                              const char* device_id);
 
+/**
+ * @brief Gets specific table's schema in the tsfile.
+ *
+ * @return TableSchema, contains table and column info.
+ * @note Caller should call free_table_schema and free to free the ptr.
+ */
+TableSchema tsfile_reader_get_table_schema(TsFileReader reader,
+                                       const char* table_name);
 /**
  * @brief Gets all table schema in the tsfile.
  *

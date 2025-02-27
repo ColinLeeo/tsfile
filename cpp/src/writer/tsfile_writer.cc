@@ -288,18 +288,16 @@ int TsFileWriter::do_check_and_prepare_tablet(Tablet &tablet) {
         auto table_schema = table_schema_it->second;
         uint32_t column_cnt = tablet.get_column_count();
         for (uint32_t i = 0; i < column_cnt; i++) {
-            for (uint32_t i = 0; i < column_cnt; i++) {
-                auto &col_name = tablet.get_column_name(i);
-                int col_index = table_schema->find_column_index(col_name);
-                if (col_index == -1) {
-                    return E_COLUMN_NOT_EXIST;
-                }
-                const common::ColumnCategory column_category =
-                    table_schema->get_column_categories()[col_index];
-                tablet.column_categories_.emplace_back(column_category);
-                if (column_category == ColumnCategory::TAG) {
-                    tablet.id_column_indexes_.push_back(i);
-                }
+            auto &col_name = tablet.get_column_name(i);
+            int col_index = table_schema->find_column_index(col_name);
+            if (col_index == -1) {
+                return E_COLUMN_NOT_EXIST;
+            }
+            const common::ColumnCategory column_category =
+                table_schema->get_column_categories()[col_index];
+            tablet.column_categories_.emplace_back(column_category);
+            if (column_category == ColumnCategory::TAG) {
+                tablet.id_column_indexes_.push_back(i);
             }
         }
     }
@@ -707,7 +705,7 @@ int TsFileWriter::write_table(Tablet &tablet) {
     if (io_writer_->get_schema()->table_schema_map_.find(
             tablet.insert_target_name_) ==
         io_writer_->get_schema()->table_schema_map_.end()) {
-        ret = E_DEVICE_NOT_EXIST;
+        ret = E_TABLE_NOT_EXIST;
         return ret;
     }
     if (RET_FAIL(do_check_and_prepare_tablet(tablet))) {
