@@ -36,7 +36,7 @@ cdef class TsFileWriterPy:
         """
         Register a timeseries with tsfile writer.
         device_name: device name of the timeseries
-        timeseries_schema: sensor's name/datatype/encoding/compressor
+        timeseries_schema: measurement's name/datatype/encoding/compressor
         """
         cdef TimeseriesSchema* c_schema = to_c_timeseries_schema(timeseries_schema)
         cdef ErrorCode errno
@@ -49,7 +49,7 @@ cdef class TsFileWriterPy:
     def register_device(self, device_schema : DeviceSchemaPy):
         """
         Register a device with tsfile writer.
-        device_schema: the device definition, including device_name, sensors' schema.
+        device_schema: the device definition, including device_name, some measurements' schema.
         """
         cdef DeviceSchema* device_schema_c = to_c_device_schema(device_schema)
         cdef ErrorCode errno
@@ -74,8 +74,9 @@ cdef class TsFileWriterPy:
 
     def write_tablet(self, tablet : TabletPy):
         """
-        Write a table into tsfile with tsfile writer.
+        Write a tablet into tsfile with tsfile writer.
         tablet: data collection to be inserted
+        Currently used for writing data into a device.
         """
         cdef Tablet ctablet = to_c_tablet(tablet)
         cdef ErrorCode errno
@@ -88,7 +89,8 @@ cdef class TsFileWriterPy:
     def write_row_record(self, record : RowRecord):
         """
         Write a record into tsfile with tsfile writer.
-        :param record: timestamp and data collection
+        record: timestamp and data collection
+        Currently used for writing a row data into a device.
         """
         cdef TsRecord record_c = to_c_record(record)
         cdef ErrorCode errno
@@ -99,6 +101,10 @@ cdef class TsFileWriterPy:
             free_c_row_record(record_c)
 
     def write_table(self, tablet : TabletPy):
+        """
+        Write a tablet data into a table in tsfile writer.
+        Currently used for writing data into table.
+        """
         cdef Tablet ctablet = to_c_tablet(tablet)
         cdef ErrorCode errno
         try:

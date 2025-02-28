@@ -19,7 +19,6 @@
 #cython: language_level=3
 
 import weakref
-
 import pandas as pd
 from pandas import DataFrame
 
@@ -27,6 +26,8 @@ from pandas import DataFrame
 
 from .tsfile_cpp cimport *
 from .tsfile_py_cpp cimport *
+
+from libc.stdlib cimport free
 cimport cython
 
 from typing import List
@@ -35,23 +36,26 @@ from tsfile.schema import TSDataType as TSDataTypePy
 
 cdef class ResultSetPy:
     """
-    Get data from a query result.
+    Get data from a query result. When reader run a query, a query handler will return.
+    If reader is closed, result set will not invalid anymore.
     """
+    # a tag for enable weakref in cython.
     __pyx_allow_weakref__ = True
-    cdef ResultSet result
-    cdef object metadata
-    cdef object device_name
-    cdef object not_invalid_result_set
-    cdef object tsfile_reader
     cdef object __weakref__
 
+    # ResultSet from C interface.
+    cdef ResultSet result
+    cdef object metadata
+
+    # ResultSet is valid or not, if the reader is closed, valid will be False.
+    cdef object valid
+    # The reader
+    cdef object tsfile_reader
 
     def __init__(self, tsfile_reader : TsFileReaderPy):
         self.metadata = None
-        self.device_name = None
-        self.not_invalid_result_set = False
+        self.valid = True
         self.tsfile_reader = weakref.ref(tsfile_reader)
-        pass
 
     cdef init_c(self, ResultSet result, object device_name):
         """
@@ -66,16 +70,21 @@ cdef class ResultSetPy:
 
     def next(self):
         """
-        Check if the query has next rows.
+        Check and get next rows in query result.
+        :return: boolean, true means get next rows.
         """
         cdef ErrorCode code = 0
         self.check_result_set_invalid()
+        print("get next here")
         has_next =  tsfile_result_set_next(self.result, &code)
         check_error(code)
         return has_next
 
-
     def get_result_column_info(self):
+        """
+        Get result set's columns info.
+        :return: a dict contains column's name and datatype.
+        """
         return {
             column_name:column_type
             for column_name, column_type in zip(
@@ -86,7 +95,7 @@ cdef class ResultSetPy:
 
     def read_next_data_frame(self, max_row_num : int = 1024):
         """
-        :param max_row_num:
+        :param max_row_num: default row num: 1024
         :return: a dataframe contains data from query result.
         """
         self.check_result_set_invalid()
@@ -114,11 +123,14 @@ cdef class ResultSetPy:
     def get_value_by_index(self, index : int):
         """
         Get value by index from query result set.
+        NOTE: index start from 1.
         """
+        cdef char* string = NULL
         self.check_result_set_invalid()
+        # Well when we check is null, id from 0, so there index -1.
         if tsfile_result_set_is_null_by_index(self.result, index - 1):
-            print("None there")
             return None
+        # data type in metadata is an array, id from 0.
         data_type = self.metadata.get_data_type(index - 1)
         if data_type == TSDataTypePy.INT32:
             return tsfile_result_set_get_value_by_index_int32_t(self.result, index)
@@ -130,6 +142,14 @@ cdef class ResultSetPy:
             return tsfile_result_set_get_value_by_index_double(self.result, index)
         elif data_type == TSDataTypePy.BOOLEAN:
             return tsfile_result_set_get_value_by_index_bool(self.result, index)
+        elif data_type == TSDataTypePy.STRING:
+            try:
+                string = tsfile_result_set_get_value_by_index_string(self.result, index)
+                py_str = string.decode('utf-8')
+                return py_str
+            finally:
+                if string != NULL:
+                    free(string)
 
     def get_value_by_name(self, column_name : str):
         """
@@ -167,11 +187,11 @@ cdef class ResultSetPy:
         return self.is_null_by_index(ind + 1)
 
     def check_result_set_invalid(self):
-        if self.not_invalid_result_set:
+        if not self.valid:
             raise Exception("Invalid result set. TsFile Reader not exists")
 
-    def get_result_set_invalid(self):
-        return self.not_invalid_result_set
+    def get_result_set_valid(self):
+        return self.valid
 
     def close(self):
         """
@@ -188,10 +208,10 @@ cdef class ResultSetPy:
                 reader.notify_result_set_discard(self)
 
         self.result = NULL
-        self.not_invalid_result_set = True
+        self.valid = False
 
-    def set_invalid_result_set(self, invalid : bool):
-        self.not_invalid_result_set = invalid
+    def set_invalid_result_set(self):
+        self.valid = False
         self.close()
 
     def __dealloc__(self):
@@ -211,11 +231,12 @@ cdef class TsFileReaderPy:
 
     Provides a Pythonic interface to read and query time series data from TsFiles.
     """
-    cdef TsFileReader reader
-    cdef object activate_result_set_list
+
     __pyx_allow_weakref__ = True
     cdef object __weakref__
 
+    cdef TsFileReader reader
+    cdef object activate_result_set_list
 
     def __init__(self, pathname):
         """
@@ -231,6 +252,7 @@ cdef class TsFileReaderPy:
                     start_time : int = 0, end_time : int = 0) -> ResultSetPy:
         """
         Execute a time range query on specified table and columns.
+        :return: query result handler.
         """
         cdef ResultSet result;
         result = tsfile_reader_query_table_c(self.reader, table_name, column_names, start_time, end_time)
@@ -242,7 +264,7 @@ cdef class TsFileReaderPy:
     def query_timeseries(self, device_name : str, sensor_list : List[str], start_time : int = 0,
                          end_time : int = 0) -> ResultSetPy:
         """
-        Execute a time range query on specified path list.
+        Execute a time range query on a specify device.
         """
         cdef ResultSet result;
         result = tsfile_reader_query_paths_c(self.reader, device_name, sensor_list, start_time, end_time)
@@ -252,6 +274,11 @@ cdef class TsFileReaderPy:
         return pyresult
 
     def notify_result_set_discard(self, result_set: ResultSetPy):
+        """
+        Remove activate result set from activate_result_set_list, called when a result set close.
+        :param result_set:
+        :return:
+        """
         self.activate_result_set_list.discard(result_set)
 
     def close(self):

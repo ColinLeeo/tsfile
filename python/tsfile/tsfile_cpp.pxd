@@ -177,5 +177,6 @@ cdef extern from "./tsfile_cwrapper.h":
     bint tsfile_result_set_get_value_by_index_bool(ResultSet result_set, uint32_t column_index);
     float tsfile_result_set_get_value_by_index_float(ResultSet result_set, uint32_t column_index);
     double tsfile_result_set_get_value_by_index_double(ResultSet result_set, uint32_t column_index);
+    char * tsfile_result_set_get_value_by_index_string(ResultSet result_set, uint32_t column_index);
     ResultSetMetaData tsfile_result_set_get_metadata(ResultSet result_set);
     void free_result_set_meta_data(ResultSetMetaData result_set_meta_data);

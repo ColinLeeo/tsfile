@@ -491,8 +491,10 @@ void free_table_schema(TableSchema schema);
 void free_column_schema(ColumnSchema schema);
 void free_write_file(WriteFile* write_file);
 
-// For Python API
+// ---------- For Python API. ----------
+// create a tsfile writer.
 TsFileWriter _tsfile_writer_new(const char* pathname, ERRNO* err_code);
+ // create a tablet will full info.
 Tablet _tablet_new_with_target_name(const char* device_id,
                                     char** column_name_list,
                                     TSDataType* data_types, int column_num,
@@ -519,6 +521,7 @@ INSERT_DATA_INTO_TS_RECORD_BY_NAME(double);
 ERRNO _tsfile_writer_write_tablet(TsFileWriter writer, Tablet tablet);
 ERRNO _tsfile_writer_write_table(TsFileWriter writer, Tablet tablet);
 ERRNO _tsfile_writer_write_ts_record(TsFileWriter writer, TsRecord record);
+
 ERRNO _tsfile_writer_close(TsFileWriter writer);
 ResultSet _tsfile_reader_query_device(TsFileReader reader,
                                       const char* device_name,

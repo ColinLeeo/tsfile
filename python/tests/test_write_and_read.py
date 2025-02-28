@@ -27,6 +27,7 @@ from tsfile import TSDataType
 from tsfile import Tablet, RowRecord, Field
 from tsfile import TsFileTableWriter
 
+
 def test_row_record_write_and_read():
     try:
         writer = TsFileWriter("record_write_and_read.tsfile")
@@ -39,14 +40,14 @@ def test_row_record_write_and_read():
         for i in range(max_row_num):
             row = RowRecord("root.device1", i,
                             [Field("level1", i, TSDataType.INT64),
-                                    Field("level2",i*1.1, TSDataType.DOUBLE),
-                                    Field("level3", i*2, TSDataType.INT32)])
+                             Field("level2", i * 1.1, TSDataType.DOUBLE),
+                             Field("level3", i * 2, TSDataType.INT32)])
             writer.write_row_record(row)
 
         writer.close()
 
         reader = TsFileReader("record_write_and_read.tsfile")
-        result = reader.query_timeseries("root.device1", ["level1","level2"], 10, 100)
+        result = reader.query_timeseries("root.device1", ["level1", "level2"], 10, 100)
         i = 10
         while result.next():
             assert result.get_value_by_index(1) == i
@@ -61,6 +62,7 @@ def test_row_record_write_and_read():
         if os.path.exists("record_write_and_read.tsfile"):
             os.remove("record_write_and_read.tsfile")
 
+
 def test_tablet_write_and_read():
     try:
         writer = TsFileWriter("tablet_write_and_read.tsfile")
@@ -72,7 +74,8 @@ def test_tablet_write_and_read():
         tablet_row_num = 1000
         tablet_num = 0
         for i in range(max_row_num // tablet_row_num):
-            tablet = Tablet([f'level{j}' for j in range(measurement_num)],[TSDataType.INT64 for _ in range(measurement_num)], tablet_row_num)
+            tablet = Tablet([f'level{j}' for j in range(measurement_num)],
+                            [TSDataType.INT64 for _ in range(measurement_num)], tablet_row_num)
             tablet.set_table_name("root.device1")
             for row in range(tablet_row_num):
                 tablet.add_timestamp(row, row + tablet_num * tablet_row_num)
@@ -108,13 +111,21 @@ def test_table_writer():
                          ColumnSchema("value", TSDataType.DOUBLE, ColumnCategory.FIELD)])
     try:
         with TsFileTableWriter("table_write.tsfile", table) as writer:
-            tablet = Tablet( ["device", "value"],
+            tablet = Tablet(["device", "value"],
                             [TSDataType.STRING, TSDataType.DOUBLE], 100)
             for i in range(100):
                 tablet.add_timestamp(i, i)
                 tablet.add_value_by_name("device", i, "device" + str(i))
-                tablet.add_value_by_index(1, i, i* 100.0)
+                tablet.add_value_by_index(1, i, i * 100.0)
             writer.write_table(tablet)
+
+        # with TsFileReader("table_write.tsfile") as reader:
+        #     with reader.query_table("test_table", ["device", "value"],
+        #                             10, 50) as result:
+        #         while result.next():
+        #             print(result.get_value_by_name("device"))
+        #             print(result.get_value_by_name("value"))
+
     finally:
         if os.path.exists("table_write.tsfile"):
             os.remove("table_write.tsfile")
@@ -149,8 +160,3 @@ def test_query_result_detach_from_reader():
     finally:
         if os.path.exists("query_result_detach_from_reader.tsfile"):
             os.remove("query_result_detach_from_reader.tsfile")
-
-
-
-
-

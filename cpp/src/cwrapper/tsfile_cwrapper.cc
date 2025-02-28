@@ -609,6 +609,7 @@ ERRNO _tsfile_writer_write_table(TsFileWriter writer, Tablet tablet) {
     auto *tbl = static_cast<storage::Tablet *>(tablet);
     return w->write_table(*tbl);
 }
+
 ERRNO _tsfile_writer_write_ts_record(TsFileWriter writer, TsRecord data) {
     auto *w = static_cast<storage::TsFileWriter *>(writer);
     const storage::TsRecord *record = static_cast<storage::TsRecord *>(data);
