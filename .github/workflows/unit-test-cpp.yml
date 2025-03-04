@@ -46,32 +46,32 @@ jobs:
           # Linux all
           - os: ubuntu-latest
             build_type: Debug
-            enable_asan: true
+            enable_asan: Asan
           - os: ubuntu-latest
             build_type: Debug
-            enable_asan: false
+            enable_asan: NoAsan
           - os: ubuntu-latest
             build_type: Release
-            enable_asan: true
+            enable_asan: Asan
           - os: ubuntu-latest
             build_type: Release
-            enable_asan: false
+            enable_asan: NoAsan
 
           # macOS exclude Release+ASan
           - os: macos-latest
             build_type: Debug
-            enable_asan: true
+            enable_asan: Asan
           - os: macos-latest
             build_type: Debug
-            enable_asan: false
+            enable_asan: NoAsan
           - os: macos-latest
             build_type: Release
-            enable_asan: false
+            enable_asan: NoAsan
 
           # Windows just Release
           - os: windows-latest
             build_type: Release
-            enable_asan: False
+            enable_asan: NoAsan
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -107,7 +107,11 @@ jobs:
       - name: Build and test with Maven
         shell: bash
         run: |
-          ASAN_OPTION="-Denable.asan=${{ matrix.enable_asan }}"
-          DEBUG_OPTION="-Dbuild.type=${{ matrix.build_type }}"
-          ./mvnw${{ steps.platform_suffix.outputs.platform_suffix }} -P with-cpp $ASAN_OPTION $DEBUG_OPTION clean verify
+          if [ "${{ matrix.enable_asan }}" = "Asan" ]; then
+            ASAN_VALUE="ON"
+          else
+            ASAN_VALUE="OFF"
+          fi
+          ./mvnw${{ steps.platform_suffix.outputs.platform_suffix }} -P with-cpp \
+           -Denable.asan=$ASAN_VALUE -Dbuild.type=${{ matrix.build_type }} clean verify
 

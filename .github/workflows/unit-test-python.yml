@@ -77,7 +77,7 @@ jobs:
       - name: Build and test with Maven
         shell: bash
         run: |
-          ./mvnw${{ steps.platform_suffix.outputs.platform_suffix }} -P with-python -D clean verify
+          ./mvnw${{ steps.platform_suffix.outputs.platform_suffix }} -P with-python -Denable.asan=OFF -Dbuild.type=Release clean verify
 
       - name: Upload whl Artifact
         uses: actions/upload-artifact@v4
