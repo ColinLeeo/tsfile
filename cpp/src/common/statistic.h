@@ -121,6 +121,12 @@ namespace storage {
         count_++;                        \
     } while (false)
 
+#ifdef _WIN32
+#define MY_PRId64 "I64d"
+#else
+#define MY_PRId64 "lld"
+#endif
+
 // Base Statistic
 class Statistic {
    public:
@@ -547,8 +553,8 @@ class Int32Statistic : public Statistic {
         const int buf_len = 256;
         char buf[buf_len];
         snprintf(buf, buf_len,
-                 "{count=%d, start_time=%" PRId64 ", end_time=%" PRId64
-                 ", first_val=%d, last_val=%d, sum_value=%" PRId64
+                 "{count=%d, start_time=%" MY_PRId64 ", end_time=%" MY_PRId64
+                 ", first_val=%d, last_val=%d, sum_value=%" MY_PRId64
                  ", min_value=%d, max_value=%d}",
                  count_, start_time_, end_time_, first_value_, last_value_,
                  sum_value_, min_value_, max_value_);
@@ -630,9 +636,9 @@ class Int64Statistic : public Statistic {
         const int buf_len = 256;
         char buf[buf_len];
          snprintf(buf, buf_len,
-                  "{count=%d, start_time=%" PRId64 ", end_time=%" PRId64
-                  ", first_val=%" PRId64 ", last_val=%" PRId64
-                  ", sum_value=%lf, min_value=%" PRId64 ", max_value=%" PRId64
+                  "{count=%d, start_time=%" MY_PRId64 ", end_time=%" MY_PRId64
+                  ", first_val=%" MY_PRId64 ", last_val=%" MY_PRId64
+                  ", sum_value=%lf, min_value=%" MY_PRId64 ", max_value=%" MY_PRId64
                   "}",
                   count_, start_time_, end_time_, first_value_, last_value_,
                   sum_value_, min_value_, max_value_);
@@ -815,7 +821,7 @@ class TimeStatistic : public Statistic {
         const int buf_len = 256;
         char buf[buf_len];
         snprintf(buf, buf_len,
-                 "{count=%d, start_time=%" PRId64 ", end_time=%" PRId64 "}",
+                 "{count=%d, start_time=%" MY_PRId64 ", end_time=%" MY_PRId64 "}",
                  count_, start_time_, end_time_);
         return std::string(buf);
     }
