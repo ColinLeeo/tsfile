@@ -62,26 +62,20 @@ target_link_libraries(read_obj ${COMPRESSION_LIBS})
 target_link_libraries(write_obj ${COMPRESSION_LIBS})
 
 add_library(tsfile SHARED)
-add_library(tsfile_static STATIC)
 if (${COV_ENABLED})
     message("Enable code cov...")
     target_link_libraries(tsfile common_obj compress_obj cwrapper_obj file_obj read_obj write_obj parser_obj -lgcov)
-    target_link_libraries(tsfile_static common_obj compress_obj cwrapper_obj file_obj read_obj write_obj parser_obj -lgcov)
 else()
     message("Disable code cov...")
     target_link_libraries(tsfile common_obj compress_obj cwrapper_obj file_obj read_obj write_obj parser_obj)
-    target_link_libraries(tsfile_static common_obj compress_obj cwrapper_obj file_obj read_obj write_obj parser_obj)
 endif()
 
 set(LIBTSFILE_PROJECT_VERSION ${TsFile_CPP_VERSION})
 set(LIBTSFILE_SO_VERSION ${TsFile_CPP_VERSION})
 set_target_properties(tsfile PROPERTIES VERSION ${LIBTSFILE_PROJECT_VERSION})
 set_target_properties(tsfile PROPERTIES SOVERSION ${LIBTSFILE_SO_VERSION})
-set_target_properties(tsfile_static PROPERTIES VERSION ${LIBTSFILE_PROJECT_VERSION})
-set_target_properties(tsfile_static PROPERTIES SOVERSION ${LIBTSFILE_SO_VERSION})
 
 install(TARGETS tsfile LIBRARY DESTINATION ${LIBRARY_OUTPUT_PATH})
-install(TARGETS tsfile_static LIBRARY DESTINATION ${LIBRARY_OUTPUT_PATH})
 
 
 

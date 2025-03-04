@@ -84,7 +84,7 @@ if (NOT WIN32)
     endif ()
   else ()
     message("Address Sanitizer is disabled.")
-  endif (ENABLE_ASAN)
+  endif ()
 endif ()
 
 
