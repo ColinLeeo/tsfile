@@ -55,6 +55,7 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
 endif ()
 
+message("CMAKE BUILD TYPE " ${CMAKE_BUILD_TYPE})
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -68,7 +69,7 @@ endif ()
 message("CMAKE DEBUG: CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}")
 
 # enable asan by default.
-option(ENABLE_ASAN "Enable Address Sanitizer" ON)
+option(ENABLE_ASAN "Enable Address Sanitizer" OFF)
 
 if (NOT WIN32)
   if (ENABLE_ASAN)
@@ -77,7 +78,7 @@ if (NOT WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
 
     if (NOT APPLE)
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libsan")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libasan")
       set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address -static-libasan")
     else ()
       set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
