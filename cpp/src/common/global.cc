@@ -24,7 +24,6 @@
 #endif
 #include <stdlib.h>
 
-#include "mutex/mutex.h"
 #include "utils/injection.h"
 
 namespace common {

@@ -68,7 +68,7 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
 endif ()
 message("CMAKE DEBUG: CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}")
 
-# enable asan by default.
+# disable asan by default.
 option(ENABLE_ASAN "Enable Address Sanitizer" OFF)
 
 if (NOT WIN32)
