@@ -1,4 +1,4 @@
-#[[
+﻿#[[
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
 distributed with this work for additional information
@@ -97,6 +97,7 @@ set(PROJECT_SRC_DIR ${PROJECT_SOURCE_DIR}/src)
 
 # All include files will be installed here.
 set(LIBRARY_INCLUDE_DIR ${PROJECT_BINARY_DIR}/include)
+set(THIRD_PARTY_INCLUDE ${PROJECT_BINARY_DIR}/third_party)
 
 add_subdirectory(third_party)
 add_subdirectory(src)

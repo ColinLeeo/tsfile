@@ -21,6 +21,7 @@
 #define COMMON_STATISTIC_H
 
 #include <inttypes.h>
+#include <sstream>
 
 #include "common/allocator/alloc_base.h"
 #include "common/allocator/byte_stream.h"
@@ -120,12 +121,6 @@ namespace storage {
         BOOL_VALUE_STAT_UPDATE((value)); \
         count_++;                        \
     } while (false)
-
-#ifdef _WIN32
-#define MY_PRId64 "I64d"
-#else
-#define MY_PRId64 "lld"
-#endif
 
 // Base Statistic
 class Statistic {
@@ -550,15 +545,17 @@ class Int32Statistic : public Statistic {
     }
 
     std::string to_string() const {
-        const int buf_len = 256;
-        char buf[buf_len];
-        snprintf(buf, buf_len,
-                 "{count=%d, start_time=%" MY_PRId64 ", end_time=%" MY_PRId64
-                 ", first_val=%d, last_val=%d, sum_value=%" MY_PRId64
-                 ", min_value=%d, max_value=%d}",
-                 count_, start_time_, end_time_, first_value_, last_value_,
-                 sum_value_, min_value_, max_value_);
-        return std::string(buf);
+        std::ostringstream oss;
+        oss << "{count=" << count_
+            << ", start_time=" << start_time_
+            << ", end_time=" << end_time_
+            << ", first_val=" << first_value_
+            << ", last_val=" << last_value_
+            << ", sum_value=" << sum_value_
+            << ", min_value=" << min_value_
+            << ", max_value=" << max_value_
+            << "}";
+        return oss.str();
     }
 };
 
@@ -633,16 +630,17 @@ class Int64Statistic : public Statistic {
     }
 
     std::string to_string() const {
-        const int buf_len = 256;
-        char buf[buf_len];
-         snprintf(buf, buf_len,
-                  "{count=%d, start_time=%" MY_PRId64 ", end_time=%" MY_PRId64
-                  ", first_val=%" MY_PRId64 ", last_val=%" MY_PRId64
-                  ", sum_value=%lf, min_value=%" MY_PRId64 ", max_value=%" MY_PRId64
-                  "}",
-                  count_, start_time_, end_time_, first_value_, last_value_,
-                  sum_value_, min_value_, max_value_);
-        return std::string(buf);
+        std::ostringstream oss;
+        oss << "{count=" << count_
+            << ", start_time=" << start_time_
+            << ", end_time=" << end_time_
+            << ", first_val=" << first_value_
+            << ", last_val=" << last_value_
+            << ", sum_value=" << sum_value_
+            << ", min_value=" << min_value_
+            << ", max_value=" << max_value_
+            << "}";
+        return oss.str();
     }
 };
 
@@ -818,12 +816,12 @@ class TimeStatistic : public Statistic {
     }
 
     std::string to_string() const {
-        const int buf_len = 256;
-        char buf[buf_len];
-        snprintf(buf, buf_len,
-                 "{count=%d, start_time=%" MY_PRId64 ", end_time=%" MY_PRId64 "}",
-                 count_, start_time_, end_time_);
-        return std::string(buf);
+        std::ostringstream oss;
+        oss << "{count=" << count_
+            << ", start_time=" << start_time_
+            << ", end_time=" << end_time_
+            << "}";
+        return oss.str();
     }
 };
 
