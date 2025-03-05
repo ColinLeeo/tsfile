@@ -182,7 +182,7 @@ TEST_F(TsFileWriterTableTest, WriteNonExistTableTest) {
     delete table_schema;
 }
 
-TEST_F(TsFileWriterTableTest, DISABLED_WriteAndReadSimple) {
+TEST_F(TsFileWriterTableTest, WriteAndReadSimple) {
     std::vector<MeasurementSchema*> measurement_schemas;
     std::vector<ColumnCategory> column_categories;
     measurement_schemas.resize(2);
@@ -214,6 +214,7 @@ TEST_F(TsFileWriterTableTest, DISABLED_WriteAndReadSimple) {
         reader.query("test_table", {"device", "value"}, 10, 50, ret);
     ASSERT_EQ(common::E_OK, ret_value);
 
+    ASSERT_EQ(ret_value, 0);
     auto* table_result_set = (TableResultSet*)ret;
     bool has_next = false;
     // There may be error in AlignedChunkReader::read_from_file_and_rewrap.

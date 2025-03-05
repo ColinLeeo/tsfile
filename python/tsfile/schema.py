@@ -127,8 +127,15 @@ class ResultSetMetaData:
             raise OverflowError
         return self.column_list[column_index - 1]
 
-    def get_column_name_index(self, column_name: str) -> int:
-        return self.column_list.index(self.table_name + "." + column_name) + 1
+    def get_column_name_index(self, column_name: str, is_tree : bool = False) -> int:
+        """
+        For Tree model, column is full path, column_name means sensor_name.
+        For Table model, column is just column name.
+        """
+        if is_tree:
+            return self.column_list.index(self.table_name + "." + column_name) + 1
+        else:
+            return self.column_list.index(column_name) + 1
 
     def get_column_num(self):
         return len(self.column_list)

@@ -49,11 +49,13 @@ cdef class ResultSetPy:
     cdef object valid
     # The reader
     cdef object tsfile_reader
+    cdef object is_tree
 
-    def __init__(self, tsfile_reader : TsFileReaderPy):
+    def __init__(self, tsfile_reader : TsFileReaderPy, is_tree: bint = False):
         self.metadata = None
         self.valid = True
         self.tsfile_reader = weakref.ref(tsfile_reader)
+        self.is_tree = is_tree
 
     cdef init_c(self, ResultSet result, object device_name):
         """
@@ -171,10 +173,9 @@ cdef class ResultSetPy:
         """
         self.check_result_set_invalid()
         if tsfile_result_set_is_null_by_name_c(self.result, column_name):
-            print("Get None")
             return None
         # get index in metadata, metadata ind from 0.
-        ind = self.metadata.get_column_name_index(column_name)
+        ind = self.metadata.get_column_name_index(column_name, self.is_tree)
         return self.get_value_by_index(ind)
 
     def get_metadata(self):
@@ -200,7 +201,7 @@ cdef class ResultSetPy:
         Checks whether the field with the specified column name in the result set is null.
         """
         self.check_result_set_invalid()
-        ind = self.metadata.get_column_name_index(name)
+        ind = self.metadata.get_column_name_index(name, self.is_tree)
         return self.is_null_by_index(ind + 1)
 
     def check_result_set_invalid(self):
@@ -282,7 +283,7 @@ cdef class TsFileReaderPy:
         """
         cdef ResultSet result;
         result = tsfile_reader_query_paths_c(self.reader, device_name, sensor_list, start_time, end_time)
-        pyresult = ResultSetPy(self)
+        pyresult = ResultSetPy(self, True)
         pyresult.init_c(result, device_name)
         self.activate_result_set_list.add(pyresult)
         return pyresult
