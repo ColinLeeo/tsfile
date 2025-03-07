@@ -120,16 +120,15 @@ def test_table_writer():
         # with TsFileReader("table_write.tsfile") as reader:
         #     pass
         #     with reader.query_table("test_table", ["device", "value"],
-        #                             10, 50) as result:
+        #                             0, 10) as result:
         #         cur_line = 0
         #         while result.next():
-        #             print(result.get_value_by_name("value"))
-        #             # print(result.get_value_by_name("device"))
-        #         #     assert result.get_value_by_name("device") == "device" + str(cur_line)
-        #         #     assert result.get_value_by_name("value") == cur_line * 100.0
-        #         #     cur_line = cur_line + 1
-        #         # assert cur_line == 50
-        #         # print(cur_line)
+        #             # assert result.get_value_by_name("device") == "device" + str(cur_line)
+        #             # assert result.get_value_by_name("value") == cur_line * 100.0
+        #             print(result.get_value_by_name("time"))
+        #             cur_line = cur_line + 1
+        #         # assert cur_line == 10
+        #         print(cur_line)
     finally:
         if os.path.exists("table_write.tsfile"):
             os.remove("table_write.tsfile")
