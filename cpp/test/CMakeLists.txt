@@ -124,7 +124,7 @@ if (WIN32)
             COMMAND ${CMAKE_COMMAND} -E copy
             "${LIBRARY_OUTPUT_PATH}/libtsfile.dll"
             "$<TARGET_FILE_DIR:TsFile_Test>"
-            COMMENT "Copying mylib.dll to test executable directory"
+            COMMENT "Copying libtsfile.dll to test executable directory"
             VERBATIM
     )
 endif ()

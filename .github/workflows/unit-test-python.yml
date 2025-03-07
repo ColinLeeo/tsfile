@@ -15,6 +15,7 @@ on:
   pull_request:
     branches:
       - develop
+      - dev/*
       - iotdb
       - rc/*
     paths-ignore:
