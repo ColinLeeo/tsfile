@@ -43,15 +43,19 @@ int TableResultSet::next(bool& has_next) {
             break;
         }
 
+        if (tsblock_) {
+            delete tsblock_;
+            tsblock_ = nullptr;
+        }
 
         if (RET_FAIL(tsblock_reader_->next(tsblock_))) {
             break;
         }
         if (row_iterator_) {
-            std::cout<<"free in row_iteraotr"<<std::endl;
             delete row_iterator_;
             row_iterator_ = nullptr;
         }
+
         row_iterator_ = new common::RowIterator(tsblock_);
     }
     if (row_iterator_ == nullptr || !row_iterator_->has_next()) {
@@ -96,12 +100,10 @@ void TableResultSet::close() {
     tsblock_reader_->close();
     pa_.destroy();
     if (row_record_) {
-
         delete row_record_;
         row_record_ = nullptr;
     }
     if (row_iterator_) {
-        std::cout<<"free in table result close"<<std::endl;
         delete row_iterator_;
         row_iterator_ = nullptr;
     }
