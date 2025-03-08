@@ -42,10 +42,13 @@ int TableResultSet::next(bool& has_next) {
         } else if (!has_next) {
             break;
         }
+
+
         if (RET_FAIL(tsblock_reader_->next(tsblock_))) {
             break;
         }
         if (row_iterator_) {
+            std::cout<<"free in row_iteraotr"<<std::endl;
             delete row_iterator_;
             row_iterator_ = nullptr;
         }
@@ -93,10 +96,12 @@ void TableResultSet::close() {
     tsblock_reader_->close();
     pa_.destroy();
     if (row_record_) {
+
         delete row_record_;
         row_record_ = nullptr;
     }
     if (row_iterator_) {
+        std::cout<<"free in table result close"<<std::endl;
         delete row_iterator_;
         row_iterator_ = nullptr;
     }

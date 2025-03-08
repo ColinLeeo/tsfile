@@ -50,10 +50,11 @@ class TsBlock {
           max_row_count_(max_row_count),
           tuple_desc_(tupledesc) {}
 
-    virtual ~TsBlock() {
+    ~TsBlock() {
         int size = vectors_.size();
         for (int i = 0; i < size; ++i) {
             delete vectors_[i];
+            vectors_[i] = nullptr;
         }
     }
 
