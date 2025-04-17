@@ -380,8 +380,7 @@ int TsFileIOReader::load_all_measurement_index_entry(
 int TsFileIOReader::read_device_meta_index(int32_t start_offset,
                                            int32_t end_offset,
                                            common::PageArena &pa,
-                                           MetaIndexNode *&device_meta_index,
-                                           bool leaf) {
+                                           MetaIndexNode *&device_meta_index) {
     int ret = E_OK;
     ASSERT(start_offset < end_offset);
     const int32_t read_size = (int32_t)(end_offset - start_offset);

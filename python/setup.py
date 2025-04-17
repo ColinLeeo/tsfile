@@ -143,10 +143,7 @@ setup(
     author='"Apache TsFile"',
     packages=["tsfile"],
     license="Apache 2.0",
-    ext_modules=cythonize(
-        ext_modules_tsfile
-    ),
-
+    ext_modules=cythonize(ext_modules_tsfile),
     cmdclass={"build_ext": BuildExt},
     include_dirs=[np.get_include()],
     package_dir={"tsfile": "./tsfile"},
