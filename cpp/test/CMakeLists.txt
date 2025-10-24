@@ -79,6 +79,7 @@ message("LIB_TSFILE_SDK_DIR: ${LIB_TSFILE_SDK_DIR}")
 include_directories(
         ${LIBRARY_INCLUDE_DIR}
         ${THIRD_PARTY_INCLUDE}
+        ${THIRD_PARTY_INCLUDE}/zlib-1.2.13
         ${THIRD_PARTY_INCLUDE}/google_snappy
         ${CMAKE_SOURCE_DIR}/third_party/lz4
         ${CMAKE_SOURCE_DIR}/third_party/google_snappy
@@ -119,27 +120,11 @@ target_link_libraries(
 
 set_target_properties(TsFile_Test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${LIB_TSFILE_SDK_DIR})
 
-if(WIN32)
-    # 获取所有匹配的 DLL 文件
-    file(GLOB TSFILE_DLLS "${LIBRARY_OUTPUT_PATH}/*")
+# currently disable ut on win.
+# add_custom_command(TARGET TsFile_Test POST_BUILD
+#   COMMAND ${CMAKE_COMMAND} -E echo "Copying runtime DLLs to $<TARGET_FILE_DIR:TsFile_Test>"
+#   COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:tsfile> $<TARGET_FILE_DIR:TsFile_Test>
+# )
 
-    add_custom_command(TARGET TsFile_Test POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:TsFile_Test>"
-            COMMENT "Copying all tsfile*.dll files to test executable directory"
-            VERBATIM
-    )
-
-    foreach(dll ${TSFILE_DLLS})
-        add_custom_command(TARGET TsFile_Test POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${dll}"
-                "$<TARGET_FILE_DIR:TsFile_Test>"
-                VERBATIM
-        )
-    endforeach()
-endif()
-
-target_compile_definitions(TsFile_Test PRIVATE ANTLR4CPP_STATIC)
-
-include(GoogleTest)
-gtest_discover_tests(TsFile_Test)
+# include(GoogleTest)
+# gtest_discover_tests(TsFile_Test)

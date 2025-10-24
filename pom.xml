@@ -733,7 +733,7 @@
             <properties>
                 <os.suffix>win</os.suffix>
                 <os.classifier>windows-x86_64</os.classifier>
-                <cmake.generator>MinGW Makefiles</cmake.generator>
+                <cmake.generator>Visual Studio 17 2022</cmake.generator>
                 <python.venv.bin>venv/Scripts/</python.venv.bin>
                 <python.exe.bin>python</python.exe.bin>
             </properties>
@@ -750,7 +750,7 @@
             <properties>
                 <os.suffix>win</os.suffix>
                 <os.classifier>windows-amd64</os.classifier>
-                <cmake.generator>MinGW Makefiles</cmake.generator>
+                <cmake.generator>Visual Studio 17 2022</cmake.generator>
                 <python.venv.bin>venv/Scripts/</python.venv.bin>
                 <python.exe.bin>python</python.exe.bin>
             </properties>
@@ -767,7 +767,7 @@
             <properties>
                 <os.suffix>win</os.suffix>
                 <os.classifier>windows-aarch64</os.classifier>
-                <cmake.generator>MinGW Makefiles</cmake.generator>
+                <cmake.generator>Visual Studio 17 2022</cmake.generator>
                 <python.venv.bin>venv/Scripts/</python.venv.bin>
                 <python.exe.bin>python</python.exe.bin>
             </properties>
