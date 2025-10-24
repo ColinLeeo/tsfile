@@ -106,8 +106,8 @@ if (${COV_ENABLED})
     add_compile_options(-fprofile-arcs -ftest-coverage)
 endif ()
 
-add_definitions(-DANTLR4CPP_STATIC)
-set(ANTLR4_WITH_STATIC_CRT OFF)
+#add_definitions(-DANTLR4CPP_STATIC)
+#set(ANTLR4_WITH_STATIC_CRT OFF)
 
 add_executable(TsFile_Test ${TEST_SRCS})
 target_link_libraries(
@@ -119,15 +119,27 @@ target_link_libraries(
 
 set_target_properties(TsFile_Test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${LIB_TSFILE_SDK_DIR})
 
-if (WIN32)
+if(WIN32)
+    # 获取所有匹配的 DLL 文件
+    file(GLOB TSFILE_DLLS "${LIBRARY_OUTPUT_PATH}/*")
+
     add_custom_command(TARGET TsFile_Test POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
-            "${LIBRARY_OUTPUT_PATH}/libtsfile.dll"
-            "$<TARGET_FILE_DIR:TsFile_Test>"
-            COMMENT "Copying libtsfile.dll to test executable directory"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:TsFile_Test>"
+            COMMENT "Copying all tsfile*.dll files to test executable directory"
             VERBATIM
     )
-endif ()
+
+    foreach(dll ${TSFILE_DLLS})
+        add_custom_command(TARGET TsFile_Test POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${dll}"
+                "$<TARGET_FILE_DIR:TsFile_Test>"
+                VERBATIM
+        )
+    endforeach()
+endif()
+
+target_compile_definitions(TsFile_Test PRIVATE ANTLR4CPP_STATIC)
 
 include(GoogleTest)
 gtest_discover_tests(TsFile_Test)

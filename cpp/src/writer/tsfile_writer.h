@@ -19,9 +19,17 @@
 #ifndef WRITER_TSFILE_WRITER_H
 #define WRITER_TSFILE_WRITER_H
 
-#include <fcntl.h>
-
-#include <climits>
+#ifdef _WIN32
+#include <io.h>
+#define mode_t int
+#define S_IRUSR _S_IREAD
+#define S_IWUSR _S_IWRITE
+#define S_IRGRP 0
+#define S_IROTH 0
+#else
+#include <sys/types.h>
+#include <sys/stat.h>
+#endif
 #include <map>
 #include <memory>
 #include <string>

@@ -26,6 +26,16 @@
 
 #include "utils/util_define.h"
 
+#ifdef _WIN32
+    #ifdef TSFILE_EXPORTS
+        #define TSFILE_API __declspec(dllexport)
+    #else
+        #define TSFILE_API __declspec(dllimport)
+    #endif
+#else
+    #define TSFILE_API
+#endif
+
 namespace common {
 
 enum AllocModID {
@@ -117,7 +127,7 @@ class ModStat {
     static const int32_t ITEM_COUNT = __LAST_MOD_ID;
     int32_t *stat_arr_;
 
-    STATIC_ASSERT((ITEM_SIZE % sizeof(int32_t) == 0), ModStat_ITEM_SIZE_ERROR);
+    static_assert(ITEM_SIZE % sizeof(int32_t) == 0, "ITEM_SIZE must be a multiple of sizeof(int32_t)");
 };
 
 /* base allocator */
@@ -127,7 +137,7 @@ class BaseAllocator {
     void free(void *ptr) { mem_free(ptr); }
 };
 
-extern BaseAllocator g_base_allocator;
+TSFILE_API extern BaseAllocator g_base_allocator;
 
 }  // end namespace common
 

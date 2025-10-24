@@ -28,8 +28,6 @@ using namespace common;
 
 namespace storage {
 
-uint32_t ValuePageWriter::MASK = 1 << 7;
-
 int ValuePageData::init(ByteStream &col_notnull_bitmap_bs, ByteStream &value_bs,
                         Compressor *compressor, uint32_t size) {
     int ret = E_OK;
@@ -80,6 +78,8 @@ int ValuePageData::init(ByteStream &col_notnull_bitmap_bs, ByteStream &value_bs,
 #endif
     return ret;
 }
+
+ValuePageWriter::~ValuePageWriter() { destroy(); }
 
 int ValuePageWriter::init(TSDataType data_type, TSEncoding encoding,
                           CompressionType compression) {

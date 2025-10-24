@@ -21,13 +21,20 @@ project(TsFile_CPP)
 
 cmake_policy(SET CMP0079 NEW)
 set(TsFile_CPP_VERSION 2.2.0.dev)
+
+# 统一 C++11 设置，避免 MSVC 下 -std=c++11 报错
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -Wall")
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wunused -Wuninitialized -D__STDC_FORMAT_MACROS")
 endif ()
 
 message("cmake using: USE_CPP11=${USE_CPP11}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+# ✅ 去掉这里的 -std=c++11，交给 CMAKE_CXX_STANDARD 管理
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 if (DEFINED ENV{CXX})
     set(CMAKE_CXX_COMPILER $ENV{CXX})
@@ -49,7 +56,6 @@ if (${COV_ENABLED})
     add_definitions(-DCOV_ENABLED=1)
     message("add_definitions -DCOV_ENABLED=1")
 endif ()
-
 
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
@@ -88,7 +94,6 @@ if (NOT WIN32)
     endif ()
 endif ()
 
-
 # All libs will be stored here, including libtsfile, compress-encoding lib.
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
@@ -101,9 +106,40 @@ set(LIBRARY_INCLUDE_DIR ${PROJECT_BINARY_DIR}/include CACHE STRING "TsFile inclu
 set(THIRD_PARTY_INCLUDE ${PROJECT_BINARY_DIR}/third_party)
 
 set(SAVED_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -Wall -std=c++11")
+set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -Wall")
+
+if (MSVC)
+    # 推荐：使用动态 CRT (/MD). 可改为 "MultiThreaded" 来使用 /MT
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL" CACHE STRING "MSVC runtime library" FORCE)
+    #set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")  # /MT 静态 CRT
+
+    set(WITH_STATIC_CRT OFF CACHE BOOL "Disable static CRT for antlr runtime" FORCE)
+endif()
+
 add_subdirectory(third_party)
 set(CMAKE_CXX_FLAGS "${SAVED_CXX_FLAGS}")
+
+if(MSVC)
+    # 保留你原来的所有忽略警告配置
+    add_compile_options(/wd4710)
+    add_compile_options(/wd5045)
+    add_compile_options(/wd4577)
+    add_compile_options(/wd4711)
+    add_compile_options(/wd4365)
+    add_compile_options(/wd5999)
+    add_compile_options(/wd4365)
+    add_compile_options(/W3)
+
+    # 增加必要的 MSVC 编译选项
+    add_compile_options(
+            /std:c++11
+            /utf-8
+            /W3
+            /wd4267  # 禁用 size_t 转换警告
+            /wd4996  # 禁用 POSIX 函数弃用警告
+            /wd4819  # 禁用编码警告
+    )
+endif()
 
 add_subdirectory(src)
 add_subdirectory(test)
@@ -111,4 +147,3 @@ add_subdirectory(examples)
 if (TESTS_ENABLED)
     add_dependencies(TsFile_Test tsfile)
 endif ()
-

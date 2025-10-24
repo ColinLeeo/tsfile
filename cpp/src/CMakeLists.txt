@@ -31,7 +31,7 @@ if (${COV_ENABLED})
 endif ()
 add_definitions(-DANTLR4CPP_STATIC)
 set(ANTLR4_WITH_STATIC_CRT OFF)
-
+add_definitions(-DTSFILE_EXPORTS)
 
 set(PROJECT_INCLUDE_DIR
         ${CMAKE_SOURCE_DIR}/src
@@ -70,6 +70,11 @@ if (${COV_ENABLED})
 else()
     message("Disable code cov...")
     target_link_libraries(tsfile common_obj compress_obj cwrapper_obj file_obj read_obj write_obj parser_obj)
+endif()
+
+# ✅ MSVC 下自动导出所有符号，生成 .lib
+if(MSVC)
+    set_target_properties(tsfile PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif()
 
 # to trigger copy headers

@@ -98,7 +98,7 @@ class ValuePageWriter {
           is_inited_(false),
           col_notnull_bitmap_(),
           size_(0) {}
-    ~ValuePageWriter() { destroy(); }
+    ~ValuePageWriter();
     int init(common::TSDataType data_type, common::TSEncoding encoding,
              common::CompressionType compression);
     void reset();
@@ -213,7 +213,7 @@ class ValuePageWriter {
     std::vector<uint8_t> col_notnull_bitmap_;
     uint32_t size_;
 
-    static uint32_t MASK;
+    const uint32_t MASK = 1 << 7;
 };
 
 }  // end namespace storage

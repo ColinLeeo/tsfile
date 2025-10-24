@@ -21,7 +21,6 @@
 
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 #include "common/logger/elog.h"
 #include "common/tsfile_common.h"
@@ -30,7 +29,7 @@
 #include <io.h>
 #include <windows.h>
 
-ssize_t pread(int fd, void *buf, size_t count, uint64_t offset);
+uint64_t pread(int fd, void *buf, size_t count, uint64_t offset);
 #endif
 
 using namespace common;
@@ -114,7 +113,7 @@ int ReadFile::read(int32_t offset, char *buf, int32_t buf_size,
     int ret = E_OK;
     read_len = 0;
     while (read_len < buf_size) {
-        ssize_t pread_size = ::pread(fd_, buf + read_len, buf_size - read_len,
+        uint64_t pread_size = ::pread(fd_, buf + read_len, buf_size - read_len,
                                      offset + read_len);
         if (pread_size < 0) {
             ret = E_FILE_READ_ERR;
@@ -133,7 +132,7 @@ int ReadFile::read(int32_t offset, char *buf, int32_t buf_size,
 }  // end namespace storage
 
 #ifdef _WIN32
-ssize_t pread(int fd, void *buf, size_t count, uint64_t offset) {
+uint64_t pread(int fd, void *buf, size_t count, uint64_t offset) {
     long unsigned int read_bytes = 0;
 
     OVERLAPPED overlapped;

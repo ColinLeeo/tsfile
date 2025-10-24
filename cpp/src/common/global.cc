@@ -121,6 +121,13 @@ int init_common() {
 bool is_timestamp_column_name(const char* time_col_name) {
     // both "time" and "timestamp" refer to timestmap column.
     int32_t len = strlen(time_col_name);
+#ifdef _WIN32
+#include <string.h>
+#define strncasecmp _strnicmp
+#else
+#include <strings.h>
+#endif
+
     if (len == 4) {
         return strncasecmp(time_col_name, "time", 4) == 0;
     } else if (len == 9) {

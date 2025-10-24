@@ -19,8 +19,6 @@
 
 #include "tsfile_writer.h"
 
-#include <unistd.h>
-
 #include "chunk_writer.h"
 #include "common/config/config.h"
 #include "file/tsfile_io_writer.h"
@@ -148,7 +146,11 @@ int TsFileWriter::register_table(
 }
 
 bool check_file_exist(const std::string &file_path) {
+#ifdef _WIN32
+    return _access(file_path.c_str(), 0) == 0;
+#else
     return access(file_path.c_str(), F_OK) == 0;
+#endif
 }
 
 int TsFileWriter::open(const std::string &file_path, int flags, mode_t mode) {

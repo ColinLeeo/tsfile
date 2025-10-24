@@ -19,16 +19,7 @@
 
 #include "write_file.h"
 
-#include <errno.h>
 #include <fcntl.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <unistd.h>
-
-#include "common/config/config.h"
-#include "common/logger/elog.h"
 #include "utils/errno_define.h"
 
 #ifdef _WIN32

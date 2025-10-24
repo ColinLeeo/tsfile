@@ -26,7 +26,7 @@
 #include "common/config/config.h"
 namespace common {
 
-extern ConfigValue g_config_value_;
+TSFILE_API extern ConfigValue g_config_value_;
 extern ColumnSchema g_time_column_schema;
 
 FORCE_INLINE int set_global_time_data_type(uint8_t data_type) {

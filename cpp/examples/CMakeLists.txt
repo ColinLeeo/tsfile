@@ -27,10 +27,10 @@ set(SDK_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/../src/)
 message("SDK_INCLUDE_DIR: ${SDK_INCLUDE_DIR}")
 
 # TsFile shared object dir
-set(SDK_LIB_DIR_RELEASE ${PROJECT_SOURCE_DIR}/../build/Release/lib)
+set(SDK_LIB_DIR_RELEASE ${PROJECT_SOURCE_DIR}/../cmake-build-release-visual-studio/lib)
 message("SDK_LIB_DIR_RELEASE: ${SDK_LIB_DIR_RELEASE}")
 
-set(SDK_LIB_DIR_DEBUG ${PROJECT_SOURCE_DIR}/../build/Debug/lib)
+set(SDK_LIB_DIR_DEBUG ${PROJECT_SOURCE_DIR}/../cmake-build-release-visual-studio/lib)
 message("SDK_LIB_DIR_DEBUG: ${SDK_LIB_DIR_DEBUG}")
 include_directories(${PROJECT_SOURCE_DIR}/../third_party/antlr4-cpp-runtime-4/runtime/src)
 

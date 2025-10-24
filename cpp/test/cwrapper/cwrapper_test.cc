@@ -17,7 +17,6 @@
  * under the License.
  */
 #include <gtest/gtest.h>
-#include <unistd.h>
 #include <utils/db_utils.h>
 extern "C" {
 #include "cwrapper/errno_define_c.h"

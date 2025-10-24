@@ -38,7 +38,7 @@ Vocabulary Vocabulary::fromTokenNames(const std::vector<std::string> &tokenNames
       continue;
     } else if (tokenName.front() == '\'') {
       symbolicNames[i].clear();
-    } else if (std::isupper(tokenName.front(), locale)) {
+    } else if (isupper(static_cast<unsigned char>(tokenName.front()))) {
       literalNames[i].clear();
     } else {
       // wasn't a literal or symbolic name

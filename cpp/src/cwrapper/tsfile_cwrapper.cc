@@ -21,7 +21,6 @@
 
 #include <file/write_file.h>
 #include <reader/qds_without_timegenerator.h>
-#include <unistd.h>
 #include <writer/tsfile_table_writer.h>
 
 #include "common/tablet.h"
@@ -76,7 +75,13 @@ WriteFile write_file_new(const char *pathname, ERRNO *err_code) {
     int ret;
     init_tsfile_config();
 
-    if (access(pathname, F_OK) == 0) {
+    if (
+    #ifdef _WIN32
+        _access(pathname, 0)
+    #else
+        access(pathname, F_OK)
+    #endif
+        == 0) {
         *err_code = common::E_ALREADY_EXIST;
         return nullptr;
     }
