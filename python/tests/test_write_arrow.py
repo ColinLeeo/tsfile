@@ -29,7 +29,7 @@ import pytest
 
 pa = pytest.importorskip("pyarrow", reason="pyarrow is not installed")
 
-from tsfile import ColumnCategory, ColumnSchema, TableSchema, TSDataType, TsFileReader
+from tsfile import ColumnCategory, ColumnSchema, TableSchema, TSDataType, TsFileReader, to_dataframe
 from tsfile import TsFileTableWriter
 
 
@@ -361,6 +361,7 @@ def test_write_arrow_large_batch():
     finally:
         if os.path.exists(path):
             os.remove(path)
+
 
 
 if __name__ == "__main__":

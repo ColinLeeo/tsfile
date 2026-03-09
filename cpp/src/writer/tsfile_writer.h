@@ -47,6 +47,38 @@ extern void libtsfile_destroy();
 extern void set_page_max_point_count(uint32_t page_max_ponint_count);
 extern void set_max_degree_of_index_node(uint32_t max_degree_of_index_node);
 
+/**
+ * Result of TsFileWriter::plan_write_memory().
+ *
+ * All byte fields are estimates; actual usage may differ by ~10 % due to
+ * OS memory-block alignment and variable-length string overhead.
+ */
+struct WriteMemoryPlan {
+    /** Recommended rows per tablet (R*). */
+    int64_t recommended_tablet_rows;
+    /** Expected number of flush calls: ceil(total_rows / recommended_tablet_rows). */
+    int64_t flush_count;
+    /** Estimated peak heap in bytes at the recommended tablet size. */
+    int64_t peak_memory_bytes;
+
+    // ── breakdown ──────────────────────────────────────────────────────────
+    /** Cyclic data memory (Tablet + ChunkWriter), released after each flush. */
+    int64_t data_memory_bytes;
+    /** Cumulative metadata memory that grows with each flush until close(). */
+    int64_t meta_memory_bytes;
+    /** Baseline overhead after schema registration. */
+    int64_t init_memory_bytes;
+
+    /**
+     * False when the requested memory_limit_bytes is smaller than the
+     * minimum achievable peak.  recommended_tablet_rows still holds the
+     * memory-minimising value, so the caller can see what budget is required.
+     */
+    bool feasible;
+    /** Minimum achievable peak memory (bytes), reached at recommended_tablet_rows. */
+    int64_t min_peak_bytes;
+};
+
 class TsFileWriter {
    public:
     TsFileWriter();
@@ -94,6 +126,37 @@ class TsFileWriter {
     DeviceSchemasMap* get_schema_group_map() { return &schemas_; }
     std::shared_ptr<TableSchema> get_table_schema(
         const std::string& table_name) const;
+
+    /**
+     * Compute the optimal tablet size for a write workload under a memory
+     * budget.
+     *
+     * @param total_rows           Total rows to be written.
+     * @param memory_limit_bytes   Peak heap budget (bytes).  Pass 0 to obtain
+     *                             the unconstrained memory-minimising value.
+     * @param schema               Registered table schema describing columns.
+     * @param n_devices_per_flush  Number of distinct device groups (chunk
+     *                             groups) produced per tablet write call.
+     *                             Use 1 when each tablet covers a single
+     *                             device; set to the actual device count when
+     *                             one tablet spans many devices.
+     * @param table_mode           true  = aligned table model (shared
+     *                             timestamp per row); false = tree model
+     *                             (each series stores its own timestamp in
+     *                             ChunkWriter).
+     * @param m_init_bytes         Baseline heap after schema registration
+     *                             (default ~900 KB from empirical measurement).
+     * @return WriteMemoryPlan     Recommended tablet size, flush count, and
+     *                             memory breakdown.
+     */
+    static WriteMemoryPlan plan_write_memory(
+        int64_t total_rows,
+        int64_t memory_limit_bytes,
+        const TableSchema& schema,
+        int32_t n_devices_per_flush = 1,
+        bool table_mode = true,
+        int64_t m_init_bytes = 900 * 1024);
+
     int64_t calculate_mem_size_for_all_group();
     int check_memory_size_and_may_flush_chunks();
     /*
