@@ -19,9 +19,17 @@
 import ctypes
 import os
 import platform
-system = platform.system()
-if system == "Windows":
-    ctypes.WinDLL(os.path.join(os.path.dirname(__file__), "libtsfile.dll"), winmode=0)
+import sys
+
+if sys.platform == "win32":
+    _pkg_dir = os.path.dirname(os.path.abspath(__file__))
+    # Register package dir for DLL search (local development)
+    os.add_dll_directory(_pkg_dir)
+    os.environ["PATH"] = _pkg_dir + os.pathsep + os.environ.get("PATH", "")
+    # Register .libs dir for DLL search (wheel install via delvewheel)
+    _libs_dir = os.path.join(_pkg_dir, ".libs")
+    if os.path.isdir(_libs_dir):
+        os.add_dll_directory(_libs_dir)
 
 from .constants import *
 from .schema import *
