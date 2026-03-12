@@ -40,25 +40,6 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <executions>
-                    <!-- Create python virtual environment -->
-                    <execution>
-                        <id>python-upgrade-pip</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>${python.exe.bin}</executable>
-                            <arguments>
-                                <argument>-m</argument>
-                                <argument>pip</argument>
-                                <argument>install</argument>
-                                <argument>--break-system-packages</argument>
-                                <argument>--upgrade</argument>
-                                <argument>pip</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
                     <execution>
                         <id>python-install-requirements</id>
                         <phase>initialize</phase>
