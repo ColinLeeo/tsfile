@@ -111,18 +111,14 @@ jobs:
           CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
           CIBW_SKIP: "pp* *-musllinux*"
 
-          CIBW_MANYLINUX_X86_64_IMAGE: "manylinux2014"
-          CIBW_MANYLINUX_AARCH64_IMAGE: "manylinux2014"
+          CIBW_MANYLINUX_X86_64_IMAGE: "manylinux_2_28"
+          CIBW_MANYLINUX_AARCH64_IMAGE: "manylinux_2_28"
 
           MACOSX_DEPLOYMENT_TARGET: "12.0"
 
           CIBW_BEFORE_ALL_LINUX: |
             set -euxo pipefail
-            if command -v yum >/dev/null 2>&1; then
-              yum install -y wget tar gzip pkgconfig libuuid-devel libblkid-devel
-            else
-              echo "Not a yum-based image?" ; exit 1
-            fi
+            dnf install -y wget tar gzip pkgconfig libuuid-devel libblkid-devel
             ARCH="$(uname -m)"
             mkdir -p /opt/java
             if [ "$ARCH" = "x86_64" ]; then
