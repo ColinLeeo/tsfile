@@ -56,7 +56,8 @@ extern void set_max_degree_of_index_node(uint32_t max_degree_of_index_node);
 struct WriteMemoryPlan {
     /** Recommended rows per tablet (R*). */
     int64_t recommended_tablet_rows;
-    /** Expected number of flush calls: ceil(total_rows / recommended_tablet_rows). */
+    /** Expected number of flush calls: ceil(total_rows /
+     * recommended_tablet_rows). */
     int64_t flush_count;
     /** Estimated peak heap in bytes at the recommended tablet size. */
     int64_t peak_memory_bytes;
@@ -75,7 +76,8 @@ struct WriteMemoryPlan {
      * memory-minimising value, so the caller can see what budget is required.
      */
     bool feasible;
-    /** Minimum achievable peak memory (bytes), reached at recommended_tablet_rows. */
+    /** Minimum achievable peak memory (bytes), reached at
+     * recommended_tablet_rows. */
     int64_t min_peak_bytes;
 };
 
@@ -149,13 +151,12 @@ class TsFileWriter {
      * @return WriteMemoryPlan     Recommended tablet size, flush count, and
      *                             memory breakdown.
      */
-    static WriteMemoryPlan plan_write_memory(
-        int64_t total_rows,
-        int64_t memory_limit_bytes,
-        const TableSchema& schema,
-        int32_t n_devices_per_flush = 1,
-        bool table_mode = true,
-        int64_t m_init_bytes = 900 * 1024);
+    static WriteMemoryPlan plan_write_memory(int64_t total_rows,
+                                             int64_t memory_limit_bytes,
+                                             const TableSchema& schema,
+                                             int32_t n_devices_per_flush = 1,
+                                             bool table_mode = true,
+                                             int64_t m_init_bytes = 900 * 1024);
 
     int64_t calculate_mem_size_for_all_group();
     int check_memory_size_and_may_flush_chunks();

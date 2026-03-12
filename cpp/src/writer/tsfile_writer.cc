@@ -19,8 +19,9 @@
 
 #include "tsfile_writer.h"
 
-#include <cmath>
 #include <unistd.h>
+
+#include <cmath>
 
 #include "chunk_writer.h"
 #include "common/config/config.h"
@@ -417,7 +418,7 @@ std::shared_ptr<TableSchema> TsFileWriter::get_table_schema(
 }
 
 // ── Memory constants (bytes, from empirical profiling) ────────────────────
-static constexpr int64_t kChunkMetaBytes      = 104;
+static constexpr int64_t kChunkMetaBytes = 104;
 static constexpr int64_t kChunkGroupMetaBytes = 96;
 // Estimated in-memory width for variable-length types (string / text / blob)
 static constexpr int64_t kVarLenEstimateBytes = 16;
@@ -429,32 +430,32 @@ static constexpr int64_t kVarLenEstimateBytes = 16;
  */
 static int64_t value_memory_bytes(common::TSDataType dt) {
     switch (dt) {
-        case common::BOOLEAN:   return 1;
+        case common::BOOLEAN:
+            return 1;
         case common::INT32:
         case common::DATE:
-        case common::FLOAT:     return 4;
+        case common::FLOAT:
+            return 4;
         case common::INT64:
         case common::TIMESTAMP:
-        case common::DOUBLE:    return 8;
+        case common::DOUBLE:
+            return 8;
         case common::STRING:
         case common::TEXT:
-        case common::BLOB:      return kVarLenEstimateBytes;
-        default:                return 8;
+        case common::BLOB:
+            return kVarLenEstimateBytes;
+        default:
+            return 8;
     }
 }
 
 WriteMemoryPlan TsFileWriter::plan_write_memory(
-    int64_t total_rows,
-    int64_t memory_limit_bytes,
-    const TableSchema& schema,
-    int32_t n_devices_per_flush,
-    bool table_mode,
-    int64_t m_init_bytes) {
-
+    int64_t total_rows, int64_t memory_limit_bytes, const TableSchema& schema,
+    int32_t n_devices_per_flush, bool table_mode, int64_t m_init_bytes) {
     // ── Column value-width sum ─────────────────────────────────────────────
     const auto& data_types = schema.get_data_types();
-    int64_t n_col  = static_cast<int64_t>(data_types.size());
-    int64_t v_sum  = 0;
+    int64_t n_col = static_cast<int64_t>(data_types.size());
+    int64_t v_sum = 0;
     for (auto dt : data_types) {
         v_sum += value_memory_bytes(dt);
     }
@@ -469,9 +470,9 @@ WriteMemoryPlan TsFileWriter::plan_write_memory(
     //   tree  mode (unaligned): each series stores its own timestamp copy
     double chunk_row_bytes;
     if (table_mode) {
-        chunk_row_bytes = static_cast<double>(row_bytes);   // k_expand = 1
+        chunk_row_bytes = static_cast<double>(row_bytes);  // k_expand = 1
     } else {
-        chunk_row_bytes = n_col * (8.0 + v_avg);            // k_expand > 1
+        chunk_row_bytes = n_col * (8.0 + v_avg);  // k_expand > 1
     }
     double A = static_cast<double>(row_bytes) + chunk_row_bytes;
 
@@ -484,11 +485,11 @@ WriteMemoryPlan TsFileWriter::plan_write_memory(
     // ── Optimal R* = sqrt(total_rows × B / A) ─────────────────────────────
     // Minimises f(R) = A·R + (total_rows/R)·B
     double r_opt_f = (A > 0.0 && B > 0)
-                     ? std::sqrt(static_cast<double>(total_rows) *
-                                 static_cast<double>(B) / A)
-                     : static_cast<double>(total_rows);
+                         ? std::sqrt(static_cast<double>(total_rows) *
+                                     static_cast<double>(B) / A)
+                         : static_cast<double>(total_rows);
     int64_t r_opt = static_cast<int64_t>(std::llround(r_opt_f));
-    if (r_opt < 1)          r_opt = 1;
+    if (r_opt < 1) r_opt = 1;
     if (r_opt > total_rows) r_opt = total_rows;
 
     // Minimum possible peak (at R*)
@@ -504,17 +505,18 @@ WriteMemoryPlan TsFileWriter::plan_write_memory(
         if (feasible) {
             // Narrow R to the feasible range [R_lo, R_hi] where
             //   A·R² - M_avail·R + total_rows·B = 0
-            double m_avail     = static_cast<double>(memory_limit_bytes - m_init_bytes);
-            double discriminant = m_avail * m_avail -
-                                  4.0 * A * static_cast<double>(total_rows) *
-                                      static_cast<double>(B);
+            double m_avail =
+                static_cast<double>(memory_limit_bytes - m_init_bytes);
+            double discriminant =
+                m_avail * m_avail - 4.0 * A * static_cast<double>(total_rows) *
+                                        static_cast<double>(B);
             if (discriminant >= 0.0) {
                 double sq = std::sqrt(discriminant);
-                int64_t r_lo = static_cast<int64_t>(
-                    std::ceil((m_avail - sq) / (2.0 * A)));
+                int64_t r_lo =
+                    static_cast<int64_t>(std::ceil((m_avail - sq) / (2.0 * A)));
                 int64_t r_hi = static_cast<int64_t>(
                     std::floor((m_avail + sq) / (2.0 * A)));
-                if (r_lo < 1)          r_lo = 1;
+                if (r_lo < 1) r_lo = 1;
                 if (r_hi > total_rows) r_hi = total_rows;
                 // Clamp optimal to feasible range
                 if (r_opt < r_lo) r_opt = r_lo;
@@ -524,20 +526,21 @@ WriteMemoryPlan TsFileWriter::plan_write_memory(
     }
 
     // ── Final breakdown at chosen R ───────────────────────────────────────
-    int64_t n_flush = (total_rows + r_opt - 1) / r_opt;   // ceil division
-    int64_t m_data  = static_cast<int64_t>(std::llround(A * static_cast<double>(r_opt)));
-    int64_t m_meta  = n_flush * B;
-    int64_t peak    = m_init_bytes + m_data + m_meta;
+    int64_t n_flush = (total_rows + r_opt - 1) / r_opt;  // ceil division
+    int64_t m_data =
+        static_cast<int64_t>(std::llround(A * static_cast<double>(r_opt)));
+    int64_t m_meta = n_flush * B;
+    int64_t peak = m_init_bytes + m_data + m_meta;
 
     WriteMemoryPlan plan;
     plan.recommended_tablet_rows = r_opt;
-    plan.flush_count             = n_flush;
-    plan.peak_memory_bytes       = peak;
-    plan.data_memory_bytes       = m_data;
-    plan.meta_memory_bytes       = m_meta;
-    plan.init_memory_bytes       = m_init_bytes;
-    plan.feasible                = feasible;
-    plan.min_peak_bytes          = min_peak;
+    plan.flush_count = n_flush;
+    plan.peak_memory_bytes = peak;
+    plan.data_memory_bytes = m_data;
+    plan.meta_memory_bytes = m_meta;
+    plan.init_memory_bytes = m_init_bytes;
+    plan.feasible = feasible;
+    plan.min_peak_bytes = min_peak;
     return plan;
 }
 
