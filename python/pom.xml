@@ -53,6 +53,7 @@
                                 <argument>-m</argument>
                                 <argument>pip</argument>
                                 <argument>install</argument>
+                                <argument>--break-system-packages</argument>
                                 <argument>--upgrade</argument>
                                 <argument>pip</argument>
                             </arguments>
@@ -70,6 +71,7 @@
                                 <argument>-m</argument>
                                 <argument>pip</argument>
                                 <argument>install</argument>
+                                <argument>--break-system-packages</argument>
                                 <argument>-r</argument>
                                 <argument>${project.basedir}/requirements.txt</argument>
                             </arguments>
@@ -102,6 +104,7 @@
                                 <argument>-m</argument>
                                 <argument>pip</argument>
                                 <argument>install</argument>
+                                <argument>--break-system-packages</argument>
                                 <argument>pytest</argument>
                             </arguments>
                         </configuration>
