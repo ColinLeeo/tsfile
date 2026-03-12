@@ -2,6 +2,11 @@ name: Build TsFile wheels(multi-platform)
 
 on:
   workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to build (e.g. rc/2.2.1)"
+        required: true
+        default: "develop"
 
 jobs:
   build:
@@ -31,11 +36,12 @@ jobs:
             platform: macos
             cibw_archs_macos: "arm64"
 #          Windows is handled by the build-windows job below
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.inputs.branch }}
           submodules: false
           fetch-depth: 0
 
@@ -170,6 +176,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.inputs.branch }}
           submodules: false
           fetch-depth: 0
 
@@ -224,6 +231,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.inputs.branch }}
           submodules: false
           fetch-depth: 0
 
