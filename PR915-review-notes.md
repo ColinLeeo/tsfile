@@ -138,7 +138,12 @@ cmd11 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:34:30.271Z","b
 
 ### [P2] `write` 的类型关键字接受大小写变体
 
+<!-- tag-comment-scope-L-start mode="block" hash="sha256:bfb616cd8914b5f9ec6ef0fc81bec8e60c404df8090d23aba198e8addf2d0082" -->
 `cpp/tools/format/input_format.cc:67-69,92-128` 通过会规范化大小写的 `common::parse_data_type_name` 解析类型，因此 `--field s1 int64` 会被接受；`cpp/test/tools/input_format_test.cc` 还把小写 category/type 作为合法输入。需求 D-080 要求类型参数只接受规范大写名称。
+<!-- tag-comment-scope-L-end mode="block" -->
+<!-- tag-comment-thread-L
+cmd12 {"author":"colin","kind":"human","createdAt":"2026-08-25T06:17:22.186Z","body":"这里可以接受小写"}
+-->
 
 ### [P1] tree 模式 `stats` / `count` 没有在统计缺失或不可靠时扫描补算
 
