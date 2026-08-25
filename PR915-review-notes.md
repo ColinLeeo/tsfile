@@ -98,16 +98,8 @@ cmd30 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:06.897Z","b
 
 ### [P1] `stats` 的值统计矩阵和 NDJSON 类型不符合契约
 
-<!-- tag-comment-scope-N-start mode="block" hash="sha256:af01feb4f5978d69a4b6803f725a0f0dac2cd4f474b95643054f269592a4f034" -->
 `cpp/tools/commands/cmd_stats.cc:85-105` 把 DATE 纳入 numeric 比较，却没有从 DATE 单元读取其 int32 天数值，导致 table 模式的 DATE min/max 比较恒使用 `0`；`cmd_stats.cc:368-381,432-440` 又把动态的 min/max/first/last/sum 列统一声明为 STRING，使 NDJSON 中的数值和 BOOLEAN 被错误加引号。应按底层 Statistic 实际提供的字段直接输出，不额外扫描补算或人为屏蔽 DATE/TIMESTAMP/INT64 的统计项；DATE 使用 int32 内部值参与比较并按 DATE 词法序列化，其他统计值在 RowSchema 中保留真实数据类型。统计对象不存在时按全空处理，底层统计读取失败时整个命令失败。
 
-<!-- tag-comment-scope-N-end mode="block" -->
-<!-- tag-comment-thread-N
-cmd14 {"author":"colin","kind":"human","createdAt":"2026-08-25T06:19:54.324Z","body":"但 D-185 要求三者为 null 这里为啥会要求三者为null呢？\ndate 不应该用numeric吗？ 这里有点不懂？"}
-cmd34 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:08.963Z","body":"回复 cmd14：这里的“三者为 null”只指 `sum`，不是 min/max/first/last。DATE 可以按内部天数值做先后比较，所以 min/max 应正常计算；当前 table 扫描的问题恰好是把 DATE 纳入 numeric，却没有在 `numeric_value` 里读取 DATE，导致比较值恒为 0。DATE/TIMESTAMP 的求和缺少业务含义，INT64 求和还有溢出风险，所以 D-185 选择让三者的 `sum` 为 null；如果产品希望沿用底层 INT64 statistic 的 sum，需要重新明确溢出和 DATE/TIMESTAMP 语义。"}
-cmd53 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:58:38.122Z","body":"date 内部应该是按照int 来处理的吧。 我想的是， 这里的底层是什么统计数据我们就返回什么统计数据， 如果底层没有， 那就不返回或者返回错误。 我们不会专门去扫描所谓的统计信息的。"}
-cmd72 {"author":"codex","kind":"codex","createdAt":"2026-08-25T08:07:53.515Z","body":"回复 cmd53：是，底层 `DATE` 使用继承自 `Int32Statistic` 的 `DateStatistic`，`TIMESTAMP` 使用继承自 `Int64Statistic` 的统计对象，所以底层确实已经决定了可返回的统计字段。按你描述的口径，CLI 应只序列化 `get_statistic()` 实际提供的数据，不自行扫描补算；统计对象不存在时沿用前面确认的“全空”，底层读取失败则返回输入错误。这样还需要同步调整设计中强制扫描、固定禁用 INT64/DATE/TIMESTAMP sum 的规则。当前评审里独立存在的实现问题仍是 table 路径没有正确读取 DATE 的 int32 值，以及 NDJSON 把数值/布尔统计统一序列化成字符串。你这条是在进一步明确口径，没有直接表示认同当前正文，所以我先只回复，不改正文。"}
--->
 
 
 
