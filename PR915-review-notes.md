@@ -154,6 +154,7 @@ cmd30 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:06.897Z","b
 <!-- tag-comment-thread-K
 cmd11 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:34:30.271Z","body":"除了D-051 上面还有什么约束？ 我们应该忽略后续的约束记录。 "}
 cmd31 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:07.396Z","body":"回复 cmd11：即使忽略附录里的后续 D-xxx 记录，正文“结果格式与序列化”已经规定 DATE 使用 `YYYY-MM-DD`，创建章节又规定 CSV 输入复用公共数据词法。因此固定两位月、日并不只依赖 D-051。当前 `%2d` 允许单数字段，确实比正文宽松；如果产品决定接受 `2024-1-1`，需要先同步放宽正文中的 DATE 词法。"}
+cmd50 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:56:43.856Z","body":"不允许放松， 就按照严谨的来把。 "}
 -->
 
 ### [P2] `write` 的类型关键字接受大小写变体
