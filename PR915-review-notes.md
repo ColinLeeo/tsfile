@@ -89,7 +89,12 @@ cmd6 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:25:14.992Z","bo
 
 ### [P2] tree 模式的 `stats` / `count` 对不存在的 device 或 measurement 静默成功
 
+<!-- tag-comment-scope-G-start mode="block" hash="sha256:bcc208048fdf82e687cfe949dcdd8b8cb4e0b20defa198dea2f56b83494ad9db" -->
 `cpp/tools/commands/statistics.cc:139-181` 过滤不到元数据就返回空 rows，随后两个命令正常 finish 并返回 `0`。需求 D-181/D-182/D-189/D-190 要求请求名称完全不存在时返回 `1`。
+<!-- tag-comment-scope-G-end mode="block" -->
+<!-- tag-comment-thread-G
+cmd7 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:25:27.126Z","body":"同样需要处理。 "}
+-->
 
 ### [P1] `head` / `cat` / `export` 的对象和投影预校验不完整
 
