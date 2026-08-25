@@ -174,7 +174,12 @@ cmd15 {"author":"colin","kind":"human","createdAt":"2026-08-25T06:22:57.897Z","b
 
 ### [P1] stdout 写入和序列化失败不会转换成退出码 `3`
 
+<!-- tag-comment-scope-P-start mode="block" hash="sha256:d43050ad88f0196246df0d4438bd7005f3eb9e8e430e4fa27ebfbb4829aea27b" -->
 `cpp/tools/format/output_format.cc:293-413` 的 `RowWriter` 写入后不检查 stream 状态，`finish()` 也返回 void；`cpp/tools/format/result_set_format.cc:75-114` 最终只返回 reader 的迭代状态。因此 EPIPE、短写或其他 ostream 错误可能仍返回 `0`，也没有立即停止读取。需求 D-122 及各命令错误表要求捕获 stdout 交付失败并返回 `3`。
+<!-- tag-comment-scope-P-end mode="block" -->
+<!-- tag-comment-thread-P
+cmd16 {"author":"colin","kind":"human","createdAt":"2026-08-25T06:23:29.069Z","body":"这个确实需要修一下。"}
+-->
 
 ### [P1] `cat` / `export` 没有满足大结果流式处理边界
 
