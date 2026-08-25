@@ -183,7 +183,12 @@ cmd16 {"author":"colin","kind":"human","createdAt":"2026-08-25T06:23:29.069Z","b
 
 ### [P1] `cat` / `export` 没有满足大结果流式处理边界
 
+<!-- tag-comment-scope-Q-start mode="block" hash="sha256:29125f98f7cb68a6165e5d574e98931f85b51d36954b86be5aecf45f80532992" -->
 `cpp/tools/format/output_format.cc:312-317,370-413` 会为 table 格式缓存全部行后再排版；`cpp/tools/commands/cmd_export.cc:314-346` 对所有格式先把完整结果写入 `std::ostringstream`，再一次性写目标，多对象模式还再次扫描完整字符串计算行数。结果内存随导出数据量线性增长，违反 D-216 的流式要求。
+<!-- tag-comment-scope-Q-end mode="block" -->
+<!-- tag-comment-thread-Q
+cmd17 {"author":"colin","kind":"human","createdAt":"2026-08-25T06:24:05.844Z","body":"问题在于 tsfile 不能追加写， 所以我们必须缓存。 "}
+-->
 
 ### [P1] `write` 的结构与名称校验不完整
 
