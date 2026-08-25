@@ -98,7 +98,12 @@ cmd7 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:25:27.126Z","bo
 
 ### [P1] `head` / `cat` / `export` 的对象和投影预校验不完整
 
+<!-- tag-comment-scope-H-start mode="block" hash="sha256:8bd3b715bac1f7afab0562f515bba3f0658a26d53296157c8a09fb098f4a7443" -->
 `cpp/tools/commands/row_query.cc:165-199` 直接把 table `-m` 交给 reader，没有先验证列存在且类别为 FIELD；tree 分支在对象或 FIELD 过滤为空时于 `221-224` 返回执行失败 `3`。需求要求对象不存在、列不存在或类别不匹配在扫描前返回参数错误 `1`。
+<!-- tag-comment-scope-H-end mode="block" -->
+<!-- tag-comment-thread-H
+cmd8 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:26:54.390Z","body":"这里确实应该验证一下是否是reader的schema， 如果查询了非法的column， 会返回什么呢？ 我记得内部会直接报告notexist？内部肯定是严格的。 "}
+-->
 
 ### [P1] `meta.format_version` 使用编译期常量，不是文件实际版本
 
