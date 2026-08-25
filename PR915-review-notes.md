@@ -192,7 +192,12 @@ cmd17 {"author":"colin","kind":"human","createdAt":"2026-08-25T06:24:05.844Z","b
 
 ### [P1] `write` 的结构与名称校验不完整
 
+<!-- tag-comment-scope-R-start mode="block" hash="sha256:578b54cd49f4f53d62879b3fa0204f8749a5db21c2f873d78fd996688c91d268" -->
 `cpp/tools/cli/run_cli.cc:251-263` 只检查 `columns` 非空，所以只有 TAG、没有 FIELD 的结构也会通过；`cpp/tools/format/input_format.cc:92-128` 不限制 TAG 必须为 STRING，只按大小写敏感方式检查重复列，也不拒绝任意大小写的保留名 `time`。`cpp/tools/commands/cmd_write.cc:322-370` 虽检测表头大小写冲突，却按原字符串查找声明列，无法完成表头与 table/TAG/FIELD 的 ASCII 大小写不敏感映射。此外没有合法 UTF-8 和控制字符名称校验。上述行为违反 D-062/D-072/D-074/D-078/D-091/D-092。
+<!-- tag-comment-scope-R-end mode="block" -->
+<!-- tag-comment-thread-R
+cmd18 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:00:13.738Z","body":"我们逐个来看：\n1. 只有tag，没有field 的不能过， 这种文件对应着写入都只创建了时间序列， 没有写入数据。 \n2. 这里应该按照string来解析， 在输入的数据中似乎没办法区分是否为string，保留名按照time 全小写。 表模型里面的列名都是自动转换成小写的。 \n3. 后面的也应该修一修"}
+-->
 
 ### [P2] `write` 的严格 CSV 输入契约还有多处缺口
 
