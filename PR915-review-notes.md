@@ -89,16 +89,8 @@ cmd30 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:06.897Z","b
 
 ### [P2] `write` 的 DATE 词法不够严格
 
-<!-- tag-comment-scope-K-start mode="block" hash="sha256:74889ca5d612cf10a17be7a3ce2aeffe82ee7b028eafb956c6722eb5bad280e0" -->
 `cpp/tools/commands/cmd_write.cc:153-170` 使用 `sscanf("%4d-%2d-%2d%c")` 解析 DATE，字段宽度只表示最大宽度，因此会接受 `2024-1-1`。应先验证输入严格匹配十位 `YYYY-MM-DD` 结构，再解析并校验真实日历日期，包括闰年和各月天数；任何额外字符、缺少前导零或非法日期都应在写入前返回参数错误。
 
-<!-- tag-comment-scope-K-end mode="block" -->
-<!-- tag-comment-thread-K
-cmd11 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:34:30.271Z","body":"除了D-051 上面还有什么约束？ 我们应该忽略后续的约束记录。 "}
-cmd31 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:07.396Z","body":"回复 cmd11：即使忽略附录里的后续 D-xxx 记录，正文“结果格式与序列化”已经规定 DATE 使用 `YYYY-MM-DD`，创建章节又规定 CSV 输入复用公共数据词法。因此固定两位月、日并不只依赖 D-051。当前 `%2d` 允许单数字段，确实比正文宽松；如果产品决定接受 `2024-1-1`，需要先同步放宽正文中的 DATE 词法。"}
-cmd50 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:56:43.856Z","body":"不允许放松， 就按照严谨的来把。 "}
-cmd69 {"author":"codex","kind":"codex","createdAt":"2026-08-25T08:07:51.951Z","body":"回复 cmd50：已修复。正文已明确 DATE 词法不放宽，必须严格接受 `YYYY-MM-DD`；代码仍待修改。"}
--->
 
 <!-- tag-comment-scope-L-start mode="block" hash="sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" -->
 
