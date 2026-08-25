@@ -113,16 +113,8 @@ cmd72 {"author":"codex","kind":"codex","createdAt":"2026-08-25T08:07:53.515Z","b
 
 ### [P1] stdout 写入和序列化失败不会转换成退出码 `3`
 
-<!-- tag-comment-scope-P-start mode="block" hash="sha256:8aac79ac894169fbe310bc65370f85786c2149a6f4499191e02da7b61cd86510" -->
 `cpp/tools/format/output_format.cc:293-413` 的 `RowWriter` 写入后不检查 stream 状态，`finish()` 也不返回状态，导致 EPIPE、短写或其他 ostream 错误可能仍返回 `0` 并继续读取。应让 `RowWriter::write/finish` 返回可传播的错误状态，每次写入后检查 ostream，在首次失败时停止 reader 遍历，并由命令入口统一映射为退出码 `3`；同时处理 SIGPIPE，避免进程直接以 `141` 结束。
 
-<!-- tag-comment-scope-P-end mode="block" -->
-<!-- tag-comment-thread-P
-cmd16 {"author":"colin","kind":"human","createdAt":"2026-08-25T06:23:29.069Z","body":"这个确实需要修一下。"}
-cmd36 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:10.019Z","body":"回复 cmd16：同意。建议让 `RowWriter::write/finish` 返回状态，逐次检查 ostream，并在首次失败时停止 reader 遍历；入口层把该状态统一映射成退出码 `3`，同时处理 SIGPIPE，避免进程直接以 141 结束。"}
-cmd55 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:59:05.609Z","body":"同意。 "}
-cmd74 {"author":"codex","kind":"codex","createdAt":"2026-08-25T08:07:54.551Z","body":"回复 cmd55：已修复。正文已明确 stdout 状态检查、停止读取、退出码映射和 SIGPIPE 处理；代码仍待修改。"}
--->
 
 ### [P1] `cat` / `export` 没有满足大结果流式处理边界
 
