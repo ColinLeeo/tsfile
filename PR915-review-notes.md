@@ -165,6 +165,7 @@ cmd50 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:56:43.856Z","b
 <!-- tag-comment-thread-L
 cmd12 {"author":"colin","kind":"human","createdAt":"2026-08-25T06:17:22.186Z","body":"这里可以接受小写"}
 cmd32 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:07.896Z","body":"回复 cmd12：收到，按你确认的产品语义，类型关键字允许小写，当前实现无需因此修改，这条评审不再成立。设计正文和 D-080 中“只接受规范大写名称”的表述后续需要同步调整，避免验收口径冲突。"}
+cmd51 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:56:55.741Z","body":"同意。 "}
 -->
 
 ### [P1] tree 模式 `stats` / `count` 没有在统计缺失或不可靠时扫描补算
