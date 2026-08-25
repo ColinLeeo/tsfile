@@ -59,16 +59,8 @@ PR 快照：`origin/pr/915`，提交 `909984b24`。评审文档分支为 `doc/pr
 
 ### [P2] tree 模式的 `stats` / `count` 对不存在的 device 或 measurement 静默成功
 
-<!-- tag-comment-scope-G-start mode="block" hash="sha256:01b5b471e96413a3f280b654a46ee910426a2d5a1bced1bf25b361cf149e61b0" -->
 `cpp/tools/commands/statistics.cc:139-181` 在 tree 模式过滤不到元数据时返回空 rows，随后 `stats/count` 仍正常结束并返回 `0`。应在输出前区分“存在但没有数据的合法作用域”和“请求的 device 或 measurement 不存在”；后者返回参数错误 `1` 并指出未命中的名称，前者才输出对应的零值或空统计结果。
 
-<!-- tag-comment-scope-G-end mode="block" -->
-<!-- tag-comment-thread-G
-cmd7 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:25:27.126Z","body":"同样需要处理。 "}
-cmd27 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:05.354Z","body":"回复 cmd7：同意。tree 的 `stats/count` 也需要区分“合法空作用域”和“请求对象或 measurement 不存在”，后者应在输出前返回参数错误。"}
-cmd47 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:54:56.101Z","body":"同意。"}
-cmd66 {"author":"codex","kind":"codex","createdAt":"2026-08-25T08:07:50.305Z","body":"回复 cmd47：已修复。正文已明确 tree 模式下不存在对象或 measurement 的错误处理；代码仍待修改。"}
--->
 
 ### [P1] `head` / `cat` / `export` 的对象和投影预校验不完整
 
