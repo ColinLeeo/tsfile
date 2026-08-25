@@ -80,7 +80,12 @@ cmd5 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:18:42.621Z","bo
 
 ### [P2] `schema` 对不存在的作用域或列静默成功
 
+<!-- tag-comment-scope-F-start mode="block" hash="sha256:47e1b693a0238fd518b13e99509ef923cf770e328fcdc4b440910c8828b9ae7d" -->
 `cpp/tools/commands/cmd_schema.cc:49-89,94-157` 只在输出循环中筛选 table/device/column，不验证请求对象是否命中。`schema -t missing`、`schema -d missing` 或 `schema -m missing` 都可能只输出表头并返回 `0`。需求 D-174/D-175 要求不存在对象或列返回 `1`。
+<!-- tag-comment-scope-F-end mode="block" -->
+<!-- tag-comment-thread-F
+cmd6 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:25:14.992Z","body":"这里确实需要改一下"}
+-->
 
 ### [P2] tree 模式的 `stats` / `count` 对不存在的 device 或 measurement 静默成功
 
