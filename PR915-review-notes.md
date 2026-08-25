@@ -201,7 +201,12 @@ cmd18 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:00:13.738Z","b
 
 ### [P2] `write` 的严格 CSV 输入契约还有多处缺口
 
+<!-- tag-comment-scope-S-start mode="block" hash="sha256:9deaeb64f715082971e6ad6299b7dce9f7fe2df59af9b1ee34fe16126e96fd5a" -->
 `cpp/tools/commands/cmd_write.cc:687-691` 静默跳过空逻辑记录，违反 D-089；`cpp/tools/format/input_format.cc:131-145` 接受 `1/0` 以及任意大小写 BOOLEAN，而 D-051 要求规范小写文本；输入没有合法 UTF-8 检查，也没有移除文档允许的单个开头 UTF-8 BOM。错误位置只维护物理行累计值，没有同时报告一基逻辑记录号和多行记录范围，未满足 D-088/D-097。
+<!-- tag-comment-scope-S-end mode="block" -->
+<!-- tag-comment-thread-S
+cmd19 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:02:09.928Z","body":"这里的话：\n1. 静默跳过空逻辑记录指的是跳过行还是跳过列？\n2. 这个允许， 可以接受1/0 或者大小写的boolean， 只要他声明的是boolean类型即可。\n3. 这个合法utf8 指的是什么检查？\n4. 这个可以举一个例子吗？"}
+-->
 
 ## 已讨论但不再作为当前问题
 
