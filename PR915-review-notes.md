@@ -48,6 +48,7 @@ cmd41 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:51:42.250Z","b
 <!-- tag-comment-thread-B
 cmd2 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:11:27.346Z","body":"这里后面有这个pr：\nhttps://github.com/apache/tsfile/pull/838"}
 cmd22 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:02.773Z","body":"回复 cmd2：确认。PR 838 当前仍为 OPEN，目标正是把 Java `TsFileSketchTool` 的能力迁入 C++ `tsfile-cli sketch`，并声明了大 metadata/index 区域的已知限制。它合入或被 PR 915 依赖后，这个占位问题可由 PR 838 处理；就 PR 915 当前快照本身而言，`sketch` 仍是占位实现。"}
+cmd42 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:52:24.409Z","body":"同意，更新这里的描述，或者直接去掉。 "}
 -->
 
 ### [P1] `stats` 的 tree 模式输出结构和统计口径不完整
