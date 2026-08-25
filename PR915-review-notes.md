@@ -176,6 +176,7 @@ cmd51 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:56:55.741Z","b
 <!-- tag-comment-thread-M
 cmd13 {"author":"colin","kind":"human","createdAt":"2026-08-25T06:18:17.114Z","body":"忽略需求D-xxx， 统计信息缺失就意味着全空"}
 cmd33 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:08.407Z","body":"回复 cmd13：收到。按你确认的新语义，`get_statistic() == nullptr` 直接解释为该序列全空，不再要求扫描补算；在这个前提下，这条评审不成立。需要确保底层不会用 nullptr 同时表达“统计未加载、缺失或损坏”，否则三种状态会被误合并为全空。"}
+cmd52 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:57:08.484Z","body":"同意。 "}
 -->
 
 ### [P1] `stats` 的值统计矩阵和 NDJSON 类型不符合契约
