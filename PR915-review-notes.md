@@ -129,7 +129,12 @@ cmd10 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:32:15.935Z","b
 
 ### [P2] `write` 的 DATE 词法不够严格
 
+<!-- tag-comment-scope-K-start mode="block" hash="sha256:92b0cfb0757bd758cfd3caac516ce06cc06e307bbf18a790abcf52d97a49931c" -->
 `cpp/tools/commands/cmd_write.cc:153-170` 使用 `sscanf("%4d-%2d-%2d%c")`；字段宽度是最大宽度，不要求月、日恰好两位，因此 `2024-1-1` 可被接受。需求 D-051 要求严格 `YYYY-MM-DD`。
+<!-- tag-comment-scope-K-end mode="block" -->
+<!-- tag-comment-thread-K
+cmd11 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:34:30.271Z","body":"除了D-051 上面还有什么约束？ 我们应该忽略后续的约束记录。 "}
+-->
 
 ### [P2] `write` 的类型关键字接受大小写变体
 
