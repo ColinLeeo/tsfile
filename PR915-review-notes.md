@@ -64,16 +64,8 @@ PR 快照：`origin/pr/915`，提交 `909984b24`。评审文档分支为 `doc/pr
 
 ### [P1] `head` / `cat` / `export` 的对象和投影预校验不完整
 
-<!-- tag-comment-scope-H-start mode="block" hash="sha256:e6ba26f64aaba5a5edb10335ce4f562ae72ff6ce4fe6f4be5d98e4f1f1e3a819" -->
 table reader 对不存在的列会返回 `E_COLUMN_NOT_EXIST`，但 `cpp/tools/commands/row_query.cc` 当前把 query 的非零返回统一映射为执行失败 `3`，且 reader 不负责验证 `-m` 是否属于 FIELD。应在扫描前基于 reader schema 一次性校验对象、列存在性和 FIELD 类别，失败时返回参数错误 `1` 且 stdout 为空；tree 分支也应使用相同的预校验和退出码口径，只把真正的读取、解码或执行失败映射为 `2` 或 `3`。
 
-<!-- tag-comment-scope-H-end mode="block" -->
-<!-- tag-comment-thread-H
-cmd8 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:26:54.390Z","body":"这里确实应该验证一下是否是reader的schema， 如果查询了非法的column， 会返回什么呢？ 我记得内部会直接报告notexist？内部肯定是严格的。 "}
-cmd28 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:05.886Z","body":"回复 cmd8：底层确实是严格的。`TableQueryExecutor` 会把列名转小写，找不到时返回 `E_COLUMN_NOT_EXIST`。但当前 `run_row_query` 把所有 query 非零返回统一映射为退出码 `3`，而不是参数错误 `1`；并且 reader 只检查列存在，不会替 CLI 检查 `-m` 是否为 FIELD，TAG 列也可能被接受。因此 CLI 仍需先基于 reader schema 做存在性和类别校验。"}
-cmd48 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:55:20.823Z","body":"同意。 "}
-cmd67 {"author":"codex","kind":"codex","createdAt":"2026-08-25T08:07:50.926Z","body":"回复 cmd48：已修复。正文已补充 reader 的实际行为以及 CLI 必须承担的存在性、类别和退出码预校验；代码仍待修改。"}
--->
 
 ### [P1] `meta.format_version` 使用编译期常量，不是文件实际版本
 
