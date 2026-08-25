@@ -62,7 +62,12 @@ cmd3 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:12:00.449Z","bo
 
 ### [P1] `stats` / `count` 在多表文件上仍然强制要求 `-t`
 
+<!-- tag-comment-scope-D-start mode="block" hash="sha256:4cc41770f9bc9390c8f8fc57d33b6fb385c73f18b921a4b9231b3c2c027bfb21" -->
 `cpp/tools/commands/cmd_stats.cc:225-238` 和 `cpp/tools/commands/cmd_count.cc:85-99` 在表数量不等于 1 时直接返回参数错误；帮助文本也宣称省略作用域仅适用于单对象。需求 D-180/D-188/D-231/D-232 要求省略作用域时覆盖纯模型文件中的全部访问作用域。
+<!-- tag-comment-scope-D-end mode="block" -->
+<!-- tag-comment-thread-D
+cmd4 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:13:22.801Z","body":"我们的评审文档里面应该是都不再要求了吧。 即便是全部表或者全部tree 都能正常显示。 "}
+-->
 
 ### [P2] 表模型列名投影仍使用字面匹配
 
