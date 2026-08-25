@@ -116,7 +116,12 @@ cmd9 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:27:48.064Z","bo
 
 ### [P1] `export` / `sketch -o` 的目标保护和原子替换不成立
 
+<!-- tag-comment-scope-J-start mode="block" hash="sha256:df8c0f2d700f4afbc75a6b300095073ab0edce3d575d71bec6fa05484699096e" -->
 `cpp/tools/commands/cmd_export.cc:42-123` 使用会跟随链接的 `stat`、固定的 `<target>.tmp` 和普通 `rename`。它没有检查目标与源 TsFile 是否为同一 inode，没有拒绝符号链接/FIFO 等特殊目标，可能截断用户已有的 `.tmp` 文件；非 `--force` 的“先检查再 rename”还有竞态，目标并发出现时 Unix `rename` 会直接替换。close/flush 失败也未检查。需求 D-120/D-204/D-223 要求 same-file 保护、特殊目标拒绝和真正的 no-replace/原子提交。
+<!-- tag-comment-scope-J-end mode="block" -->
+<!-- tag-comment-thread-J
+cmd10 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:32:15.935Z","body":"这里似乎有点复杂。 "}
+-->
 
 ### [P1] `write` 不是“全部成功后再提交正式目标”的原子交付
 
