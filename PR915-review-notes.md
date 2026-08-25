@@ -35,16 +35,8 @@ PR 快照：`origin/pr/915`，提交 `909984b24`。评审文档分支为 `doc/pr
 
 ### [P1] `stats` 的 tree 模式输出结构和统计口径不完整
 
-<!-- tag-comment-scope-C-start mode="block" hash="sha256:86216ce03aee9a014fd672519599a67f7b2a7124914e95f7a776bdaf6c27a0c4" -->
 `cpp/tools/commands/cmd_stats.cc:432-457` 把 `data_type` 固定写成 null，把 `null_count` 固定写成 `0`，并直接把 series statistic 的 count 当作 `non_null_count`，因此 tree 模式无法输出真实类型和空值数量。应从 measurement schema 取得 `data_type`，以 device 的逻辑行总数为分母，用 `null_count = row_count - non_null_count` 计算空值，并为零行、全空列和不同 FIELD 时间点不一致的情况补充测试。
 
-<!-- tag-comment-scope-C-end mode="block" -->
-<!-- tag-comment-thread-C
-cmd3 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:12:00.449Z","body":"这里是留下了占位吗？"}
-cmd23 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:03.282Z","body":"回复 cmd3：是的，这里实际留下的是占位值。代码没有 TODO 标记，但 `data_type` 直接写空，`null_count` 直接写 `0`，并没有从 schema 或 device 逻辑行数计算，所以行为上就是尚未完成的占位实现。"}
-cmd43 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:52:55.082Z","body":"同意，我们后面会修改代码来实现。 "}
-cmd62 {"author":"codex","kind":"codex","createdAt":"2026-08-25T08:07:48.166Z","body":"回复 cmd43：已修复。评审正文已明确标注为待实现的占位行为；这里只更新了评审文档，代码仍按你的安排后续实现。"}
--->
 
 ### [P1] `count` 的 tree 模式统计口径不对
 
