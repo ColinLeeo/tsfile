@@ -156,7 +156,12 @@ cmd13 {"author":"colin","kind":"human","createdAt":"2026-08-25T06:18:17.114Z","b
 
 ### [P1] `stats` 的值统计矩阵和 NDJSON 类型不符合契约
 
+<!-- tag-comment-scope-N-start mode="block" hash="sha256:281030acea9e6c4b6508cb54e0388682a5ca9bbdbd4cc9b9b0e9856247c8ebd6" -->
 `cpp/tools/commands/statistics.cc:75-95` 为 tree 的 INT64/DATE/TIMESTAMP 输出了 `sum`，但 D-185 要求三者为 null；对应单测 `cpp/test/tools/statistics_test.cc:26-38` 还固化了错误预期。table 扫描中 `cpp/tools/commands/cmd_stats.cc:85-105` 把 DATE 视为 numeric，却没有读取 DATE 的数值，导致 DATE min/max 比较恒用 0。两种模式又把动态的 min/max/first/last/sum 列统一声明为 STRING（`cmd_stats.cc:368-381,432-440`），使 NDJSON 中 INT32/FLOAT/DOUBLE/BOOLEAN 值被错误加引号，违反 D-185/D-199/D-221。
+<!-- tag-comment-scope-N-end mode="block" -->
+<!-- tag-comment-thread-N
+cmd14 {"author":"colin","kind":"human","createdAt":"2026-08-25T06:19:54.324Z","body":"但 D-185 要求三者为 null 这里为啥会要求三者为null呢？\ndate 不应该用numeric吗？ 这里有点不懂？"}
+-->
 
 ### [P1] `schema` 没有展开列的实际多组物理参数
 
