@@ -54,16 +54,8 @@ PR 快照：`origin/pr/915`，提交 `909984b24`。评审文档分支为 `doc/pr
 
 ### [P2] `schema` 对不存在的作用域或列静默成功
 
-<!-- tag-comment-scope-F-start mode="block" hash="sha256:b049574cc0b296fabf2eac41fa1e108e4fa5afd9f5cb44d30e07e20f99653398" -->
 `cpp/tools/commands/cmd_schema.cc:49-89,94-157` 只在输出循环中筛选 table/device/column，没有验证请求是否命中，导致 `schema -t missing`、`schema -d missing` 或 `schema -m missing` 可能只输出表头并返回 `0`。应在创建 writer 和输出表头前验证 table/device 存在，并确认每个显式 `-m` 至少命中一个合法列；任一请求未命中时向 stderr 报告具体对象或列并返回 `1`，stdout 保持为空。
 
-<!-- tag-comment-scope-F-end mode="block" -->
-<!-- tag-comment-thread-F
-cmd6 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:25:14.992Z","body":"这里确实需要改一下"}
-cmd26 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:04.837Z","body":"回复 cmd6：同意。这里需要在输出前分别确认请求的 table/device 存在，并确认每个 `-m` 至少命中一个合法列；未命中时返回参数错误，而不是空表头加成功状态。"}
-cmd46 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:54:46.014Z","body":"同意。"}
-cmd65 {"author":"codex","kind":"codex","createdAt":"2026-08-25T08:07:49.782Z","body":"回复 cmd46：已修复。正文已明确补充对象和列的预校验要求；代码仍待修改。"}
--->
 
 ### [P2] tree 模式的 `stats` / `count` 对不存在的 device 或 measurement 静默成功
 
