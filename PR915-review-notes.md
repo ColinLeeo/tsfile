@@ -214,9 +214,14 @@ cmd19 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:02:09.928Z","b
 
 先前按文档原文提出过，但你明确说明产品意图是“有表优先，否则按树”，因为 table 是 tree 上的增量配置。后续以这个产品语义为准，不再作为实现缺陷记录。
 
+<!-- tag-comment-scope-T-start mode="block" hash="sha256:4086e667d25786e82175e8cb8162bf1fd478effb4269420f98f074bd94124321" -->
 ### `head` / `cat` 在树模型多 device 文件上默认扫全文件
 
 早先版本存在该问题；当前快照的 `cpp/tools/commands/row_query.cc` 已经在多 device 且未指定 `-d` 时返回 usage error。
+<!-- tag-comment-scope-T-end mode="block" -->
+<!-- tag-comment-thread-T
+cmd20 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:03:25.048Z","body":"我们的设计文档似乎没有禁止这件事情。"}
+-->
 
 ### `export` 混用 `-d` 和 `-t` 未被拒绝
 
