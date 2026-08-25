@@ -118,6 +118,7 @@ cmd47 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:54:56.101Z","b
 <!-- tag-comment-thread-H
 cmd8 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:26:54.390Z","body":"这里确实应该验证一下是否是reader的schema， 如果查询了非法的column， 会返回什么呢？ 我记得内部会直接报告notexist？内部肯定是严格的。 "}
 cmd28 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:05.886Z","body":"回复 cmd8：底层确实是严格的。`TableQueryExecutor` 会把列名转小写，找不到时返回 `E_COLUMN_NOT_EXIST`。但当前 `run_row_query` 把所有 query 非零返回统一映射为退出码 `3`，而不是参数错误 `1`；并且 reader 只检查列存在，不会替 CLI 检查 `-m` 是否为 FIELD，TAG 列也可能被接受。因此 CLI 仍需先基于 reader schema 做存在性和类别校验。"}
+cmd48 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:55:20.823Z","body":"同意。 "}
 -->
 
 ### [P1] `meta.format_version` 使用编译期常量，不是文件实际版本
