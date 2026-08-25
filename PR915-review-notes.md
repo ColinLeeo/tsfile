@@ -25,9 +25,14 @@ PR 快照：`origin/pr/915`，提交 `909984b24`。评审文档分支为 `doc/pr
 
 ## 当前仍成立的问题
 
+<!-- tag-comment-scope-A-start mode="block" hash="sha256:cb3ba39ba1ee024f2eac5efe41509437c44cabc4d10c25e108f461495546f43e" -->
 ### [P1] `head` / `cat` / `export` 的 `offset` 越界没有返回参数错误
 
 `cpp/tools/format/result_set_format.cc:75-114` 只是在结果集遍历时跳过 `offset` 行；匹配行数小于 `offset` 时仍输出空结果并返回成功。无时间过滤时 `cpp/tools/commands/row_query.cc:191-198` 还会把窗口直接下推给 reader，同样没有区分“小于 offset”和“恰好等于 offset”。需求 D-247 要求前者返回 `1`、stdout 为空，且 `export` 不提交目标。
+<!-- tag-comment-scope-A-end mode="block" -->
+<!-- tag-comment-thread-A
+cmd1 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:08:07.562Z","body":"这里应该有几个问题：\n1. offset 应该下推到reader，无论多少都需要吧？\n2. 即便offset 比较大，操作上也是合法的， 只不过超过一定offset之后数据肯定不存在了。 \n3. 而且用户其实也不知道offset 究竟应该多大。 "}
+-->
 
 ### [P1] 多对象 `export` 的失败清理不完整
 
