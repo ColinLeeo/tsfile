@@ -85,6 +85,7 @@ cmd44 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:53:57.828Z","b
 <!-- tag-comment-thread-E
 cmd5 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:18:42.621Z","body":"这里是否转换都无所谓， 底层的reader 会转换， 除非他在上层再次处理才会有问题。 "}
 cmd25 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:04.306Z","body":"回复 cmd5：reader 查询路径确实会把表列名转成小写，所以 `head/cat` 直接交给 reader 的列名不受影响。但这里列出的 `schema/stats/count` 都在 reader 查询前用 `std::find`、`set` 等按原字符串自行筛选和校验，因此会在上层把 `S1` 当成不存在。问题只成立于这些上层再次处理的路径。"}
+cmd45 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:54:17.259Z","body":"同意。 "}
 -->
 
 ### [P2] `schema` 对不存在的作用域或列静默成功
