@@ -220,6 +220,7 @@ cmd55 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:59:05.609Z","b
 <!-- tag-comment-thread-Q
 cmd17 {"author":"colin","kind":"human","createdAt":"2026-08-25T06:24:05.844Z","body":"问题在于 tsfile 不能追加写， 所以我们必须缓存。 "}
 cmd37 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:10.513Z","body":"回复 cmd17：这里缓存的是导出的 CSV/NDJSON/可读文本，不是继续写 TsFile，所以不受 TsFile 不能追加写的限制。可以把 ResultSet 逐行写到同目录临时输出文件，全部成功后原子 rename；行数也可边写边计数。table 可读格式为了计算列宽可能需要额外 spool 或两遍处理，但不应让 CSV/NDJSON 也整体进入内存。因此这条问题对 `export` 仍成立。"}
+cmd56 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:59:22.725Z","body":"同意。 "}
 -->
 
 ### [P1] `write` 的结构与名称校验不完整
