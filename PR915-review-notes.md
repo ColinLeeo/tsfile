@@ -129,6 +129,7 @@ cmd48 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:55:20.823Z","b
 <!-- tag-comment-thread-I
 cmd9 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:27:48.064Z","body":"这部分版本应该是获取外部的tsfile 版本， 现在tsfile 版本应该是又mvn给定的 ，这里仿照对应的逻辑即可。 "}
 cmd29 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:06.390Z","body":"回复 cmd9：这里需要区分两种版本。`\u002d\u002dversion` 中的 `tsfile=\u003ctsfile-version>` 是 Maven/CMake 注入的绑定库版本；`meta.format_version` 是输入 TsFile 文件头中的格式版本字节。当前 reader 没有公开该值的 accessor，所以不能直接照搬 Maven 版本，需要从 reader/file metadata 暴露已读取的文件格式版本；否则会把“库版本”和“文件版本”混为一项。"}
+cmd49 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:56:12.726Z","body":"你说的是文件格式里面的版本吗？ 这个文件版本似乎没啥用，我记得只有tsfile-cli 有一个version以及他会访问tsfile代码的版本"}
 -->
 
 ### [P1] `export` / `sketch -o` 的目标保护和原子替换不成立
