@@ -165,7 +165,12 @@ cmd14 {"author":"colin","kind":"human","createdAt":"2026-08-25T06:19:54.324Z","b
 
 ### [P1] `schema` 没有展开列的实际多组物理参数
 
+<!-- tag-comment-scope-O-start mode="block" hash="sha256:d7363856ba19b5dfb7936757c9be5f4f1c1512bc109f94a8624c5715295c2df6" -->
 `cpp/tools/commands/cmd_schema.cc:49-89,118-153` 每个列最多输出一行，只取 table/measurement schema 上的一组 encoding/compression；没有遍历文件中的 Chunk 并按首次出现顺序去重。因此同一列存在多组物理组合时结果会丢失信息，违反 D-172；相关测试也只覆盖单一组合。
+<!-- tag-comment-scope-O-end mode="block" -->
+<!-- tag-comment-thread-O
+cmd15 {"author":"colin","kind":"human","createdAt":"2026-08-25T06:22:57.897Z","body":"这里不用处理， 我们就只能汇报在schema 里面的类型， 毕竟我们可以按照chunk 进行数据编码压缩。 "}
+-->
 
 ### [P1] stdout 写入和序列化失败不会转换成退出码 `3`
 
