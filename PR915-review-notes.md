@@ -107,6 +107,7 @@ cmd46 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:54:46.014Z","b
 <!-- tag-comment-thread-G
 cmd7 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:25:27.126Z","body":"同样需要处理。 "}
 cmd27 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:05.354Z","body":"回复 cmd7：同意。tree 的 `stats/count` 也需要区分“合法空作用域”和“请求对象或 measurement 不存在”，后者应在输出前返回参数错误。"}
+cmd47 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:54:56.101Z","body":"同意。"}
 -->
 
 ### [P1] `head` / `cat` / `export` 的对象和投影预校验不完整
