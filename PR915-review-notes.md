@@ -109,15 +109,7 @@ cmd53 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:58:38.122Z","b
 cmd72 {"author":"codex","kind":"codex","createdAt":"2026-08-25T08:07:53.515Z","body":"回复 cmd53：是，底层 `DATE` 使用继承自 `Int32Statistic` 的 `DateStatistic`，`TIMESTAMP` 使用继承自 `Int64Statistic` 的统计对象，所以底层确实已经决定了可返回的统计字段。按你描述的口径，CLI 应只序列化 `get_statistic()` 实际提供的数据，不自行扫描补算；统计对象不存在时沿用前面确认的“全空”，底层读取失败则返回输入错误。这样还需要同步调整设计中强制扫描、固定禁用 INT64/DATE/TIMESTAMP sum 的规则。当前评审里独立存在的实现问题仍是 table 路径没有正确读取 DATE 的 int32 值，以及 NDJSON 把数值/布尔统计统一序列化成字符串。你这条是在进一步明确口径，没有直接表示认同当前正文，所以我先只回复，不改正文。"}
 -->
 
-<!-- tag-comment-scope-O-start mode="block" hash="sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" -->
 
-<!-- tag-comment-scope-O-end mode="block" -->
-<!-- tag-comment-thread-O
-cmd15 {"author":"colin","kind":"human","createdAt":"2026-08-25T06:22:57.897Z","body":"这里不用处理， 我们就只能汇报在schema 里面的类型， 毕竟我们可以按照chunk 进行数据编码压缩。 "}
-cmd35 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:09.504Z","body":"回复 cmd15：收到。按你的产品定义，`schema` 只汇报 schema 层声明的 encoding/compression，不展开各 Chunk 的实际组合；Chunk 级物理信息交给 `sketch`。据此这条评审不再成立，设计里的 D-172/D-218 后续需要改为 schema 层口径。"}
-cmd54 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:58:53.003Z","body":"同意"}
-cmd73 {"author":"codex","kind":"codex","createdAt":"2026-08-25T08:07:54.033Z","body":"回复 cmd54：已修复。正文已撤销该实现问题，明确 `schema` 只报告 schema 层配置，Chunk 级信息交给 `sketch`。"}
--->
 
 ### [P1] stdout 写入和序列化失败不会转换成退出码 `3`
 
