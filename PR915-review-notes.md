@@ -44,16 +44,8 @@ PR 快照：`origin/pr/915`，提交 `909984b24`。评审文档分支为 `doc/pr
 
 ### [P1] `stats` / `count` 在多表文件上仍然强制要求 `-t`
 
-<!-- tag-comment-scope-D-start mode="block" hash="sha256:521f3f12f4ea416cfe26310c81d24cbb78d77056748f18e6d70a8d9376b3198f" -->
 `cpp/tools/commands/cmd_stats.cc:225-238` 和 `cpp/tools/commands/cmd_count.cc:85-99` 在表数量不等于 1 时直接返回参数错误，帮助文本也把省略作用域限制为单对象。应在未指定 `-t` 或 `-d` 时遍历文件中的全部 table 或全部 tree device，按 `ls` 的对象顺序分别输出统计结果；显式指定作用域时仍只处理该对象。
 
-<!-- tag-comment-scope-D-end mode="block" -->
-<!-- tag-comment-thread-D
-cmd4 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:13:22.801Z","body":"我们的评审文档里面应该是都不再要求了吧。 即便是全部表或者全部tree 都能正常显示。 "}
-cmd24 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:03.801Z","body":"回复 cmd4：是的，当前设计是不指定作用域时也要覆盖全部 table 或全部 tree device。这里的评审指出的正是实现仍在多表时强制 `-t`，所以这条问题成立；不是要求用户重新显式选择，而是要求实现支持全部作用域输出。"}
-cmd44 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:53:57.828Z","body":"同意"}
-cmd63 {"author":"codex","kind":"codex","createdAt":"2026-08-25T08:07:48.721Z","body":"回复 cmd44：已修复。正文已明确未指定作用域时应处理全部 table 或全部 tree device；代码仍待修改。"}
--->
 
 ### [P2] 表模型列名投影仍使用字面匹配
 
