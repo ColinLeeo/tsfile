@@ -49,7 +49,12 @@ cmd2 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:11:27.346Z","bo
 
 ### [P1] `stats` 的 tree 模式输出结构和统计口径不完整
 
+<!-- tag-comment-scope-C-start mode="block" hash="sha256:518b2a08f95afae2f1e5e5d54e0fc36da5e38e5bc5844e5abe1202ba0eb7a43a" -->
 `cpp/tools/commands/cmd_stats.cc:432-457` 把 `data_type` 固定写成 null，把 `null_count` 固定写成 `0`，并直接把 series statistic 的 count 当作 `non_null_count`。需求 D-178/D-194/D-222 要求真实类型，并以 device 逻辑行总数为分母计算空值。
+<!-- tag-comment-scope-C-end mode="block" -->
+<!-- tag-comment-thread-C
+cmd3 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:12:00.449Z","body":"这里是留下了占位吗？"}
+-->
 
 ### [P1] `count` 的 tree 模式统计口径不对
 
