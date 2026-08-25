@@ -49,16 +49,8 @@ PR 快照：`origin/pr/915`，提交 `909984b24`。评审文档分支为 `doc/pr
 
 ### [P2] 表模型列名投影仍使用字面匹配
 
-<!-- tag-comment-scope-E-start mode="block" hash="sha256:00a5664635fab67c0ee7fe43ac3e07215f2d57790deb2034c5a072300c0ef327" -->
 `cpp/tools/commands/cmd_schema.cc:68-72`、`cpp/tools/commands/cmd_stats.cc:219-222,274-285` 和 `cpp/tools/commands/cmd_count.cc:125-135` 在 reader 查询前按原字符串比较 `-m`，因此不会受 reader 的小写规范化保护，`S1` 可能在上层被判定为不存在。应对 table 模型的 TAG/FIELD 名执行 ASCII 小写规范化后匹配，并映射回 schema 中的规范名称用于输出；tree 模型继续按其既有名称规则处理。
 
-<!-- tag-comment-scope-E-end mode="block" -->
-<!-- tag-comment-thread-E
-cmd5 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:18:42.621Z","body":"这里是否转换都无所谓， 底层的reader 会转换， 除非他在上层再次处理才会有问题。 "}
-cmd25 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:04.306Z","body":"回复 cmd5：reader 查询路径确实会把表列名转成小写，所以 `head/cat` 直接交给 reader 的列名不受影响。但这里列出的 `schema/stats/count` 都在 reader 查询前用 `std::find`、`set` 等按原字符串自行筛选和校验，因此会在上层把 `S1` 当成不存在。问题只成立于这些上层再次处理的路径。"}
-cmd45 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:54:17.259Z","body":"同意。 "}
-cmd64 {"author":"codex","kind":"codex","createdAt":"2026-08-25T08:07:49.245Z","body":"回复 cmd45：已修复。正文已把范围收窄到 `schema/stats/count` 的上层筛选路径，并保留对应代码修改项。"}
--->
 
 ### [P2] `schema` 对不存在的作用域或列静默成功
 
