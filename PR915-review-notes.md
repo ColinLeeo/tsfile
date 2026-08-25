@@ -231,6 +231,7 @@ cmd56 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:59:22.725Z","b
 <!-- tag-comment-thread-R
 cmd18 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:00:13.738Z","body":"我们逐个来看：\n1. 只有tag，没有field 的不能过， 这种文件对应着写入都只创建了时间序列， 没有写入数据。 \n2. 这里应该按照string来解析， 在输入的数据中似乎没办法区分是否为string，保留名按照time 全小写。 表模型里面的列名都是自动转换成小写的。 \n3. 后面的也应该修一修"}
 cmd38 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:11.002Z","body":"回复 cmd18：逐项确认：第一，只有 TAG 没有 FIELD 必须在读 CSV 前拒绝；第二，`\u002d\u002dtag` 声明的类型参数应要求 STRING，CSV 单元格按字符串词法解析即可，不需要从数据推断，名称先规范成小写后再检查 `time` 和跨类别重复；第三，UTF-8/控制字符、大小写冲突和表头映射等剩余校验也需要补齐。因此这条评审保留，但实现时可以按这三个子项拆分测试。"}
+cmd57 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:59:45.966Z","body":"同意。 "}
 -->
 
 ### [P2] `write` 的严格 CSV 输入契约还有多处缺口
