@@ -69,16 +69,8 @@ table reader 对不存在的列会返回 `E_COLUMN_NOT_EXIST`，但 `cpp/tools/c
 
 ### [P1] `meta.format_version` 使用编译期常量，不是文件实际版本
 
-<!-- tag-comment-scope-I-start mode="block" hash="sha256:21de63274b7c93c162baeb6277f08085602f6d3dcce3475fd8aa2793e5484177" -->
 `cpp/tools/commands/cmd_meta.cc:30-40` 输出 `storage::VERSION_NUM_BYTE`，这是当前绑定库的格式常量，不是输入 TsFile 文件头中的实际格式版本，因此不同版本文件可能得到相同结果。按当前 `meta` 契约，应由 reader 暴露打开文件时读取并校验过的版本字节，`meta.format_version` 输出该值；版本不支持或文件头矛盾时返回 `2`。顶层 `--version` 仍单独输出 Maven/CMake 注入的 CLI 和绑定 TsFile 代码版本，不能与文件格式版本混用。
 
-<!-- tag-comment-scope-I-end mode="block" -->
-<!-- tag-comment-thread-I
-cmd9 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:27:48.064Z","body":"这部分版本应该是获取外部的tsfile 版本， 现在tsfile 版本应该是又mvn给定的 ，这里仿照对应的逻辑即可。 "}
-cmd29 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:06.390Z","body":"回复 cmd9：这里需要区分两种版本。`\u002d\u002dversion` 中的 `tsfile=\u003ctsfile-version>` 是 Maven/CMake 注入的绑定库版本；`meta.format_version` 是输入 TsFile 文件头中的格式版本字节。当前 reader 没有公开该值的 accessor，所以不能直接照搬 Maven 版本，需要从 reader/file metadata 暴露已读取的文件格式版本；否则会把“库版本”和“文件版本”混为一项。"}
-cmd49 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:56:12.726Z","body":"你说的是文件格式里面的版本吗？ 这个文件版本似乎没啥用，我记得只有tsfile-cli 有一个version以及他会访问tsfile代码的版本"}
-cmd68 {"author":"codex","kind":"codex","createdAt":"2026-08-25T08:07:51.439Z","body":"回复 cmd49：是，我说的是 TsFile 文件头中的格式版本。当前需求实际上定义了两套版本信息：顶层 `\u002d\u002dversion` 输出 Maven/CMake 注入的 CLI 和绑定 TsFile 代码版本；`meta` 又固定包含输入文件的 `format_version`，示例值为 `4`。如果确认文件格式版本没有产品价值，应从 `meta` 字段、示例和错误契约中移除，届时这条评审可以撤销；在这个产品变更被明确确认前，我先只回复，不改正文。"}
--->
 
 ### [P1] `export` / `sketch -o` 的目标保护和原子替换不成立
 
