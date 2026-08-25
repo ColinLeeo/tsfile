@@ -92,15 +92,7 @@ cmd30 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:06.897Z","b
 `cpp/tools/commands/cmd_write.cc:153-170` 使用 `sscanf("%4d-%2d-%2d%c")` 解析 DATE，字段宽度只表示最大宽度，因此会接受 `2024-1-1`。应先验证输入严格匹配十位 `YYYY-MM-DD` 结构，再解析并校验真实日历日期，包括闰年和各月天数；任何额外字符、缺少前导零或非法日期都应在写入前返回参数错误。
 
 
-<!-- tag-comment-scope-L-start mode="block" hash="sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" -->
 
-<!-- tag-comment-scope-L-end mode="block" -->
-<!-- tag-comment-thread-L
-cmd12 {"author":"colin","kind":"human","createdAt":"2026-08-25T06:17:22.186Z","body":"这里可以接受小写"}
-cmd32 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:07.896Z","body":"回复 cmd12：收到，按你确认的产品语义，类型关键字允许小写，当前实现无需因此修改，这条评审不再成立。设计正文和 D-080 中“只接受规范大写名称”的表述后续需要同步调整，避免验收口径冲突。"}
-cmd51 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:56:55.741Z","body":"同意。 "}
-cmd70 {"author":"codex","kind":"codex","createdAt":"2026-08-25T08:07:52.480Z","body":"回复 cmd51：已修复。正文已撤销该实现问题，并记录类型关键字允许小写；代码无需修改，需求文档口径仍需后续同步。"}
--->
 
 <!-- tag-comment-scope-M-start mode="block" hash="sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" -->
 
