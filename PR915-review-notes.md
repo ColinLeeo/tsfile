@@ -107,7 +107,12 @@ cmd8 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:26:54.390Z","bo
 
 ### [P1] `meta.format_version` 使用编译期常量，不是文件实际版本
 
+<!-- tag-comment-scope-I-start mode="block" hash="sha256:1ccff6064abc93ec348d76f3852732b86e3d1fd11eda48b10b7d3e30ecfabbbb" -->
 `cpp/tools/commands/cmd_meta.cc:30-40` 输出 `storage::VERSION_NUM_BYTE`，这是当前绑定库的格式常量，不是当前输入文件读取到的版本。需求 D-177/D-226 要求返回文件实际版本，并在版本信息无法识别或矛盾时返回 `2`。
+<!-- tag-comment-scope-I-end mode="block" -->
+<!-- tag-comment-thread-I
+cmd9 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:27:48.064Z","body":"这部分版本应该是获取外部的tsfile 版本， 现在tsfile 版本应该是又mvn给定的 ，这里仿照对应的逻辑即可。 "}
+-->
 
 ### [P1] `export` / `sketch -o` 的目标保护和原子替换不成立
 
