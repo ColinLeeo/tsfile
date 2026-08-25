@@ -71,7 +71,12 @@ cmd4 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:13:22.801Z","bo
 
 ### [P2] 表模型列名投影仍使用字面匹配
 
+<!-- tag-comment-scope-E-start mode="block" hash="sha256:9fe049394c38dcc389e36b7494a61f4da937d0990d5bd1e6a8de34e83b63cd48" -->
 `cpp/tools/commands/cmd_schema.cc:68-72`、`cpp/tools/commands/cmd_stats.cc:219-222,274-285`、`cpp/tools/commands/cmd_count.cc:125-135` 都用原始字符串比较 `-m`。table 名虽然被转为小写，TAG/FIELD 名没有按 ASCII 大小写不敏感规则解析并映射回 schema 规范名称，违反 D-031。
+<!-- tag-comment-scope-E-end mode="block" -->
+<!-- tag-comment-thread-E
+cmd5 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:18:42.621Z","body":"这里是否转换都无所谓， 底层的reader 会转换， 除非他在上层再次处理才会有问题。 "}
+-->
 
 ### [P2] `schema` 对不存在的作用域或列静默成功
 
