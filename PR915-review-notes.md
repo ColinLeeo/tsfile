@@ -59,6 +59,7 @@ cmd42 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:52:24.409Z","b
 <!-- tag-comment-thread-C
 cmd3 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:12:00.449Z","body":"这里是留下了占位吗？"}
 cmd23 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:03.282Z","body":"回复 cmd3：是的，这里实际留下的是占位值。代码没有 TODO 标记，但 `data_type` 直接写空，`null_count` 直接写 `0`，并没有从 schema 或 device 逻辑行数计算，所以行为上就是尚未完成的占位实现。"}
+cmd43 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:52:55.082Z","body":"同意，我们后面会修改代码来实现。 "}
 -->
 
 ### [P1] `count` 的 tree 模式统计口径不对
