@@ -242,6 +242,7 @@ cmd57 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:59:45.966Z","b
 <!-- tag-comment-thread-S
 cmd19 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:02:09.928Z","body":"这里的话：\n1. 静默跳过空逻辑记录指的是跳过行还是跳过列？\n2. 这个允许， 可以接受1/0 或者大小写的boolean， 只要他声明的是boolean类型即可。\n3. 这个合法utf8 指的是什么检查？\n4. 这个可以举一个例子吗？"}
 cmd39 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:11.478Z","body":"回复 cmd19：第一，静默跳过的是整条空逻辑记录，也就是空行，代码命中 `if (line.empty()) continue`，不是跳过列。第二，收到，BOOLEAN 按你确认的语义允许 `1/0` 和大小写变体，这个子项不再是问题。第三，合法 UTF-8 检查是验证输入字节序列能否解码，例如字节 `C3 28` 不是合法 UTF-8；开头的 `EF BB BF` 则是允许且应移除的 BOM。第四，位置例子：第二条逻辑记录是一个跨物理第 2-3 行的带引号字段，若第 4 列 `temp` 非法，期望诊断类似“logical record 2, physical lines 2-3, column temp (4)”，当前只会报告累计到的物理行 3。"}
+cmd58 {"author":"colin","kind":"human","createdAt":"2026-08-25T08:01:53.341Z","body":"第一个可以跳过。 \n第二个同意。\n第三个也行。\n第四个这个会复杂一些吧，如果能实现当然也很好。 "}
 -->
 
 ## 已讨论但不再作为当前问题
