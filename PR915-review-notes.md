@@ -38,9 +38,14 @@ cmd1 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:08:07.562Z","bo
 
 `cpp/tools/commands/cmd_export.cc:298-333` 先提交编号文件，再更新 `_manifest.json`。编号文件成功但 Manifest 更新失败时直接返回，没有删除未记录编号文件，也没有在清理失败时报告路径。需求 D-240/D-249 要求正常失败清理未记录文件，清理失败返回 `3`。
 
+<!-- tag-comment-scope-B-start mode="block" hash="sha256:a7eeeb36b06ffa5bdac8fe3c66731f1d5ddb202867be13d0cef3e91190d32713" -->
 ### [P1] `sketch` 仍是占位实现
 
 `cpp/tools/commands/cmd_export.cc:349-363` 只输出硬编码边框、文件路径和模型，没有调用绑定版本的 `printSketch`，不包含 Page/Chunk/ChunkGroup 等物理结构。需求 D-136/D-204 要求内容、层级、顺序和文本格式原样遵循 `printSketch`。
+<!-- tag-comment-scope-B-end mode="block" -->
+<!-- tag-comment-thread-B
+cmd2 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:11:27.346Z","body":"这里后面有这个pr：\nhttps://github.com/apache/tsfile/pull/838"}
+-->
 
 ### [P1] `stats` 的 tree 模式输出结构和统计口径不完整
 
