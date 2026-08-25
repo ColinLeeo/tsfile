@@ -187,6 +187,7 @@ cmd52 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:57:08.484Z","b
 <!-- tag-comment-thread-N
 cmd14 {"author":"colin","kind":"human","createdAt":"2026-08-25T06:19:54.324Z","body":"但 D-185 要求三者为 null 这里为啥会要求三者为null呢？\ndate 不应该用numeric吗？ 这里有点不懂？"}
 cmd34 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:08.963Z","body":"回复 cmd14：这里的“三者为 null”只指 `sum`，不是 min/max/first/last。DATE 可以按内部天数值做先后比较，所以 min/max 应正常计算；当前 table 扫描的问题恰好是把 DATE 纳入 numeric，却没有在 `numeric_value` 里读取 DATE，导致比较值恒为 0。DATE/TIMESTAMP 的求和缺少业务含义，INT64 求和还有溢出风险，所以 D-185 选择让三者的 `sum` 为 null；如果产品希望沿用底层 INT64 statistic 的 sum，需要重新明确溢出和 DATE/TIMESTAMP 语义。"}
+cmd53 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:58:38.122Z","body":"date 内部应该是按照int 来处理的吧。 我想的是， 这里的底层是什么统计数据我们就返回什么统计数据， 如果底层没有， 那就不返回或者返回错误。 我们不会专门去扫描所谓的统计信息的。"}
 -->
 
 ### [P1] `schema` 没有展开列的实际多组物理参数
