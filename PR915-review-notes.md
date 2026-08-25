@@ -147,7 +147,12 @@ cmd12 {"author":"colin","kind":"human","createdAt":"2026-08-25T06:17:22.186Z","b
 
 ### [P1] tree 模式 `stats` / `count` 没有在统计缺失或不可靠时扫描补算
 
+<!-- tag-comment-scope-M-start mode="block" hash="sha256:1084d83a39a27b8f40dec46fd77533271da2a987c74f4dc7900f35930b3acdc7" -->
 `cpp/tools/commands/statistics.cc:165-177` 在 `get_statistic()` 返回 null 时只构造全空值行；现有 statistic 也未经可靠性判断直接使用。`cmd_stats` 随后把有 count 的行标为 `statistics`，`cmd_count` 同样没有 scan 路径。需求 D-178/D-183/D-184/D-198 要求缺失或不可靠时扫描完整作用域，失败则整个命令失败。
+<!-- tag-comment-scope-M-end mode="block" -->
+<!-- tag-comment-thread-M
+cmd13 {"author":"colin","kind":"human","createdAt":"2026-08-25T06:18:17.114Z","body":"忽略需求D-xxx， 统计信息缺失就意味着全空"}
+-->
 
 ### [P1] `stats` 的值统计矩阵和 NDJSON 类型不符合契约
 
