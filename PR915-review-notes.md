@@ -209,6 +209,7 @@ cmd54 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:58:53.003Z","b
 <!-- tag-comment-thread-P
 cmd16 {"author":"colin","kind":"human","createdAt":"2026-08-25T06:23:29.069Z","body":"这个确实需要修一下。"}
 cmd36 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:10.019Z","body":"回复 cmd16：同意。建议让 `RowWriter::write/finish` 返回状态，逐次检查 ostream，并在首次失败时停止 reader 遍历；入口层把该状态统一映射成退出码 `3`，同时处理 SIGPIPE，避免进程直接以 141 结束。"}
+cmd55 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:59:05.609Z","body":"同意。 "}
 -->
 
 ### [P1] `cat` / `export` 没有满足大结果流式处理边界
