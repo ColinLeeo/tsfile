@@ -96,6 +96,7 @@ cmd45 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:54:17.259Z","b
 <!-- tag-comment-thread-F
 cmd6 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:25:14.992Z","body":"这里确实需要改一下"}
 cmd26 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:04.837Z","body":"回复 cmd6：同意。这里需要在输出前分别确认请求的 table/device 存在，并确认每个 `-m` 至少命中一个合法列；未命中时返回参数错误，而不是空表头加成功状态。"}
+cmd46 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:54:46.014Z","body":"同意。"}
 -->
 
 ### [P2] tree 模式的 `stats` / `count` 对不存在的 device 或 measurement 静默成功
