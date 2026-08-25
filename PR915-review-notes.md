@@ -74,6 +74,7 @@ cmd43 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:52:55.082Z","b
 <!-- tag-comment-thread-D
 cmd4 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:13:22.801Z","body":"我们的评审文档里面应该是都不再要求了吧。 即便是全部表或者全部tree 都能正常显示。 "}
 cmd24 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:03.801Z","body":"回复 cmd4：是的，当前设计是不指定作用域时也要覆盖全部 table 或全部 tree device。这里的评审指出的正是实现仍在多表时强制 `-t`，所以这条问题成立；不是要求用户重新显式选择，而是要求实现支持全部作用域输出。"}
+cmd44 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:53:57.828Z","body":"同意"}
 -->
 
 ### [P2] 表模型列名投影仍使用字面匹配
