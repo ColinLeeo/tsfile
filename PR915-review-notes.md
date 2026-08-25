@@ -74,14 +74,8 @@ table reader 对不存在的列会返回 `E_COLUMN_NOT_EXIST`，但 `cpp/tools/c
 
 ### [P1] `export` / `sketch -o` 的目标保护和原子替换不成立
 
-<!-- tag-comment-scope-J-start mode="block" hash="sha256:074cc419072ff54ab82a4b67897a63b97c58f5e423319386664a23d0cc31e9df" -->
 `cpp/tools/commands/cmd_export.cc:42-123` 使用会跟随链接的 `stat`、固定的 `<target>.tmp` 和普通 `rename`，没有检查源与目标是否为同一 inode，也没有拒绝符号链接、FIFO 等特殊目标；非 `--force` 的先检查再 rename 还存在并发覆盖竞态，flush/close 失败也未处理。应抽取统一的原子输出 helper：使用 `lstat` 校验目标类型和 same-file，创建同目录且唯一的私有临时文件，检查 write/flush/close，最后使用真正的 no-replace 提交；`--force` 只允许原子替换普通文件，失败时清理并报告残留临时路径。
 
-<!-- tag-comment-scope-J-end mode="block" -->
-<!-- tag-comment-thread-J
-cmd10 {"author":"colin","kind":"human","createdAt":"2026-08-25T04:32:15.935Z","body":"这里似乎有点复杂。 "}
-cmd30 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:06.897Z","body":"回复 cmd10：确实涉及三层，但可以拆开实现：先用 `lstat` 拒绝链接和特殊目标并检查源/目标 inode；再用唯一、同目录的私有临时文件写入并检查 flush/close；最后使用真正的 no-replace 提交，`\u002d\u002dforce` 时只允许替换普通文件。多对象 Manifest 可以复用同一个原子文件 helper。复杂度主要在跨平台提交原语，语义本身可以集中到一个 helper 中。"}
--->
 
 ### [P1] `write` 不是“全部成功后再提交正式目标”的原子交付
 
