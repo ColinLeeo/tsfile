@@ -123,16 +123,8 @@ cmd72 {"author":"codex","kind":"codex","createdAt":"2026-08-25T08:07:53.515Z","b
 
 ### [P1] `write` 的结构与名称校验不完整
 
-<!-- tag-comment-scope-R-start mode="block" hash="sha256:e53aca2f7d0d5ed7127eb7e4fa396463af2d0c306ca7ea421ad624d350e603b7" -->
 `cpp/tools/cli/run_cli.cc:251-263` 只检查 `columns` 非空，因此只有 TAG、没有 FIELD 的结构也会通过；输入层也没有完整落实 TAG 类型、保留名、名称和表头映射规则。应在读取 CSV 前要求至少一个 FIELD，并限制 `--tag` 类型为 STRING；table、TAG、FIELD 和表头名称统一按 ASCII 小写规范化后检查保留名 `time`、跨类别重复与大小写冲突，再映射到规范 schema 名称。还应拒绝非法 UTF-8 和控制字符名称，并为每项首错添加测试。
 
-<!-- tag-comment-scope-R-end mode="block" -->
-<!-- tag-comment-thread-R
-cmd18 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:00:13.738Z","body":"我们逐个来看：\n1. 只有tag，没有field 的不能过， 这种文件对应着写入都只创建了时间序列， 没有写入数据。 \n2. 这里应该按照string来解析， 在输入的数据中似乎没办法区分是否为string，保留名按照time 全小写。 表模型里面的列名都是自动转换成小写的。 \n3. 后面的也应该修一修"}
-cmd38 {"author":"codex","kind":"codex","createdAt":"2026-08-25T07:09:11.002Z","body":"回复 cmd18：逐项确认：第一，只有 TAG 没有 FIELD 必须在读 CSV 前拒绝；第二，`\u002d\u002dtag` 声明的类型参数应要求 STRING，CSV 单元格按字符串词法解析即可，不需要从数据推断，名称先规范成小写后再检查 `time` 和跨类别重复；第三，UTF-8/控制字符、大小写冲突和表头映射等剩余校验也需要补齐。因此这条评审保留，但实现时可以按这三个子项拆分测试。"}
-cmd57 {"author":"colin","kind":"human","createdAt":"2026-08-25T07:59:45.966Z","body":"同意。 "}
-cmd76 {"author":"codex","kind":"codex","createdAt":"2026-08-25T08:07:55.590Z","body":"回复 cmd57：已修复。正文已按三个确认项重写结构、TAG/名称和其余输入校验要求；代码仍待修改。"}
--->
 
 ### [P2] `write` 缺少 UTF-8 和 BOM 输入处理
 
