@@ -5,6 +5,14 @@ on:
     branches:
       - "rc/**"
   workflow_dispatch:
+    inputs:
+      dev_number:
+        description: "Python development release number; leave empty to use the checked-in version"
+        required: false
+        type: string
+
+env:
+  TSFILE_PYTHON_DEV_NUMBER: ${{ inputs.dev_number }}
 
 jobs:
   build:
@@ -46,6 +54,16 @@ jobs:
         uses: actions/setup-python@v7
         with:
           python-version: "3.11"
+
+      - name: Set Python development version
+        if: github.event_name == 'workflow_dispatch' && inputs.dev_number != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          python_version="$(python python/set_python_version.py \
+            --dev-number "$TSFILE_PYTHON_DEV_NUMBER")"
+          echo "TSFILE_PYTHON_VERSION=$python_version" >> "$GITHUB_ENV"
+          echo "Building Python package version $python_version"
       
       - name: Set up Java 17
         uses: actions/setup-java@v5.6.0
@@ -163,6 +181,11 @@ jobs:
           CIBW_BUILD_VERBOSITY: "1"
         run: cibuildwheel --output-dir wheelhouse python
 
+      - name: Verify Python development version
+        if: github.event_name == 'workflow_dispatch' && inputs.dev_number != ''
+        shell: bash
+        run: ls "wheelhouse/tsfile-${TSFILE_PYTHON_VERSION}-"*.whl
+
       - name: Upload wheels as artifact
         uses: actions/upload-artifact@v7
         with:
@@ -244,6 +267,18 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Set Python development version
+        if: github.event_name == 'workflow_dispatch' && inputs.dev_number != ''
+        shell: pwsh
+        run: |
+          $pythonVersion = python python/set_python_version.py `
+            --dev-number "$env:TSFILE_PYTHON_DEV_NUMBER"
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+          "TSFILE_PYTHON_VERSION=$pythonVersion" >> $env:GITHUB_ENV
+          Write-Host "Building Python package version $pythonVersion"
+
       - name: Set up Java 17
         uses: actions/setup-java@v5.6.0
         with:
@@ -297,6 +332,11 @@ jobs:
             -Dspotless.check.skip=true -Dspotless.apply.skip=true \
             ${BLACK_VER_PROP}
           ls -la dist/
+
+      - name: Verify Python development version
+        if: github.event_name == 'workflow_dispatch' && inputs.dev_number != ''
+        shell: msys2 {0}
+        run: ls "python/dist/tsfile-${TSFILE_PYTHON_VERSION}-"*.whl
 
       - name: Verify wheel
         shell: msys2 {0}

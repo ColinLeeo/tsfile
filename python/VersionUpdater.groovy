@@ -23,10 +23,17 @@
 
 def currentMavenVersion = project.version as String
 def currentPyVersion = currentMavenVersion
-if(currentMavenVersion.contains("-SNAPSHOT")) {
+def overriddenPyVersion = System.getenv("TSFILE_PYTHON_VERSION")
+if(overriddenPyVersion != null && !overriddenPyVersion.isEmpty()) {
+    if(!(overriddenPyVersion ==~ /^[0-9]+\.[0-9]+\.[0-9]+(?:\.dev(?:0|[1-9][0-9]*))?$/)) {
+        throw new IllegalArgumentException("Invalid TSFILE_PYTHON_VERSION: " + overriddenPyVersion)
+    }
+    currentPyVersion = overriddenPyVersion
+} else if(currentMavenVersion.contains("-SNAPSHOT")) {
     currentPyVersion = currentMavenVersion.split("-SNAPSHOT")[0] + ".dev"
 }
 println "Current Project Version in Maven:  " + currentMavenVersion
+println "Current Project Version for Python: " + currentPyVersion
 
 // Sync setup.py
 def pyProjectFile = new File(project.basedir, "setup.py")
