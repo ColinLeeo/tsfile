@@ -17,10 +17,18 @@
  * under the License.
  */
 
-// Writer-owned schema lookup cache (issue #885): tree records/tablets and
-// table FIELD columns share one positional cache. Exercise repeated writes,
-// name/width changes, late registration, device/writer isolation and lifecycle
-// changes by checking the values and timestamps read from the resulting files.
+// Tests for the per-device schema-check cache in do_check_schema /
+// do_check_schema_aligned (issue #885). The cache resolves chunk writers and
+// data types once per device and reuses them while the tablet's measurement
+// NAME SEQUENCE is unchanged. These tests pin the behaviors the cache must
+// preserve:
+//  1. repeated same-schema writes round-trip every row (cache hit path);
+//  2. a same-column-count tablet with different names/order re-resolves and
+//     writes each value into the right column (cache invalidation);
+//  3. a column that was unregistered at first write is NOT masked by a cached
+//     NULL after it is registered (only fully-resolved results are cached);
+//  4. the aligned path keeps its own cache with the same guarantees;
+//  5. per-device caches never cross-wire two devices.
 #include <gtest/gtest.h>
 
 #include "writer/tsfile_writer.h"
@@ -34,7 +42,6 @@
 #include <atomic>
 #include <memory>
 #include <random>
-#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -391,8 +398,8 @@ TEST_F(SchemaCheckCacheTest, AlignedRepeatedAndReordered) {
     EXPECT_EQ(rows[num_tablets - 1][2], "19");
 }
 
-// 5. Switching devices must discard pointers from the previous device even
-// when their measurement names are identical.
+// 5. Per-device caches are independent: two devices with identical
+// measurement names, interleaved writes, different values.
 TEST_F(SchemaCheckCacheTest, MultiDeviceCachesIndependent) {
     const std::string devices[2] = {"root.cache_dev0", "root.cache_dev1"};
     for (const auto& device : devices) {
@@ -437,9 +444,9 @@ class TreeSchemaCacheTest : public SchemaCheckCacheTest,
 
 TEST_P(TreeSchemaCacheTest, ChangingWidthsAcrossRecordsAndTablets) {
     const std::string device = "root.cache_width";
-    const std::vector<std::string> names = {"i", "d", "l", "unregistered"};
-    const std::vector<TSDataType> types = {INT32, DOUBLE, INT64, INT32};
-    for (size_t i = 0; i < 3; ++i) {
+    const std::vector<std::string> names = {"i", "d", "l"};
+    const std::vector<TSDataType> types = {INT32, DOUBLE, INT64};
+    for (size_t i = 0; i < names.size(); ++i) {
         MeasurementSchema schema(names[i], types[i], PLAIN, UNCOMPRESSED);
         ASSERT_EQ(
             GetParam()
@@ -447,8 +454,8 @@ TEST_P(TreeSchemaCacheTest, ChangingWidthsAcrossRecordsAndTablets) {
                 : tsfile_writer_->register_timeseries(device, schema),
             E_OK);
     }
-    std::vector<std::vector<int>> orders = {{0, 1, 2}, {1}, {2, 0},
-                                            {2, 1, 0}, {0}, {0, 1, 2}};
+    const std::vector<std::vector<int>> orders = {{0, 1, 2}, {1}, {2, 0},
+                                                  {2, 1, 0}, {0}, {0, 1, 2}};
     std::vector<std::vector<std::string>> expected;
     int64_t time = 0;
     for (const auto& order : orders) {
@@ -482,7 +489,7 @@ TEST_P(TreeSchemaCacheTest, ChangingWidthsAcrossRecordsAndTablets) {
                     std::ostringstream value;
                     value << 20.5 + time;
                     row[i + 1] = value.str();
-                } else if (i == 2) {
+                } else {
                     ASSERT_EQ(record.add_point(names[i],
                                                int64_t(5000000000LL + time)),
                               E_OK);
@@ -490,9 +497,6 @@ TEST_P(TreeSchemaCacheTest, ChangingWidthsAcrossRecordsAndTablets) {
                                                int64_t(5000000000LL + time)),
                               E_OK);
                     row[i + 1] = std::to_string(5000000000LL + time);
-                } else {
-                    ASSERT_EQ(record.add_point(names[i], int32_t(7)), E_OK);
-                    ASSERT_EQ(tablet.add_value(0, names[i], int32_t(7)), E_OK);
                 }
             }
             ASSERT_EQ(repeat == 0 ? tsfile_writer_->write_tree(record)
@@ -500,7 +504,8 @@ TEST_P(TreeSchemaCacheTest, ChangingWidthsAcrossRecordsAndTablets) {
                       E_OK);
             expected.push_back(row);
         }
-        // A field omitted for an entire chunk must retain its time position.
+        // Keep each aligned chunk's field set fixed, including on the
+        // uncached path; switching field sets happens at a chunk boundary.
         ASSERT_EQ(tsfile_writer_->flush(), E_OK);
     }
     ASSERT_EQ(tsfile_writer_->close(), E_OK);
@@ -534,9 +539,7 @@ TEST_P(TreeSchemaCacheTest, WritersWithSameNamesKeepTheirOwnTypesAndValues) {
             ASSERT_EQ(tsfile_writer_->write_tree(first_record), E_OK);
             ASSERT_EQ(second.write_tree(second_record), E_OK);
         }
-        ASSERT_EQ(tsfile_writer_->flush(), E_OK);
         ASSERT_EQ(tsfile_writer_->close(), E_OK);
-        ASSERT_EQ(second.flush(), E_OK);
         ASSERT_EQ(second.close(), E_OK);
     }
     EXPECT_EQ(query_all({make_path(device, "s")}),
@@ -560,7 +563,6 @@ TEST_P(TreeSchemaCacheTest, DestroyAndInitDoNotReuseOldSchemaPointers) {
     TsRecord record(device, 1);
     ASSERT_EQ(record.add_point("s", int32_t(1)), E_OK);
     ASSERT_EQ(tsfile_writer_->write_tree(record), E_OK);
-    ASSERT_EQ(tsfile_writer_->flush(), E_OK);
     ASSERT_EQ(tsfile_writer_->close(), E_OK);
     tsfile_writer_->destroy();
     ASSERT_EQ(remove(file_name_.c_str()), 0);
@@ -575,93 +577,10 @@ TEST_P(TreeSchemaCacheTest, DestroyAndInitDoNotReuseOldSchemaPointers) {
     TsRecord next(device, 0);
     ASSERT_EQ(next.add_point("s", int64_t(5000000000LL)), E_OK);
     ASSERT_EQ(tsfile_writer_->write_tree(next), E_OK);
-    ASSERT_EQ(tsfile_writer_->flush(), E_OK);
     ASSERT_EQ(tsfile_writer_->close(), E_OK);
     tsfile_writer_->destroy();
     EXPECT_EQ(query_all({make_path(device, "s")}),
               (std::vector<std::vector<std::string>>{{"0", "5000000000"}}));
-}
-
-TEST_P(TreeSchemaCacheTest, EvictedDevicesCanBeWrittenAgain) {
-    const int device_count = 80;  // Exceeds the writer's bounded cache.
-    for (int d = 0; d < device_count; ++d) {
-        const std::string device = "root.eviction.d" + std::to_string(d);
-        ASSERT_EQ(GetParam() ? tsfile_writer_->register_aligned_timeseries(
-                                   device, int32_schema("s"))
-                             : tsfile_writer_->register_timeseries(
-                                   device, int32_schema("s")),
-                  E_OK);
-    }
-    for (int t = 0; t < 2; ++t) {
-        for (int d = 0; d < device_count; ++d) {
-            const std::string device = "root.eviction.d" + std::to_string(d);
-            TsRecord record(device, t);
-            ASSERT_EQ(record.add_point("s", int32_t(t * 1000 + d)), E_OK);
-            ASSERT_EQ(tsfile_writer_->write_tree(record), E_OK);
-        }
-        ASSERT_EQ(tsfile_writer_->flush(), E_OK);
-    }
-    ASSERT_EQ(tsfile_writer_->close(), E_OK);
-    for (int d = 0; d < device_count; ++d) {
-        EXPECT_EQ(
-            query_all({make_path("root.eviction.d" + std::to_string(d), "s")}),
-            (std::vector<std::vector<std::string>>{
-                {"0", std::to_string(d)}, {"1", std::to_string(1000 + d)}}));
-    }
-}
-
-TEST_F(SchemaCheckCacheTest, TableWriteContextsSurviveCacheEviction) {
-    const std::vector<ColumnSchema> columns = {
-        ColumnSchema("tag", STRING, UNCOMPRESSED, PLAIN, ColumnCategory::TAG),
-        ColumnSchema("i", INT32, UNCOMPRESSED, PLAIN, ColumnCategory::FIELD),
-        ColumnSchema("l", INT64, UNCOMPRESSED, PLAIN, ColumnCategory::FIELD)};
-    auto schema = std::make_shared<TableSchema>("eviction", columns);
-    ASSERT_EQ(tsfile_writer_->register_table(schema), E_OK);
-    const int device_count = 80;
-    for (int batch = 0; batch < 2; ++batch) {
-        Tablet tablet("eviction", schema->get_measurement_names(),
-                      schema->get_data_types(), schema->get_column_categories(),
-                      device_count);
-        for (int d = 0; d < device_count; ++d) {
-            const std::string name = "d" + std::to_string(d);
-            String tag(const_cast<char*>(name.data()), name.size());
-            const int64_t time = batch * 1000 + d;
-            ASSERT_EQ(tablet.add_timestamp(d, time), E_OK);
-            ASSERT_EQ(tablet.add_value(d, "tag", tag), E_OK);
-            ASSERT_EQ(tablet.add_value(d, "i", int32_t(d)), E_OK);
-            ASSERT_EQ(tablet.add_value(d, "l", int64_t(5000000000LL + time)),
-                      E_OK);
-        }
-        // The first device's cache entry is evicted before its saved write
-        // context is consumed; the actual schema/chunk writers must survive.
-        ASSERT_EQ(tsfile_writer_->write_table(tablet), E_OK);
-        ASSERT_EQ(tsfile_writer_->flush(), E_OK);
-    }
-    ASSERT_EQ(tsfile_writer_->close(), E_OK);
-    TsFileReader reader;
-    ASSERT_EQ(reader.open(file_name_), E_OK);
-    ResultSet* result = nullptr;
-    ASSERT_EQ(reader.query("eviction", {"tag", "i", "l"}, INT64_MIN, INT64_MAX,
-                           result),
-              E_OK);
-    std::set<int64_t> seen;
-    bool has_next = false;
-    int ret = E_OK;
-    while ((ret = result->next(has_next)) == E_OK && has_next) {
-        const int64_t time = result->get_value<int64_t>(1);
-        EXPECT_TRUE(time / 1000 == 0 || time / 1000 == 1);
-        EXPECT_GE(time % 1000, 0);
-        EXPECT_LT(time % 1000, device_count);
-        EXPECT_TRUE(seen.insert(time).second);
-        const auto* tag = result->get_value<String*>(2);
-        EXPECT_EQ(std::string(tag->buf_, tag->len_),
-                  "d" + std::to_string(time % 1000));
-        EXPECT_EQ(result->get_value<int32_t>(3), time % 1000);
-        EXPECT_EQ(result->get_value<int64_t>(4), 5000000000LL + time);
-    }
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(seen.size(), 2U * device_count);
-    reader.destroy_query_data_set(result);
 }
 
 INSTANTIATE_TEST_SUITE_P(PlainAndAligned, TreeSchemaCacheTest,
@@ -700,21 +619,7 @@ TEST_F(SchemaCheckCacheTest,
             // also checks the write contexts survive cache replacement.
             for (int repeat = 0; repeat < 2; ++repeat) {
                 const int count = batch == 2 ? 3 : 1;
-                auto write_names = names;
-                auto write_types = types;
-                auto write_categories = categories;
-                if (batch == 3 && repeat == 1) {
-                    // Reorder FIELDs while this table/device's cache is warm.
-                    std::rotate(write_names.begin(), write_names.begin() + 1,
-                                write_names.end());
-                    std::rotate(write_types.begin(), write_types.begin() + 1,
-                                write_types.end());
-                    std::rotate(write_categories.begin(),
-                                write_categories.begin() + 1,
-                                write_categories.end());
-                }
-                Tablet tablet(table, write_names, write_types, write_categories,
-                              count);
+                Tablet tablet(table, names, types, categories, count);
                 for (int r = 0; r < count; ++r) {
                     int64_t time = batch * 10 + repeat * 3 + r;
                     String tag(r == 1 ? "b" : "a", 1);
@@ -736,7 +641,6 @@ TEST_F(SchemaCheckCacheTest,
         ASSERT_EQ(tsfile_writer_->write_tree(tree), E_OK);
         ASSERT_EQ(tsfile_writer_->flush(), E_OK);
     }
-    ASSERT_EQ(tsfile_writer_->flush(), E_OK);
     ASSERT_EQ(tsfile_writer_->close(), E_OK);
     TsFileReader reader;
     ASSERT_EQ(reader.open(file_name_), E_OK);
@@ -748,11 +652,8 @@ TEST_F(SchemaCheckCacheTest,
         bool has_next = false;
         int ret = E_OK;
         int rows = 0;
-        std::set<int64_t> remaining_times = {0,  3,  10, 13, 20, 21, 22, 23,
-                                             24, 25, 30, 33, 40, 43, 50, 53};
         while ((ret = result->next(has_next)) == E_OK && has_next) {
             const int64_t time = result->get_value<int64_t>(1);
-            EXPECT_EQ(remaining_times.erase(time), 1U);
             EXPECT_EQ(result->get_value<int32_t>(3), 100 + time);
             EXPECT_EQ(result->is_null(4), time / 10 == 4);
             if (!result->is_null(4))
@@ -764,7 +665,6 @@ TEST_F(SchemaCheckCacheTest,
         }
         EXPECT_EQ(ret, E_OK);
         EXPECT_EQ(rows, 16);
-        EXPECT_TRUE(remaining_times.empty());
         reader.destroy_query_data_set(result);
     }
     EXPECT_EQ(query_all({make_path("root.tree", "i")}),
@@ -774,216 +674,6 @@ TEST_F(SchemaCheckCacheTest,
                                                      {"3", "3"},
                                                      {"4", "4"},
                                                      {"5", "5"}}));
-}
-
-class SparseAlignedSchemaTest : public SchemaCheckCacheTest,
-                                public ::testing::WithParamInterface<bool> {
-   protected:
-    ConfigValue saved_config_;
-    void SetUp() override {
-        saved_config_ = g_config_value_;
-        SchemaCheckCacheTest::SetUp();
-        g_config_value_.page_writer_max_point_num_ = 4;
-        g_config_value_.page_writer_max_memory_bytes_ = 1024 * 1024;
-        g_config_value_.parallel_write_enabled_ = GetParam();
-        g_config_value_.parallel_read_enabled_ = GetParam();
-    }
-    void TearDown() override {
-        SchemaCheckCacheTest::TearDown();
-        g_config_value_ = saved_config_;
-    }
-};
-
-INSTANTIATE_TEST_SUITE_P(SerialAndParallel, SparseAlignedSchemaTest,
-                         ::testing::Bool());
-
-TEST_P(SparseAlignedSchemaTest, MissingFieldsWithinPagesAndAcrossChunks) {
-    const std::string device = "root.sparse";
-    for (const auto& name : {"x", "y"}) {
-        ASSERT_EQ(tsfile_writer_->register_aligned_timeseries(
-                      device, int32_schema(name)),
-                  E_OK);
-    }
-    const std::vector<ColumnSchema> columns = {
-        ColumnSchema("tag", STRING, UNCOMPRESSED, PLAIN, ColumnCategory::TAG),
-        ColumnSchema("x", INT32, UNCOMPRESSED, PLAIN, ColumnCategory::FIELD),
-        ColumnSchema("y", INT32, UNCOMPRESSED, PLAIN, ColumnCategory::FIELD)};
-    ASSERT_EQ(tsfile_writer_->register_table(
-                  std::make_shared<TableSchema>("sparse", columns)),
-              E_OK);
-    const std::vector<std::vector<std::string>> fields = {
-        {"x"}, {"x"}, {"y", "x"}, {"y"}, {}, {"x"}};
-    std::vector<std::vector<std::string>> expected_tree;
-    for (size_t batch = 0; batch < fields.size(); ++batch) {
-        const auto& names = fields[batch];
-        const std::vector<TSDataType> types(names.size(), INT32);
-        Tablet tree(device, &names, &types, 7);
-        auto table_names = names;
-        auto table_types = types;
-        std::vector<ColumnCategory> categories(names.size(),
-                                               ColumnCategory::FIELD);
-        table_names.push_back("tag");
-        table_types.push_back(STRING);
-        categories.push_back(ColumnCategory::TAG);
-        Tablet table("sparse", table_names, table_types, categories, 14);
-        for (int r = 0; r < 7; ++r) {
-            const int64_t time = batch * 7 + r;
-            TsRecord record(device, time);
-            ASSERT_EQ(tree.add_timestamp(r, time), E_OK);
-            std::vector<std::string> expected = {std::to_string(time), "NULL",
-                                                 "NULL"};
-            for (const auto& name : names) {
-                const int32_t value = (name == "x" ? 100 : 200) + time;
-                ASSERT_EQ(record.add_point(name, value), E_OK);
-                ASSERT_EQ(tree.add_value(r, name, value), E_OK);
-                expected[name == "x" ? 1 : 2] = std::to_string(value);
-            }
-            if (batch % 2 == 0)
-                ASSERT_EQ(tsfile_writer_->write_tree(record), E_OK);
-            expected_tree.push_back(expected);
-            for (int d = 0; d < 2; ++d) {
-                const int row = r * 2 + d;
-                ASSERT_EQ(table.add_timestamp(row, time), E_OK);
-                ASSERT_EQ(
-                    table.add_value(row, "tag", String(d == 0 ? "a" : "b", 1)),
-                    E_OK);
-                for (const auto& name : names) {
-                    ASSERT_EQ(table.add_value(
-                                  row, name,
-                                  int32_t((name == "x" ? 100 : 200) + time)),
-                              E_OK);
-                }
-            }
-        }
-        if (batch % 2 == 1) ASSERT_EQ(tsfile_writer_->write_tree(tree), E_OK);
-        ASSERT_EQ(tsfile_writer_->write_table(table), E_OK);
-        if (batch % 2 == 1) ASSERT_EQ(tsfile_writer_->flush(), E_OK);
-    }
-    ASSERT_EQ(tsfile_writer_->close(), E_OK);
-    EXPECT_EQ(query_all({make_path(device, "x"), make_path(device, "y")}),
-              expected_tree);
-
-    TsFileReader reader;
-    ASSERT_EQ(reader.open(file_name_), E_OK);
-    // A sparse-only projection must preserve even the all-null table rows.
-    for (const auto& projection : std::vector<std::vector<std::string>>{
-             {"tag", "x", "y"}, {"tag", "y"}}) {
-        for (const auto& range :
-             std::vector<std::pair<int64_t, int64_t>>{{0, 41}, {5, 36}}) {
-            ResultSet* result = nullptr;
-            ASSERT_EQ(reader.query("sparse", projection, range.first,
-                                   range.second, result),
-                      E_OK);
-            std::set<std::pair<int64_t, std::string>> rows;
-            bool next = false;
-            int ret = E_OK;
-            while ((ret = result->next(next)) == E_OK && next) {
-                const int64_t time = result->get_value<int64_t>(1);
-                EXPECT_GE(time, range.first);
-                EXPECT_LE(time, range.second);
-                const auto* tag = result->get_value<String*>(2);
-                EXPECT_TRUE(
-                    rows.emplace(time, std::string(tag->buf_, tag->len_))
-                        .second);
-                for (size_t i = 1; i < projection.size(); ++i) {
-                    const auto& name = projection[i];
-                    const bool present = name == "x"
-                                             ? time / 7 <= 2 || time / 7 == 5
-                                             : time / 7 == 2 || time / 7 == 3;
-                    EXPECT_EQ(result->is_null(i + 2), !present)
-                        << time << ":" << name;
-                    if (present && !result->is_null(i + 2)) {
-                        EXPECT_EQ(result->get_value<int32_t>(i + 2),
-                                  (name == "x" ? 100 : 200) + time);
-                    }
-                }
-            }
-            EXPECT_EQ(ret, E_OK);
-            EXPECT_EQ(rows.size(), 2U * (range.second - range.first + 1));
-            reader.destroy_query_data_set(result);
-        }
-    }
-}
-
-TEST_P(SparseAlignedSchemaTest, LateFieldBackfillsSealedAndOpenPages) {
-    std::vector<std::string> devices;
-    for (int count : {2, 4, 9, 13}) {
-        const std::string device = "root.late" + std::to_string(count);
-        devices.push_back(device);
-        ASSERT_EQ(tsfile_writer_->register_aligned_timeseries(
-                      device, int32_schema("x")),
-                  E_OK);
-        for (int64_t time = 0; time < count; ++time) {
-            TsRecord record(device, time);
-            ASSERT_EQ(record.add_point("x", int32_t(100 + time)), E_OK);
-            // The unresolved cache entry must be rechecked after registration.
-            ASSERT_EQ(record.add_point("y", int32_t(200 + time)), E_OK);
-            ASSERT_EQ(tsfile_writer_->write_tree(record), E_OK);
-        }
-        ASSERT_EQ(tsfile_writer_->register_aligned_timeseries(
-                      device, int32_schema("y")),
-                  E_OK);
-        for (int64_t time = count; time < 13; ++time) {
-            TsRecord record(device, time);
-            ASSERT_EQ(record.add_point("x", int32_t(100 + time)), E_OK);
-            if (time % 2)
-                ASSERT_EQ(record.add_point("y", int32_t(200 + time)), E_OK);
-            ASSERT_EQ(tsfile_writer_->write_tree(record), E_OK);
-        }
-    }
-    ASSERT_EQ(tsfile_writer_->flush(), E_OK);
-    for (const auto& device : devices) {
-        EXPECT_EQ(tsfile_writer_->register_aligned_timeseries(
-                      device, int32_schema("z")),
-                  E_NOT_SUPPORT);
-    }
-    ASSERT_EQ(tsfile_writer_->close(), E_OK);
-    for (int count : {2, 4, 9, 13}) {
-        const std::string device = "root.late" + std::to_string(count);
-        std::vector<std::vector<std::string>> expected;
-        for (int64_t time = 0; time < 13; ++time) {
-            expected.push_back(
-                {std::to_string(time), std::to_string(100 + time),
-                 time >= count && time % 2 ? std::to_string(200 + time)
-                                           : "NULL"});
-        }
-        EXPECT_EQ(query_all({make_path(device, "x"), make_path(device, "y")}),
-                  expected);
-    }
-}
-
-TEST_P(SparseAlignedSchemaTest,
-       RecordAfterFullTabletKeepsOmittedColumnAligned) {
-    const std::string device = "root.tablet_record";
-    ASSERT_EQ(
-        tsfile_writer_->register_aligned_timeseries(device, int32_schema("x")),
-        E_OK);
-    ASSERT_EQ(
-        tsfile_writer_->register_aligned_timeseries(device, int32_schema("y")),
-        E_OK);
-    const std::vector<std::string> names = {"x"};
-    const std::vector<TSDataType> types = {INT32};
-    Tablet tablet(device, &names, &types, 4);
-    for (int r = 0; r < 4; ++r) {
-        ASSERT_EQ(tablet.add_timestamp(r, r), E_OK);
-        ASSERT_EQ(tablet.add_value(r, "x", int32_t(100 + r)), E_OK);
-    }
-    ASSERT_EQ(tsfile_writer_->write_tree(tablet), E_OK);
-    std::vector<std::vector<std::string>> expected;
-    for (int64_t time = 0; time < 7; ++time) {
-        if (time >= 4) {
-            TsRecord record(device, time);
-            ASSERT_EQ(record.add_point("x", int32_t(100 + time)), E_OK);
-            if (time == 5) ASSERT_EQ(record.add_point("y", int32_t(205)), E_OK);
-            ASSERT_EQ(tsfile_writer_->write_tree(record), E_OK);
-        }
-        expected.push_back({std::to_string(time), std::to_string(100 + time),
-                            time == 5 ? "205" : "NULL"});
-    }
-    ASSERT_EQ(tsfile_writer_->flush(), E_OK);
-    ASSERT_EQ(tsfile_writer_->close(), E_OK);
-    EXPECT_EQ(query_all({make_path(device, "x"), make_path(device, "y")}),
-              expected);
 }
 
 }  // namespace

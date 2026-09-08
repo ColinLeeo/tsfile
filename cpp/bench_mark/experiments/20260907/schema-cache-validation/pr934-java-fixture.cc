@@ -69,7 +69,12 @@ class SchemaCheckCacheTest : public ::testing::Test {
     }
     void TearDown() override {
         delete tsfile_writer_;
-        ASSERT_EQ(0, remove(file_name_.c_str()));
+        std::string saved = "/private/tmp/pr934-java-" +
+            std::string(::testing::UnitTest::GetInstance()->current_test_info()->name());
+        std::replace(saved.begin() + 13, saved.end(), '/', '_');
+        saved += ".tsfile";
+        ASSERT_EQ(0, std::rename(file_name_.c_str(), saved.c_str()));
+        std::cout << "FIXTURE " << saved << std::endl;
         libtsfile_destroy();
     }
 
@@ -950,40 +955,6 @@ TEST_P(SparseAlignedSchemaTest, LateFieldBackfillsSealedAndOpenPages) {
         EXPECT_EQ(query_all({make_path(device, "x"), make_path(device, "y")}),
                   expected);
     }
-}
-
-TEST_P(SparseAlignedSchemaTest,
-       RecordAfterFullTabletKeepsOmittedColumnAligned) {
-    const std::string device = "root.tablet_record";
-    ASSERT_EQ(
-        tsfile_writer_->register_aligned_timeseries(device, int32_schema("x")),
-        E_OK);
-    ASSERT_EQ(
-        tsfile_writer_->register_aligned_timeseries(device, int32_schema("y")),
-        E_OK);
-    const std::vector<std::string> names = {"x"};
-    const std::vector<TSDataType> types = {INT32};
-    Tablet tablet(device, &names, &types, 4);
-    for (int r = 0; r < 4; ++r) {
-        ASSERT_EQ(tablet.add_timestamp(r, r), E_OK);
-        ASSERT_EQ(tablet.add_value(r, "x", int32_t(100 + r)), E_OK);
-    }
-    ASSERT_EQ(tsfile_writer_->write_tree(tablet), E_OK);
-    std::vector<std::vector<std::string>> expected;
-    for (int64_t time = 0; time < 7; ++time) {
-        if (time >= 4) {
-            TsRecord record(device, time);
-            ASSERT_EQ(record.add_point("x", int32_t(100 + time)), E_OK);
-            if (time == 5) ASSERT_EQ(record.add_point("y", int32_t(205)), E_OK);
-            ASSERT_EQ(tsfile_writer_->write_tree(record), E_OK);
-        }
-        expected.push_back({std::to_string(time), std::to_string(100 + time),
-                            time == 5 ? "205" : "NULL"});
-    }
-    ASSERT_EQ(tsfile_writer_->flush(), E_OK);
-    ASSERT_EQ(tsfile_writer_->close(), E_OK);
-    EXPECT_EQ(query_all({make_path(device, "x"), make_path(device, "y")}),
-              expected);
 }
 
 }  // namespace

@@ -796,8 +796,12 @@ inline int TS2DIFFDecoder<int64_t>::read_batch_int64(int64_t* out, int capacity,
         }
 
 #ifdef ENABLE_SIMD
-        // SIMD path: decode 4 INT64 values at a time
-        for (; i + 3 < remaining; i += 4) {
+        // Each SIMD lane gathers eight bytes. Widths 59, 61, 62 and 63 can
+        // start at a bit offset that requires a ninth byte; decode those
+        // blocks with the scalar path below to preserve the low bits.
+        const bool simd_width_fits =
+            bit_width_ <= 58 || bit_width_ == 60 || bit_width_ == 64;
+        for (; simd_width_fits && i + 3 < remaining; i += 4) {
             int32_t need_bytes =
                 ((i + 3) * bit_width_ + bit_width_ + 7) / 8 + 8;
             if (need_bytes > block_bytes) break;
