@@ -151,7 +151,9 @@ The ARM64 and Intel jobs download the immutable GitHub source archive for the
 exact fork commit and create a temporary local tap containing `tsfile-dev.rb`.
 The formula builds that archive as a Bottle candidate, runs its CLI and C++
 consumer tests, and calls `brew bottle --json` with the future immutable JFrog
-root URL.
+root URL. The development Formula is keg-only because the installed SDK includes
+its current dependency header closure, which must not be linked over files owned
+by Homebrew dependencies such as `simde`.
 
 A macOS merge job consumes both Bottle JSON files and produces the final
 `tsfile-dev.rb` with one `bottle do` block containing both platform checksums.
