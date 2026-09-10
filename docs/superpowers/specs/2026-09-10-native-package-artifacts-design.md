@@ -77,11 +77,11 @@ The caller does not enter a version. A `prepare` job reads
 For a base version of `2.5.0`, an example identity is:
 
 ```text
-logical:  2.5.0.dev0+20260910.123.1.gabcdef
-deb:      2.5.0~dev0+20260910.123.1.gabcdef-1
-rpm:      Version 2.5.0, Release 0.dev0.20260910.123.1.gabcdef.el9
-archive:  2.5.0-dev0.20260910.123.1.gabcdef
-homebrew: 2.5.0.dev0.20260910.123.1.gabcdef
+logical:  2.5.0.dev0+20260910.123.1.gabcdef1
+deb:      2.5.0~dev0+20260910.123.1.gabcdef1-1
+rpm:      Version 2.5.0, Release 0.dev0.20260910.123.1.gabcdef1.el9
+archive:  2.5.0-dev0.20260910.123.1.gabcdef1
+homebrew: 2.5.0.dev0.20260910.123.1.gabcdef1
 ```
 
 The workflow fails before building if the source version cannot be parsed.
@@ -188,8 +188,9 @@ successful. It downloads the intermediate artifacts, arranges them by package
 family and platform, generates `SHA256SUMS`, and writes `manifest.json` with the
 source commit, generated versions, platforms, filenames, sizes, and checksums.
 
-It uploads one final GitHub Actions artifact named from the logical build
-identity, with a retention period of 14 days.
+It uploads one final GitHub Actions artifact named
+`tsfile-native-packages-<archive-version>`, with a retention period of 14 days.
+The local assembly directory uses the logical version of the same build identity.
 
 The manifest also records the intended JFrog repository, immutable target path,
 and Debian coordinates for each file. This does not publish anything, but it
@@ -230,7 +231,7 @@ tsfile-native-packages-<logical-version>/
 │   ├── Formula/tsfile-dev.rb
 │   └── bottles/
 └── windows/
-    └── apache-tsfile-cpp-<archive-version>-windows-x86_64.zip
+    └── tsfile-<archive-version>-windows-x86_64.zip
 ```
 
 ## Failure and Safety Behavior

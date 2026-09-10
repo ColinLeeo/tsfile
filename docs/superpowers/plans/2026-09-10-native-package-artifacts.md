@@ -53,7 +53,7 @@
 - Modify through cherry-pick: `cpp/tools/CMakeLists.txt`
 - Create through cherry-pick: `cpp/cmake/TsFileConfig.cmake.in`
 - Create through cherry-pick: `cpp/cmake/TsFilePublicHeaders.cmake`
-- Create through cherry-pick: `cpp/cmake/tsfile.pc.in`
+- Create through cherry-pick: `cpp/cmake/libtsfile.pc.in`
 - Create through cherry-pick: `packaging/README.md`
 - Create through cherry-pick: `packaging/homebrew/tsfile.rb`
 - Create through cherry-pick: `.github/workflows/cpp-packaging.yml`
