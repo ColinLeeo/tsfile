@@ -119,8 +119,10 @@ def run(case, directory):
             "time": [0, 1, 2],
             "device": ["sensor"] * 3,
             "value": [1.0, 2.0, 3.0],
-            "text": ["hello", None, "world"],
-            "payload": [b"abc", None, b"xyz"],
+            # Keep the fixture's None sentinel stable across pandas versions;
+            # inferred string dtype can normalize it to NaN.
+            "text": pd.Series(["hello", None, "world"], dtype=object),
+            "payload": pd.Series([b"abc", None, b"xyz"], dtype=object),
         }
     )
     with TsFileTableWriter(path, schema) as writer:
