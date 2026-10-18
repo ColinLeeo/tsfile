@@ -119,3 +119,5 @@ The object must provide `seek()`, `tell()`, and explicitly sized binary
 `read(size)` operations. The caller owns the object: `TsFileReader` keeps it
 alive while in use, preserves its cursor position, and does not close it.
 The local `FileReadBackend` setting does not apply to file objects.
+
+For opt-in Python/C++ ASan and LSan integration tests, see [SANITIZERS.md](SANITIZERS.md).

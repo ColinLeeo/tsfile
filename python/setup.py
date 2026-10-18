@@ -17,6 +17,7 @@
 #
 
 import os
+import json
 import platform
 import shutil
 import sys
@@ -72,6 +73,47 @@ def _find_lib(root, patterns):
 
 
 CPP_OUT = _find_cpp_build()
+# Opt-in Linux/GCC/Clang integration profile. Check before copying native artifacts.
+SANITIZERS = os.environ.get("TSFILE_PY_SANITIZERS", "")
+if SANITIZERS not in ("", "address", "address,undefined"):
+    raise RuntimeError("TSFILE_PY_SANITIZERS must be address or address,undefined")
+manifest_path = CPP_OUT / "sanitizers.json"
+native_manifest = (
+    json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
+)
+cpp_sanitizers = native_manifest.get("sanitizers", [])
+if native_manifest.get("legacy_asan", False):
+    raise RuntimeError(
+        "The standalone ENABLE_ASAN build cannot be used for Python; "
+        "use TSFILE_SANITIZERS with ENABLE_ASAN=OFF"
+    )
+if cpp_sanitizers != (SANITIZERS.split(",") if SANITIZERS else []):
+    raise RuntimeError(
+        "Python/C++ sanitizer mismatch: rebuild C++ with TSFILE_SANITIZERS "
+        "matching TSFILE_PY_SANITIZERS (and ENABLE_ASAN=OFF)"
+    )
+if SANITIZERS and (
+    not sys.platform.startswith("linux")
+    or native_manifest["compiler_id"] not in ("GNU", "Clang")
+):
+    raise RuntimeError(
+        "Python sanitizer builds currently require Linux and GCC or Clang"
+    )
+sanitizer_compile_args = (
+    [
+        "-fsanitize=" + SANITIZERS,
+        "-O1",
+        "-g",
+        "-fno-omit-frame-pointer",
+        "-fno-optimize-sibling-calls",
+        "-fno-sanitize-recover=all",
+    ]
+    if SANITIZERS
+    else []
+)
+sanitizer_link_args = ["-fsanitize=" + SANITIZERS] if SANITIZERS else []
+if SANITIZERS and native_manifest["compiler_id"] == "Clang":
+    sanitizer_link_args.append("-shared-libasan")
 CPP_LIB = CPP_OUT / "lib"
 CPP_INC = CPP_OUT / "include"
 
@@ -253,6 +295,9 @@ elif sys.platform == "win32":
 else:
     raise RuntimeError(f"Unsupported platform: {sys.platform}")
 
+extra_compile_args += sanitizer_compile_args
+extra_link_args += sanitizer_link_args
+
 common = dict(
     language="c++",
     include_dirs=include_dirs,
@@ -267,7 +312,7 @@ merge_common = common.copy()
 merge_common.update(
     library_dirs=[],
     libraries=[],
-    extra_link_args=[],
+    extra_link_args=sanitizer_link_args.copy(),
     runtime_library_dirs=[],
 )
 
@@ -287,6 +332,13 @@ exts = [
     ),
     Extension("tsfile.tsfile_writer", ["tsfile/tsfile_writer.pyx"], **common),
 ]
+
+# Included only in sanitizer test artifacts; normal wheels have no marker.
+marker = PKG / "_sanitizers.json"
+if SANITIZERS:
+    marker.write_text(json.dumps({"sanitizers": SANITIZERS.split(",")}))
+elif marker.exists():
+    marker.unlink()
 
 setup(
     name="tsfile",

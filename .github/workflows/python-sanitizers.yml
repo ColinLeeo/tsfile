@@ -1,0 +1,63 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+name: Python-Sanitizers
+
+on:
+  push:
+    paths:
+      - 'cpp/**'
+      - 'python/**'
+      - '.github/workflows/python-sanitizers.yml'
+  pull_request:
+    paths:
+      - 'cpp/**'
+      - 'python/**'
+      - '.github/workflows/python-sanitizers.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python-sanitizers:
+    name: Python bindings (ASan + LSan)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-18 llvm-18 binutils cmake uuid-dev
+          python -m pip install -r python/requirements.txt pytest
+      - name: Build and test instrumented bindings and C++ library
+        env:
+          PYTHON: python
+          CC: clang-18
+          CXX: clang++-18
+          CMAKE_BUILD_PARALLEL_LEVEL: "4"
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
+        run: bash python/tools/run_sanitizers.sh

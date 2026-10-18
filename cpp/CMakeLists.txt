@@ -220,6 +220,8 @@ else ()
     message("Address Sanitizer is disabled.")
 endif ()
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Sanitizers.cmake)
+
 option(BUILD_TEST "Build tests" ON)
 message("cmake using: BUILD_TEST=${BUILD_TEST}")
 if (BUILD_TEST)

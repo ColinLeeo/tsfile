@@ -137,6 +137,11 @@ else()
     endif()
 endif()
 
+foreach (_target IN LISTS _TSFILE_OBJECT_TARGETS)
+    tsfile_instrument_target(${_target})
+endforeach ()
+tsfile_instrument_target(tsfile)
+
 unset(_TSFILE_OBJECT_SOURCES)
 unset(_TSFILE_OBJECT_TARGET)
 unset(_TSFILE_OBJECT_TARGETS)
