@@ -25,7 +25,7 @@ import pandas as pd
 import numpy as np
 
 from libc.stdlib cimport free
-from libc.stdlib cimport malloc
+from libc.stdlib cimport malloc, calloc
 from libc.string cimport strdup
 from libc.string cimport memset
 from cpython.unicode cimport PyUnicode_AsUTF8String, PyUnicode_AsUTF8, PyUnicode_AsUTF8AndSize
@@ -175,35 +175,57 @@ cdef CompressionType to_c_compression_type(object compression_type):
         raise ValueError(f"Unsupported Python Compressor: {compression_type}")
 
 cdef TimeseriesSchema * to_c_timeseries_schema(object py_schema):
-    cdef TimeseriesSchema * c_schema
-    c_schema = <TimeseriesSchema *> malloc(sizeof(TimeseriesSchema))
-    c_schema.timeseries_name = strdup(py_schema.timeseries_name.encode('utf-8'))
-    if py_schema.data_type is not None:
-        c_schema.data_type = to_c_data_type(py_schema.data_type)
-    else:
-        raise ValueError("data_type cannot be None")
-    if py_schema.encoding_type is not None:
-        c_schema.encoding = to_c_encoding_type(py_schema.encoding_type)
-    else:
-        raise ValueError("encoding_type cannot be None")
-    if py_schema.compression_type is not None:
-        c_schema.compression = to_c_compression_type(py_schema.compression_type)
-    else:
-        raise ValueError("compression_type cannot be None")
+    cdef TimeseriesSchema * c_schema = <TimeseriesSchema *> calloc(1, sizeof(TimeseriesSchema))
+    if c_schema == NULL:
+        raise MemoryError("Failed to allocate timeseries schema")
+    try:
+        c_schema.timeseries_name = strdup(py_schema.timeseries_name.encode('utf-8'))
+        if c_schema.timeseries_name == NULL:
+            raise MemoryError("Failed to allocate timeseries name")
+        if py_schema.data_type is not None:
+            c_schema.data_type = to_c_data_type(py_schema.data_type)
+        else:
+            raise ValueError("data_type cannot be None")
+        if py_schema.encoding_type is not None:
+            c_schema.encoding = to_c_encoding_type(py_schema.encoding_type)
+        else:
+            raise ValueError("encoding_type cannot be None")
+        if py_schema.compression_type is not None:
+            c_schema.compression = to_c_compression_type(py_schema.compression_type)
+        else:
+            raise ValueError("compression_type cannot be None")
+    except:
+        free_c_timeseries_schema(c_schema)
+        free(c_schema)
+        raise
     return c_schema
 
 cdef DeviceSchema * to_c_device_schema(object py_schema):
-    cdef DeviceSchema * c_schema
-    c_schema = <DeviceSchema *> malloc(sizeof(DeviceSchema))
-    c_schema.device_name = strdup(py_schema.device_name.encode('utf-8'))
-    c_schema.timeseries_num = len(py_schema.timeseries_list)
-    c_schema.timeseries_schema = <TimeseriesSchema *> malloc(c_schema.timeseries_num * sizeof(TimeseriesSchema))
-    for i in range(c_schema.timeseries_num):
-        c_schema.timeseries_schema[i].timeseries_name = strdup(
-            py_schema.timeseries_list[i].timeseries_name.encode('utf-8'))
-        c_schema.timeseries_schema[i].data_type = to_c_data_type(py_schema.timeseries_list[i].data_type)
-        c_schema.timeseries_schema[i].encoding = to_c_encoding_type(py_schema.timeseries_list[i].encoding_type)
-        c_schema.timeseries_schema[i].compression = to_c_compression_type(py_schema.timeseries_list[i].compression_type)
+    cdef DeviceSchema * c_schema = <DeviceSchema *> calloc(1, sizeof(DeviceSchema))
+    cdef size_t count
+    if c_schema == NULL:
+        raise MemoryError("Failed to allocate device schema")
+    try:
+        c_schema.device_name = strdup(py_schema.device_name.encode('utf-8'))
+        if c_schema.device_name == NULL:
+            raise MemoryError("Failed to allocate device name")
+        count = len(py_schema.timeseries_list)
+        c_schema.timeseries_schema = <TimeseriesSchema *> calloc(count, sizeof(TimeseriesSchema))
+        if count and c_schema.timeseries_schema == NULL:
+            raise MemoryError("Failed to allocate device timeseries schemas")
+        c_schema.timeseries_num = count
+        for i in range(c_schema.timeseries_num):
+            c_schema.timeseries_schema[i].timeseries_name = strdup(
+                py_schema.timeseries_list[i].timeseries_name.encode('utf-8'))
+            if c_schema.timeseries_schema[i].timeseries_name == NULL:
+                raise MemoryError("Failed to allocate timeseries name")
+            c_schema.timeseries_schema[i].data_type = to_c_data_type(py_schema.timeseries_list[i].data_type)
+            c_schema.timeseries_schema[i].encoding = to_c_encoding_type(py_schema.timeseries_list[i].encoding_type)
+            c_schema.timeseries_schema[i].compression = to_c_compression_type(py_schema.timeseries_list[i].compression_type)
+    except:
+        free_c_device_schema(c_schema)
+        free(c_schema)
+        raise
     return c_schema
 
 cdef ColumnSchema * to_c_column_schema(object py_schema):
@@ -215,15 +237,29 @@ cdef ColumnSchema * to_c_column_schema(object py_schema):
     return c_schema
 
 cdef TableSchema * to_c_table_schema(object py_schema):
-    cdef TableSchema * c_schema
-    c_schema = <TableSchema *> malloc(sizeof(TableSchema))
-    c_schema.table_name = strdup(py_schema.table_name.encode('utf-8'))
-    c_schema.column_num = len(py_schema.columns)
-    c_schema.column_schemas = <ColumnSchema *> malloc(c_schema.column_num * sizeof(ColumnSchema))
-    for i in range(c_schema.column_num):
-        c_schema.column_schemas[i].column_name = strdup(py_schema.columns[i].column_name.encode('utf-8'))
-        c_schema.column_schemas[i].column_category = to_c_category_type(py_schema.columns[i].category)
-        c_schema.column_schemas[i].data_type = to_c_data_type(py_schema.columns[i].data_type)
+    cdef TableSchema * c_schema = <TableSchema *> calloc(1, sizeof(TableSchema))
+    cdef size_t count
+    if c_schema == NULL:
+        raise MemoryError("Failed to allocate table schema")
+    try:
+        c_schema.table_name = strdup(py_schema.table_name.encode('utf-8'))
+        if c_schema.table_name == NULL:
+            raise MemoryError("Failed to allocate table name")
+        count = len(py_schema.columns)
+        c_schema.column_schemas = <ColumnSchema *> calloc(count, sizeof(ColumnSchema))
+        if count and c_schema.column_schemas == NULL:
+            raise MemoryError("Failed to allocate table column schemas")
+        c_schema.column_num = count
+        for i in range(c_schema.column_num):
+            c_schema.column_schemas[i].column_name = strdup(py_schema.columns[i].column_name.encode('utf-8'))
+            if c_schema.column_schemas[i].column_name == NULL:
+                raise MemoryError("Failed to allocate column name")
+            c_schema.column_schemas[i].column_category = to_c_category_type(py_schema.columns[i].category)
+            c_schema.column_schemas[i].data_type = to_c_data_type(py_schema.columns[i].data_type)
+    except:
+        free_c_table_schema(c_schema)
+        free(c_schema)
+        raise
     return c_schema
 
 cdef Tablet to_c_tablet(object tablet):
@@ -747,7 +783,8 @@ cdef TsRecord to_c_record(object row_record):
         raise
     return record
 
-# Free c structs' space
+# Free schema contents only: callers also pass stack values and array elements.
+# A caller owning a heap-allocated outer schema must free that container too.
 cdef void free_c_table_schema(TableSchema * c_schema):
     free(c_schema.table_name)
     for i in range(c_schema.column_num):

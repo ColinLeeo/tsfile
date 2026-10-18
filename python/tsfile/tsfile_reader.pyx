@@ -236,7 +236,7 @@ cdef class ResultSetPy:
                     return None
                 return string.decode('utf-8')
             finally:
-                pass
+                free(string)
         elif data_type == TSDataTypePy.BLOB:
             try:
                 string = tsfile_result_set_get_value_by_index_string(self.result, index)
@@ -244,7 +244,7 @@ cdef class ResultSetPy:
                     return None
                 return PyBytes_FromStringAndSize(string, strlen(string))
             finally:
-                pass
+                free(string)
 
     def get_value_by_name(self, column_name : str):
         """

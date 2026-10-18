@@ -23,6 +23,7 @@ from tsfile.schema import TableSchema as TableSchemaPy
 from tsfile.schema import TimeseriesSchema as TimeseriesSchemaPy, DeviceSchema as DeviceSchemaPy
 from tsfile.tablet import Tablet as TabletPy
 from libc.string cimport memset
+from libc.stdlib cimport free
 from libc.stdint cimport uint32_t, uint8_t, uintptr_t
 from cpython.bytes cimport PyBytes_AsStringAndSize
 from .tsfile_cpp cimport *
@@ -50,6 +51,7 @@ cdef class TsFileWriterPy:
             check_error(errno)
         finally:
             free_c_timeseries_schema(c_schema)
+            free(c_schema)
 
     def register_device(self, device_schema : DeviceSchemaPy):
         """
@@ -63,6 +65,7 @@ cdef class TsFileWriterPy:
             check_error(errno)
         finally:
             free_c_device_schema(device_schema_c)
+            free(device_schema_c)
 
     def register_table(self, table_schema : TableSchemaPy):
         """
@@ -76,6 +79,7 @@ cdef class TsFileWriterPy:
             check_error(errno)
         finally:
             free_c_table_schema(c_schema)
+            free(c_schema)
 
     def write_tablet(self, tablet : TabletPy):
         """
