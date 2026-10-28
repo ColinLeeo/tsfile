@@ -118,7 +118,7 @@ TsFile、CSV 和 Parquet 三种文件格式的比较
 | BOOLEAN | RLE        | LZ4    |
 | TEXT    | DICTIONARY | LZ4    |
 
-更多类型的编码和压缩方式参见[文档](https://iotdb.apache.org/zh/UserGuide/latest/Basic-Concept/Encoding-and-Compression.html)
+更多类型的编码和压缩方式参见[文档](https://iotdb.apache.org/zh/UserGuide/latest/Technical-Insider/Encoding-and-Compression.html)
 
 ## 开发和使用 TsFile
 
