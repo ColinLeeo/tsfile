@@ -380,6 +380,20 @@ itself remains valid until the reader closes.
 
 You can find examples on how to read and write data in `demo_read.cpp` and `demo_write.cpp` located under `./examples/cpp_examples`. There are also examples under `./examples/c_examples` on how to use a C-style API to read and write data in a C environment. The examples will be built automatically when you run the main build command.
 
+### Creating a new file
+
+`TsFileWriter::open` creates a new file only. If the path already exists,
+`open` returns `E_ALREADY_EXIST` and leaves the existing file unchanged; it
+does not append to or overwrite a completed TsFile. To work with additional
+data, write it to a new TsFile and have your application read the files
+separately and merge their records, handling timestamp ordering and
+deduplication as needed.
+
+`RestorableTsFileIOWriter` can continue writing an incomplete file after an
+interruption, but it cannot append to a normally closed file. Its `open`
+operation truncates corrupted trailing data by default; pass
+`truncate_corrupted = false` to disable that behavior.
+
 ### File-level properties
 
 `TsFileWriter` and `TsFileTableWriter` can add or replace binary properties
