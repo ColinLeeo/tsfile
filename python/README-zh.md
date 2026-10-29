@@ -52,9 +52,37 @@
 
 ---
 
-## 构建
+## 安装
 
-在构建 TsFile 的 Python 版本之前，必须先构建 [TsFile C++ 版本](../cpp/README.md)，因为 Python 版本依赖于 C++ 版本生成的共享库文件。
+从 PyPI 安装所需版本的已发布 wheel：
+
+```sh
+python -m pip install --only-binary=tsfile "tsfile==<目标版本>"
+```
+
+将 `<目标版本>` 替换为已发布到 PyPI 的版本号。`--only-binary` 会在没有
+匹配 wheel 时直接报错，不会回退到从源码构建 TsFile。wheel 已包含 TsFile
+原生运行库，因此无需单独构建 C++。
+
+也可以从成功运行的[原生打包工作流](https://github.com/apache/tsfile/blob/develop/packaging/README.md#python-wheels)
+下载 `tsfile-native-packages-<archive-version>` 构建产物。该 GitHub Actions
+产物保留 14 天，不是正式发布包；Python wheel 会通过项目的 PyPI 流程单独发布。
+下载并解压产物后，在
+`tsfile-native-packages-<archive-version>/python/wheels/<platform>/` 下找到
+wheel，根据 Python 版本对应的 `cp3X` ABI、操作系统和架构选择匹配的 `.whl`，然后安装：
+
+```sh
+python -m pip install "/path/to/matching-wheel.whl"
+```
+
+当前 wheel 构建矩阵覆盖 CPython 3.9–3.14：Linux
+（`manylinux_2_28`，x86_64/aarch64）、macOS 12 及以上（x86_64/arm64）和
+Windows（x86_64）。请确认目标版本实际提供了匹配的 wheel。
+
+## 从源码构建
+
+没有兼容 wheel 或需要开发 TsFile 时，可使用以下源码构建步骤。Python 版本依赖
+CPP 版本提供的共享库，因此必须先构建 [TsFile C++ 版本](../cpp/README.md)。
 
 ### 使用 Maven 在根目录构建
 
