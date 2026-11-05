@@ -27,6 +27,18 @@
        width="400"/>
 </p>
 
+## Table of Contents
+
+- [Introduction](#introduction)
+- [How to make contributions](#how-to-make-contributions)
+- [Build](#build)
+- [Sanitizer builds](#sanitizer-builds)
+- [Dataset read resource limits](#dataset-read-resource-limits)
+- [File-level properties](#file-level-properties)
+- [Dataset indexes](#dataset-indexes)
+- [Local File Read Backend](#local-file-read-backend)
+- [Seekable binary file objects](#seekable-binary-file-objects)
+
 
 ## Introduction
 

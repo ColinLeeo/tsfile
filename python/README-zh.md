@@ -27,6 +27,17 @@
        width="400"/>
 </p>
 
+## 目录
+
+- [简介](#简介)
+- [如何贡献](#如何贡献)
+- [构建](#构建)
+- [Dataset 索引](#dataset-索引)
+- [Dataset 读取资源上限](#dataset-读取资源上限)
+- [文件级 Properties](#文件级-properties)
+- [本地文件读取后端](#本地文件读取后端)
+- [可定位的二进制文件对象](#可定位的二进制文件对象)
+
 ## 简介
 
 本目录包含 TsFile 的 Python 实现版本。Python 版本基于 C++ 版本构建，并通过 Cython 包将 TsFile 的读写能力集成到 Python 环境中。用户可以像在 Pandas 中使用 read_csv 和 write_csv 一样，方便地读取和写入 TsFile。
