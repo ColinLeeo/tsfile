@@ -39,6 +39,14 @@ TsFile_cpp 的性能基准测试位于 `./bench_mark` 目录。
 
 ---
 
+## 获取 SDK
+
+用户目前可通过源码构建获取 SDK，参见[构建](#构建)。
+
+维护者可以手动运行原生打包工作流，将预编译包生成为临时 GitHub Actions 构件。该工作流不会发布软件包或创建官方发行版。有关便携 SDK 压缩包、DEB/RPM 包、Homebrew bottle、Windows ZIP 的生成和安装说明，以及构件下载方式和保留期限，请参阅[原生打包文档](../packaging/README.md)。
+
+---
+
 ## 如何贡献
 
 我们使用 `clang-format` 来确保 C++ 代码遵循 `./clang-format` 文件中定义的一致规范（类似于 Google 风格）。

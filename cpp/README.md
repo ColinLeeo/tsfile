@@ -34,6 +34,12 @@ This directory contains the C++ implementation of TsFile. The C++ version curren
 
 The source code can be found in the `./src` directory. C/C++ examples are located in the `./examples` directory, and a benchmark for TsFile_cpp can be found in the `./bench_mark` directory. Additionally, a C function wrapper is available in the `./src/cwrapper` directory, which the Python tool relies on.
 
+## Getting the SDK
+
+Building from source is the supported way for users to obtain the SDK; see [Build](#build).
+
+Maintainers can manually run the native packaging workflow to generate prebuilt packages as temporary GitHub Actions artifacts. The workflow does not publish packages or create official releases. See the [native packaging documentation](../packaging/README.md) for portable SDK archives, DEB/RPM packages, Homebrew bottles, Windows ZIPs, and instructions for building and installing them, including artifact download and retention details.
+
 ## How to make contributions
 
 We use `clang-format` to ensure that our C++ code adheres to a consistent set of rules defined in `.clang-format`. This is similar to the Google style.
