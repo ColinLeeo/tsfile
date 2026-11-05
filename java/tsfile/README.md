@@ -98,6 +98,13 @@ Write TsFile Example
 
 Data query is through TsFileReader.
 
+##### Thread safety
+
+The `TsFileReader` used in this section is not thread-safe and must not be used for concurrent queries.
+Use a separate `TsFileReader` with its own underlying `TsFileSequenceReader` for each thread;
+do not share the underlying reader across threads. Close each `TsFileReader` after use,
+for example with try-with-resources.
+
 1. Construct TsFileReader
 
    ```java
