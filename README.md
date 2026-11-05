@@ -60,7 +60,7 @@ TsFile can manage the time series data of multiple devices. Each device can have
 
 Each measurement of each device corresponds to a time series.
 
-The TsFile Scheme defines a set of measurement for all devices, as shown in the table below (m1~m5)
+The TsFile schema defines a set of measurements for all devices, as shown in the table below (m1~m5)
 
 | Time | deviceId | m1 | m2 | m3 | m4 | m5 |
 |------|----------|----|----|----|----|----|
