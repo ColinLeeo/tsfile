@@ -40,7 +40,7 @@ The example is to show how to write and read a TsFile File.
 ## Run TsFileWriteWithTSRecord / TsFileWriteWithTablet
 
 
-  This class is to show how to write a TsFile. It provided two ways:
+  This class is to show how to write a TsFile. It provides two ways:
   
    The first one is using a JSON string for measurement(s). The JSON string is an array of JSON 
    objects(schema). The object must include the *measurement_id*, *datatype*, *encoding*, and 
@@ -62,7 +62,7 @@ The example is to show how to write and read a TsFile File.
          public static void tsFileWriteDirect() throws IOException,WriteProcessException
    shows how to use that interface.
    
-   Note that the measurements in the two methods are the same therefore there output TsFile should also be identical.
+   Note that the measurements in the two methods are the same therefore their output TsFile should also be identical.
 
 
   
