@@ -27,6 +27,18 @@
        width="400"/>
 </p>
 
+**Table of Contents**
+
+- [Use TsFile](#use-tsfile)
+  - [Add TsFile as a dependency in Maven](#add-tsfile-as-a-dependency-in-maven)
+  - [TsFile Java API](#tsfile-java-api)
+    - [Write Data](#write-data)
+    - [Read TsFile](#read-tsfile)
+- [Building With Java](#building-with-java)
+  - [Prerequisites](#prerequisites)
+  - [Build TsFile with Maven](#build-tsfile-with-maven)
+  - [Install to local machine](#install-to-local-machine)
+
 ## Use TsFile
 
 ### Add TsFile as a dependency in Maven
