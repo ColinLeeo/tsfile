@@ -164,3 +164,7 @@ mvn clean package -P with-java -DskipTests
 ```
 mvn install -P with-java -DskipTests
 ```
+
+## Reader lifecycle
+
+`TsFileReader` and `TsFileSequenceReader` must be closed after use; prefer try-with-resources so the underlying file handle and reader resources are released.
