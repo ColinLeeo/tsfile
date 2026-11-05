@@ -162,3 +162,7 @@ mvn clean package -P with-java -DskipTests
 ```
 mvn install -P with-java -DskipTests
 ```
+
+## 并发读取
+
+`TsFileReader` / `TsFileSequenceReader` 不是线程安全的。不要在多个线程之间共享同一个 reader；每个线程应使用独立的 reader。同一份已关闭的文件可以被多个 reader 同时读取。
