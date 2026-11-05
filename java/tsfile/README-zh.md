@@ -162,3 +162,7 @@ mvn clean package -P with-java -DskipTests
 ```
 mvn install -P with-java -DskipTests
 ```
+
+## 读取器生命周期
+
+使用完毕后关闭 `TsFileReader` 和 `TsFileSequenceReader`，建议使用 try-with-resources。
