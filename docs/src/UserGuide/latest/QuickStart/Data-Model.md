@@ -63,3 +63,4 @@ In the above example, the metadata (Scheme) of TsFile contains 2 devices and 5 t
   </tr> 
 </table>
 
+> The device and measurement model above is persisted in the TsFile footer; readers use it to reconstruct the schema.
