@@ -169,8 +169,16 @@ printf 'time,id1,s1\n0,dev,0\n1,dev,10\n' \
 
 ### 构建
 
-> **平台支持。** 目前 `tsfile-cli` 仅支持在 **Linux 和 macOS** 上从源码编译。后续我们会单独
-> 发布该工具的预编译版本。
+> **源码构建。** 以下构建说明和共享库示例适用于 **Linux 和 macOS**。
+> Windows 构建说明见 [`cpp/README.md`](./cpp/README.md#build)。
+
+如需包含 `tsfile-cli` 的预编译产物，可在 GitHub Actions 页面选择
+[Build native release artifacts](https://github.com/apache/tsfile/actions/workflows/native-packages.yml)
+工作流，通过 **Run workflow** 手动触发。成功运行后会生成 SDK/CLI 归档及平台包，包括
+Linux DEB/RPM 包、Homebrew bottle 和 Windows SDK/CLI ZIP。下载时需登录 GitHub 并具有仓库读权限，
+在工作流运行页面获取 artifacts。这些是临时构建产物，按当前策略会在 14 天后过期；
+最新保留策略和完整产物清单见[打包文档](./packaging/README.md#manual-artifact-workflow)。
+该工作流不会创建正式 Release；发布、签名和长期分发是独立步骤。
 
 `tsfile-cli` 随 C++ 模块一起构建，因此在仓库根目录用 Maven 编译 C++ 模块时，它会一并包含在产物中：
 

@@ -169,8 +169,19 @@ printf 'time,id1,s1\n0,dev,0\n1,dev,10\n' \
 
 ### Building
 
-> **Platform support.** Building `tsfile-cli` from source is currently supported on **Linux
-> and macOS** only. Standalone, pre-built releases of the tool are planned for a later date.
+> **Source builds.** The instructions and shared-library examples below cover **Linux
+> and macOS**. For Windows build instructions, see [`cpp/README.md`](./cpp/README.md#build).
+
+For pre-built artifacts containing `tsfile-cli`, the
+[Build native release artifacts](https://github.com/apache/tsfile/actions/workflows/native-packages.yml)
+workflow can be triggered manually from the GitHub Actions tab using **Run workflow**.
+A successful run produces SDK/CLI archives and platform packages, including Linux DEB/RPM
+packages, Homebrew bottles, and Windows SDK/CLI ZIPs. Download artifacts from the workflow
+run page while signed in to GitHub with repository read access. These are temporary
+artifacts that expire after 14 days under the current policy; see the
+[packaging documentation](./packaging/README.md#manual-artifact-workflow) for the current
+retention policy and full artifact list. The workflow does not create an official Release;
+publishing, signing, and long-term distribution are separate steps.
 
 `tsfile-cli` is built together with the C++ module, so building that module with Maven from
 the repository root includes it in the build output:
