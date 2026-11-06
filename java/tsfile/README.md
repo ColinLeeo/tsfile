@@ -164,3 +164,7 @@ mvn clean package -P with-java -DskipTests
 ```
 mvn install -P with-java -DskipTests
 ```
+
+## Reader lifecycle
+
+Close `TsFileReader` after use to release native resources.
