@@ -162,3 +162,7 @@ mvn clean package -P with-java -DskipTests
 ```
 mvn install -P with-java -DskipTests
 ```
+
+## 时间范围读取
+
+使用 `TsFileReader.readByTimeRange(path, start, end)` 方法即可直接读取指定时间范围内的全部数据。
