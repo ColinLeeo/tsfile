@@ -86,3 +86,5 @@ The example is to show how to write and read a TsFile File.
 ### Reader lifecycle
 
 Close `TsFileReader` and `TsFileSequenceReader` after use; prefer try-with-resources.
+
+> Close the reader after use to release the underlying native resources.
