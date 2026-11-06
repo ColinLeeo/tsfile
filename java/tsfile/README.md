@@ -164,3 +164,7 @@ mvn clean package -P with-java -DskipTests
 ```
 mvn install -P with-java -DskipTests
 ```
+
+## Concurrent reads
+
+`TsFileReader` is not thread-safe; use one reader per thread and close it after use.
