@@ -164,3 +164,7 @@ mvn clean package -P with-java -DskipTests
 ```
 mvn install -P with-java -DskipTests
 ```
+
+## Reader lifecycle and thread safety
+
+Close `TsFileReader` and `TsFileSequenceReader` after use, and do not share a reader across concurrent queries; use one reader per thread.
