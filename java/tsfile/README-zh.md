@@ -162,3 +162,7 @@ mvn clean package -P with-java -DskipTests
 ```
 mvn install -P with-java -DskipTests
 ```
+
+## 并发读取
+
+`TsFileReader` 是线程安全的，可以在多个线程之间共享同一个 reader 实例来并发查询。
