@@ -47,16 +47,27 @@ Using pylint to check Python code is recommended. However, there is no suitable 
 
 ## Installation
 
-Install a released wheel for the version you need from PyPI:
+Install the latest released wheel from [PyPI](https://pypi.org/project/tsfile/):
 
 ```sh
-python -m pip install --only-binary=tsfile "tsfile==<target-version>"
+python -m pip install tsfile
 ```
 
-Replace `<target-version>` with a version published on PyPI. `--only-binary`
-makes pip fail if no matching wheel is available; it will not fall back to
-building TsFile from source. Wheels include the TsFile native runtime library,
-so a separate C++ build is not needed.
+To install a specific version, pin it:
+
+```sh
+python -m pip install "tsfile==<target-version>"
+```
+
+Replace `<target-version>` with a version published on PyPI. Wheels include the
+TsFile native runtime library, so a separate C++ build is not needed. To require
+a prebuilt wheel explicitly, add `--only-binary=tsfile`; pip then fails if no
+matching wheel is available instead of falling back to building TsFile from
+source:
+
+```sh
+python -m pip install --only-binary=tsfile tsfile
+```
 
 You can also install a wheel from the `tsfile-native-packages-<archive-version>`
 artifact produced by a successful [native packaging workflow](https://github.com/apache/tsfile/blob/develop/packaging/README.md#python-wheels).
@@ -71,10 +82,15 @@ system, and architecture, then install it:
 python -m pip install "/path/to/matching-wheel.whl"
 ```
 
-The current wheel build matrix covers CPython 3.9–3.14 on Linux
-(`manylinux_2_28`, x86_64/aarch64), macOS 12 or later (x86_64/arm64), and
-Windows (x86_64). Check that the target version actually provides a matching
-wheel.
+The wheel build matrix covers CPython 3.9–3.14 on Linux (`manylinux_2_28`,
+x86_64/aarch64), macOS 12 or later (x86_64/arm64), and Windows (x86_64). This
+matrix describes what CI builds; check the
+[PyPI files page](https://pypi.org/project/tsfile/#files) to confirm which wheels
+a specific release actually publishes, because a successful build is not a
+publication guarantee. Platforms outside this matrix, such as Windows ARM64,
+musl-based Linux, or macOS before 12, have no matching wheel: `pip install`
+fails there instead of building TsFile from source, so use the source build
+below.
 
 ## Build from source
 

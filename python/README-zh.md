@@ -54,15 +54,25 @@
 
 ## 安装
 
-从 PyPI 安装所需版本的已发布 wheel：
+从 [PyPI](https://pypi.org/project/tsfile/) 安装最新发布的 wheel：
 
 ```sh
-python -m pip install --only-binary=tsfile "tsfile==<目标版本>"
+python -m pip install tsfile
 ```
 
-将 `<目标版本>` 替换为已发布到 PyPI 的版本号。`--only-binary` 会在没有
-匹配 wheel 时直接报错，不会回退到从源码构建 TsFile。wheel 已包含 TsFile
-原生运行库，因此无需单独构建 C++。
+安装指定版本时，请固定版本号：
+
+```sh
+python -m pip install "tsfile==<目标版本>"
+```
+
+将 `<目标版本>` 替换为已发布到 PyPI 的版本号。wheel 已包含 TsFile 原生运行库，
+因此无需单独构建 C++。如需显式要求预编译 wheel，可加上 `--only-binary=tsfile`；
+此时没有匹配 wheel 会直接报错，不会回退到从源码构建 TsFile：
+
+```sh
+python -m pip install --only-binary=tsfile tsfile
+```
 
 也可以从成功运行的[原生打包工作流](https://github.com/apache/tsfile/blob/develop/packaging/README.md#python-wheels)
 下载 `tsfile-native-packages-<archive-version>` 构建产物。该 GitHub Actions
@@ -75,9 +85,13 @@ wheel，根据 Python 版本对应的 `cp3X` ABI、操作系统和架构选择�
 python -m pip install "/path/to/matching-wheel.whl"
 ```
 
-当前 wheel 构建矩阵覆盖 CPython 3.9–3.14：Linux
-（`manylinux_2_28`，x86_64/aarch64）、macOS 12 及以上（x86_64/arm64）和
-Windows（x86_64）。请确认目标版本实际提供了匹配的 wheel。
+当前 wheel 构建矩阵覆盖 CPython 3.9–3.14：Linux（`manylinux_2_28`，
+x86_64/aarch64）、macOS 12 及以上（x86_64/arm64）和 Windows（x86_64）。
+该矩阵描述的是 CI 构建能力；具体版本实际发布了哪些 wheel，请以
+[PyPI 文件页](https://pypi.org/project/tsfile/#files) 为准，构建成功不等同于
+已发布到 PyPI。此矩阵之外的平台（例如 Windows ARM64、基于 musl 的 Linux、
+macOS 12 之前的版本）没有匹配的 wheel，`pip install` 会因找不到匹配的分发而
+失败，请改用下方源码构建步骤。
 
 ## 从源码构建
 
